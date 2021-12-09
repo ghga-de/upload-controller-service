@@ -2,6 +2,4 @@
 
 # cd into .devcontainer dir so that the config yaml
 # is considered:
-cd /workspace/.devcontainer
-
 upload-controller-service
