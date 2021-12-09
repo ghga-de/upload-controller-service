@@ -4,5 +4,4 @@
 # is considered:
 cd /workspace/.devcontainer
 
-# adapt to package name
-my-microservice
+upload-controller-service

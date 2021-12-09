@@ -20,8 +20,8 @@ from typing import Any, Optional, Type
 
 import pytest
 
-from my_microservice.core.greeting import generate_greeting
-from my_microservice.models import Greeting
+from upload_controller_service.core.greeting import generate_greeting
+from upload_controller_service.models import Greeting
 
 from .fixtures.greetings import greeting_expression_fixture
 

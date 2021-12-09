@@ -19,8 +19,8 @@ import os
 from copy import deepcopy
 from typing import List
 
-from my_microservice.core.greeting import GREETINGS_EXPRESSIONS
-from my_microservice.models import GreetingExpression
+from upload_controller_service.core.greeting import GREETINGS_EXPRESSIONS
+from upload_controller_service.models import GreetingExpression
 
 from ...fixtures.utils import read_yaml
 from . import BASE_DIR

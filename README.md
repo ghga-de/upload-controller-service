@@ -33,7 +33,7 @@ please adapt it accordingly (e.g. replace all occurences of `my-microservice` or
 **\# please adapt the links of following badges:**
 ![tests](https://github.com/ghga-de/microservice-repository-template/actions/workflows/unit_and_int_tests.yaml/badge.svg)
 [![codecov](https://codecov.io/gh/ghga-de/microservice-repository-template/branch/main/graph/badge.svg?token=GYH99Y71CK)](https://codecov.io/gh/ghga-de/microservice-repository-template)
-# My-Microservice - A Short Description
+# Upload-Controller-Service - A Short Description
 
 A longer description explaining the use case of this service.
 
@@ -45,17 +45,17 @@ An extensive documentation can be found [here](...) (coming soon).
 ### Installation
 We recommend using the provided Docker container.
 
-A pre-build version is available at [docker hub](https://hub.docker.com/repository/docker/ghga/my-microservice):
+A pre-build version is available at [docker hub](https://hub.docker.com/repository/docker/ghga/upload-controller-service):
 ```bash
 # Please feel free to choose the version as needed:
-docker pull ghga/my-microservice:<version>
+docker pull ghga/upload-controller-service:<version>
 ```
 
 Or you can build the container yourself from the [`./Dockerfile`](./Dockerfile):
 ```bash
 # Execute in the repo's root dir:
 # (Please feel free to adapt the name/tag.)
-docker build -t ghga/my-microservice:<version> .
+docker build -t ghga/upload-controller-service:<version> .
 ```
 
 For production-ready deployment, we recommend using Kubernetes, however,
@@ -63,7 +63,7 @@ for simple use cases, you could execute the service using docker
 on a single server:
 ```bash
 # The entrypoint is preconfigured:
-docker run -p 8080:8080 ghga/my-microservice:<version>
+docker run -p 8080:8080 ghga/upload-controller-service:<version>
 ```
 
 If you prefer not to use containers, you may install the service from source:
@@ -72,14 +72,14 @@ If you prefer not to use containers, you may install the service from source:
 pip install .
 
 # to run the service:
-my-microservice
+upload-controller-service
 ```
 
 ### Configuration:
 The [`./example-config.yaml`](./example-config.yaml) gives an overview of the available configuration options.
-Please adapt it, rename it to `.my_microservice.yaml`, and place it to one of the following locations:
-- in the current working directory were you are execute the service (on unix: `./.my_microservice.yaml`)
-- in your home directory (on unix: `~/.my_microservice.yaml`)
+Please adapt it, rename it to `.upload_controller_service.yaml`, and place it to one of the following locations:
+- in the current working directory were you are execute the service (on unix: `./.upload_controller_service.yaml`)
+- in your home directory (on unix: `~/.upload_controller_service.yaml`)
 
 The config yaml will be automatically parsed by the service.
 

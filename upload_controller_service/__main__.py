@@ -23,8 +23,7 @@ from .config import get_config
 
 def run():
     """Run the service"""
-    # Please adapt to package name
-    run_server(app="my_microservice.__main__:app", config=get_config())
+    run_server(app="upload_controller_service.__main__:app", config=get_config())
 
 
 if __name__ == "__main__":
