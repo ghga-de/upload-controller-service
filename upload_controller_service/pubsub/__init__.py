@@ -14,6 +14,6 @@
 # limitations under the License.
 
 """
-Subpackage defineing functions for publishing to or subscribing from
+Subpackage defining functions for publishing to or subscribing from
 asynchronous messaging topics.
 """
