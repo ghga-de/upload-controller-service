@@ -31,4 +31,4 @@ configure_app(app, config=CONFIG)
 @app.get("/", summary="index")
 async def index():
     """Index"""
-    return {"Hello": "World"}
+    return "Hello World."
