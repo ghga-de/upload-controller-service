@@ -14,3 +14,27 @@
 # limitations under the License.
 
 """Defines all database specific ORM models"""
+
+from sqlalchemy import JSON, Boolean, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm.decl_api import DeclarativeMeta
+
+Base: DeclarativeMeta = declarative_base()
+
+
+class ExampleObjectA(Base):
+    """An example object stored in the DB"""
+
+    __tablename__ = "visas"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    some_json_details = Column(JSON, nullable=False)
+
+
+class ExampleObjectB(Base):
+    """Another example object stored in the DB"""
+
+    __tablename__ = "table_b"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    active = Column(Boolean, nullable=False)
