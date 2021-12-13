@@ -15,28 +15,18 @@
 
 """Config Parameter Modeling and Parsing"""
 
-from functools import lru_cache
-
 from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
+from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
 from ghga_service_chassis_lib.pubsub import PubSubConfigBase
+from ghga_service_chassis_lib.s3 import S3ConfigBase
 
-from .models import SupportedLanguages
 
-
-@config_from_yaml(prefix="my_microservice")
-class Config(ApiConfigBase, PubSubConfigBase):
+@config_from_yaml(prefix="upload_controller_service")
+class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase):
     """Config parameters and their defaults."""
 
-    # config parameter needed for the api server
-    # are inherited from ApiConfigBase;
-    # config parameter needed for the api server
-    # are inherited from PubSubConfigBase;
-
-    language: SupportedLanguages = "Croatian"
+    service_name: str = "upload_controller_service"
 
 
-@lru_cache
-def get_config():
-    """Get runtime configuration."""
-    return Config()
+CONFIG = Config()

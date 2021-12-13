@@ -2,7 +2,4 @@
 
 # cd into .devcontainer dir so that the config yaml
 # is considered:
-cd /workspace/.devcontainer
-
-# adapt to package name
-my-microservice
+upload-controller-service

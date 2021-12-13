@@ -13,20 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Connects to database."""
+"""Defines all database specific ORM models"""
 
-import os
-
-from sqlalchemy import create_engine
+from sqlalchemy import JSON, Boolean, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-# adapted once config parsing is implemented
-SQLALCHEMY_DATABASE_URL = os.getenv("DB_URL")
+Base: DeclarativeMeta = declarative_base()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+class ExampleObjectA(Base):
+    """An example object stored in the DB"""
+
+    __tablename__ = "visas"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    some_json_details = Column(JSON, nullable=False)
+
+
+class ExampleObjectB(Base):
+    """Another example object stored in the DB"""
+
+    __tablename__ = "table_b"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    active = Column(Boolean, nullable=False)

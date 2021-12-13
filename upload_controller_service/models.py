@@ -13,19 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test the api module"""
-
-from fastapi import status
-from fastapi.testclient import TestClient
-
-from upload_controller_service.api.main import app
-
-
-def test_index():
-    """Test the index endpoint"""
-
-    client = TestClient(app)
-    response = client.get("/")
-
-    assert response.status_code == status.HTTP_200_OK
-    assert response.text == '"Hello World."'
+"""Defines dataclasses for holding business-logic data"""

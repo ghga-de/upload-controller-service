@@ -13,4 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This sub-package collects any Data Access Object pattern-related code"""
+"""The package implements a service that manages uploads to a S3 inbox bucket."""
+
+__version__ = "0.1.0"

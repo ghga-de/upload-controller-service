@@ -13,4 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This sub-package contains the core functionality"""
+"""
+Module containing the main FastAPI router and (optionally) top-level API enpoints.
+Additional endpoints might be structured in dedicated modules
+(each of them having a sub-router).
+"""
+
+from fastapi import FastAPI
+from ghga_service_chassis_lib.api import configure_app
+
+from ..config import CONFIG
+
+app = FastAPI()
+configure_app(app, config=CONFIG)
+
+
+@app.get("/", summary="index")
+async def index():
+    """Index"""
+    return "Hello World."
