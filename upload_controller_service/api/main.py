@@ -28,7 +28,7 @@ app = FastAPI()
 configure_app(app, config=CONFIG)
 
 
-@app.get("/", summary="Greet the world")
+@app.get("/", summary="index")
 async def index():
-    """Greet the World"""
-    return "Hello World."
+    """Index"""
+    return {"Hello": "World"}
