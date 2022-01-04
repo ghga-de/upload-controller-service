@@ -65,14 +65,15 @@ class FileInfo(Base):
         Integer,
         nullable=True,
         default=None,
-        doc="Size of the file content in bytes.",
+        doc=("Size of the file content in bytes."),
     )
     study_id = Column(
         String,
         nullable=False,
-        unique=False,
         doc=("ID used to refer to the study this file belongs to"),
     )
     registration_date = Column(
-        DateTime, nullable=False, doc="Date/time when the file was registered."
+        DateTime,
+        nullable=True,
+        doc=("Date/time when the file was registered."),
     )

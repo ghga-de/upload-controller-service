@@ -14,3 +14,5 @@
 # limitations under the License.
 
 """This sub-package contains implementations of DAO interfaces."""
+
+from .db import PostgresDatabase as Database  # noqa: F401

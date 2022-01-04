@@ -15,7 +15,6 @@
 
 """DAO interface implementation to connect to the database."""
 
-from datetime import datetime
 from typing import Any, Optional
 
 from ghga_service_chassis_lib.postgresql import (
@@ -77,7 +76,7 @@ class DatabaseDao(DaoGenericBase):
 
     def unregister_file(self, file_id: str) -> None:
         """
-        Unregister a new file_ with the specified file ID from the database.
+        Unregister a new file with the specified file ID from the database.
         """
         ...
 
@@ -110,7 +109,7 @@ class PostgresDatabase(DatabaseDao):
         self._session_cm.__exit__(error_type, error_value, error_traceback)
 
     def _get_orm_file(self, file_id: str) -> db_models.FileInfo:
-        """Internal method to get the ORM representation of a drs object by specifying
+        """Internal method to get the ORM representation of a file by specifying
         its file ID"""
 
         statement = select(db_models.FileInfo).filter_by(file_id=file_id)
@@ -122,13 +121,13 @@ class PostgresDatabase(DatabaseDao):
         return orm_file
 
     def get_file(self, file_id: str) -> models.FileInfoInternal:
-        """Get DRS object from the database"""
+        """Get file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
         return models.FileInfoInternal.from_orm(orm_file)
 
     def register_file(self, file: models.FileInfoInternal) -> None:
-        """Register a new DRS object to the database."""
+        """Register a new file to the database."""
 
         # check for collisions in the database:
         try:
@@ -142,14 +141,13 @@ class PostgresDatabase(DatabaseDao):
 
         file_dict = {
             **file.dict(),
-            "registration_date": datetime.now(),
         }
         orm_file = db_models.FileInfo(**file_dict)
         self._session.add(orm_file)
 
     def unregister_file(self, file_id: str) -> None:
         """
-        Unregister a new DRS object with the specified file ID from the database.
+        Unregister a file with the specified file ID from the database.
         """
 
         orm_file = self._get_orm_file(file_id=file_id)

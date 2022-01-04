@@ -16,16 +16,18 @@
 
 """Main business-logic of this service"""
 
-from typing import Any, Dict
+from typing import List
 
 from ..config import CONFIG, Config
+from ..dao import Database
+from ..models import FileInfoInternal
 
 
-def handle_new_study(message: Dict[str, Any], config: Config = CONFIG):
+def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
     """
-    Extract information for all files in the message and put the into the
-    upload controller database
+    Put the information for files into the database
     """
 
-    message.clear()
-    config.db_url.capitalize()
+    for file in study_files:
+        with Database(config=config) as database:
+            database.register_file(file)

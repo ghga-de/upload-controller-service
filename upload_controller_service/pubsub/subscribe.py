@@ -23,6 +23,7 @@ from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from ..config import CONFIG, Config
 from ..core import handle_new_study
+from ..models import FileInfoInternal
 from . import schemas
 
 HERE = Path(__file__).parent.resolve()
@@ -34,7 +35,21 @@ def process_new_study_message(message: dict, config):
     otherwise throwing an error
     """
 
-    handle_new_study(message=message, config=config)
+    files = message["associated_files"]
+    study_id = message["study_id"]
+
+    study_files = [
+        FileInfoInternal(
+            file_id=file.file_id,
+            study_id=study_id,
+            md5_checksum=file.md5_checksum,
+            size=file.file_size,
+            file_name=file.file_name,
+        )
+        for file in files
+    ]
+
+    handle_new_study(study_files=study_files, config=config)
 
 
 def subscribe_file_staged(config: Config = CONFIG, run_forever: bool = True) -> None:
