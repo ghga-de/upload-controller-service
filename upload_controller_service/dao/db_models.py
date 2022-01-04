@@ -15,26 +15,58 @@
 
 """Defines all database specific ORM models"""
 
-from sqlalchemy import JSON, Boolean, Column, Integer, String
+import uuid
+
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 Base: DeclarativeMeta = declarative_base()
 
 
-class ExampleObjectA(Base):
-    """An example object stored in the DB"""
+class File(Base):
+    """
+    GHGA Files announced by an uploader.
+    """
 
-    __tablename__ = "visas"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    some_json_details = Column(JSON, nullable=False)
-
-
-class ExampleObjectB(Base):
-    """Another example object stored in the DB"""
-
-    __tablename__ = "table_b"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    active = Column(Boolean, nullable=False)
+    __tablename__ = "files"
+    id = Column(
+        UUID(
+            as_uuid=True,
+        ),
+        default=uuid.uuid4,
+        primary_key=True,
+        doc="Service-internal file ID.",
+    )
+    file_id = Column(
+        String,
+        nullable=False,
+        unique=True,
+        doc=(
+            "ID used to refer to this file across services."
+            + " May be presented to users."
+            + " This string is also used to derive the DRS ID."
+        ),
+    )
+    md5_checksum = Column(
+        String,
+        nullable=False,
+        default=None,
+        doc=("MD5 checksum of the file content."),
+    )
+    size = Column(
+        Integer,
+        nullable=True,
+        default=None,
+        doc="Size of the file content in bytes.",
+    )
+    study_id = Column(
+        String,
+        nullable=False,
+        unique=True,
+        doc=("ID used to refer to the study this file belongs to"),
+    )
+    registration_date = Column(
+        DateTime, nullable=False, doc="Date/time when the file was registered."
+    )
