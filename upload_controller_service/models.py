@@ -29,7 +29,7 @@ class FileInfoInternal(BaseModel):
     study_id: str
     file_id: str
     md5_checksum: str
-    file_size: Optional[int]
+    size: Optional[int]
     file_name: str
 
     class Config:

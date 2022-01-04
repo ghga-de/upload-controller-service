@@ -25,7 +25,7 @@ from sqlalchemy.orm.decl_api import DeclarativeMeta
 Base: DeclarativeMeta = declarative_base()
 
 
-class File(Base):
+class FileInfo(Base):
     """
     GHGA Files announced by an uploader.
     """
@@ -49,6 +49,12 @@ class File(Base):
             + " This string is also used to derive the DRS ID."
         ),
     )
+    file_name = Column(
+        String,
+        nullable=False,
+        default=None,
+        doc=("Name of the uploaded file"),
+    )
     md5_checksum = Column(
         String,
         nullable=False,
@@ -64,7 +70,7 @@ class File(Base):
     study_id = Column(
         String,
         nullable=False,
-        unique=True,
+        unique=False,
         doc=("ID used to refer to the study this file belongs to"),
     )
     registration_date = Column(
