@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This sub-package contains the main business functionality of this service.
-It should not contain any service API-related code.
-"""
 
-from .main import handle_new_study  # noqa: F401
+"""Main business-logic of this service"""
+
+from typing import Any, Dict
+
+from ..config import CONFIG, Config
+
+
+def handle_new_study(message: Dict[str, Any], config: Config = CONFIG):
+    """
+    Extract information for all files in the message and put the into the
+    upload controller database
+    """
+
+    message.clear()
+    config.db_url.capitalize()

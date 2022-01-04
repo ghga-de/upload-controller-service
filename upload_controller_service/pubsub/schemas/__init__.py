@@ -13,9 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This sub-package contains the main business functionality of this service.
-It should not contain any service API-related code.
-"""
+"""Package containing schemas."""
 
-from .main import handle_new_study  # noqa: F401
+from .read_schemas import NEW_STUDY  # noqa: F401

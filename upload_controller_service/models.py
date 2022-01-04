@@ -14,3 +14,25 @@
 # limitations under the License.
 
 """Defines dataclasses for holding business-logic data"""
+
+from typing import Optional
+
+from pydantic import BaseModel
+
+
+class FileInfoInternal(BaseModel):
+    """
+    A model containing all the metadata submitted for one file from the metadata service
+    with the new_study_created topic.
+    """
+
+    study_id: str
+    file_id: str
+    md5_checksum: str
+    file_size: Optional[int]
+    file_name: str
+
+    class Config:
+        """Additional pydantic configs."""
+
+        orm_mode = True
