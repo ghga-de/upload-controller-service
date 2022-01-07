@@ -19,12 +19,12 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from dao.db import FileInfoNotFoundError
 from fastapi import Depends, FastAPI, HTTPException, status
 from ghga_service_chassis_lib.api import configure_app
 
 from ..config import CONFIG, Config
 from ..core import get_upload_url
+from ..dao.db import FileInfoNotFoundError
 from .deps import get_config
 
 app = FastAPI()
