@@ -19,10 +19,13 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import FastAPI, status
+from dao.db import FileInfoNotFoundError
+from fastapi import Depends, FastAPI, HTTPException, status
 from ghga_service_chassis_lib.api import configure_app
 
-from ..config import CONFIG
+from ..config import CONFIG, Config
+from ..core import get_upload_url
+from .deps import get_config
 
 app = FastAPI()
 configure_app(app, config=CONFIG)
@@ -38,3 +41,24 @@ async def index():
 async def health():
     """Used to test if this service is alive"""
     return
+
+
+@app.get("/presigned_post/{file_id}", summary="health")
+async def get_presigned_post(
+    file_id: str,
+    config: Config = Depends(get_config),
+):
+    """
+    Requesting a pre-signed post URL for a new file in the inbox
+    using the file_id representing the file.
+    """
+
+    # call core functionality
+    try:
+        url = get_upload_url(file_id=file_id, config=config)
+    except FileInfoNotFoundError as file_info_not_found_error:
+        raise HTTPException(
+            status_code=404, detail="The submitted file_id does not exist."
+        ) from file_info_not_found_error
+
+    return {"presigned_post": url}

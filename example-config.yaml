@@ -22,3 +22,5 @@ s3_endpoint_url: http://internal_file_registry_service_s3:4566
 s3_access_key_id: my-access-key
 s3_secret_access_key: my-secret-access-key
 aws_config_ini: /path/to/aws.ini
+
+inbox_bucket_name: "inbox"

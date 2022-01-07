@@ -27,6 +27,7 @@ class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase
     """Config parameters and their defaults."""
 
     service_name: str = "upload_controller_service"
+    inbox_bucket_name: str = "inbox"
 
 
 CONFIG = Config()
