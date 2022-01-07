@@ -34,7 +34,7 @@ services:
     # define environment variables
     environment:
       UPLOAD_CONTROLLER_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
-      DB_URL: postgresql://postgres:postgres@postgresql/postgres
+      DB_URL: postgresql://admin:admin@postgresql/inbox
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
@@ -44,11 +44,13 @@ services:
     volumes:
       - postgres_fs:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: postgres
-      POSTGRES_PASSWORD: postgres
-    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
+      POSTGRES_USER: admin
+      POSTGRES_DB: inbox
+      POSTGRES_PASSWORD: admin
+
+    command: [ 'postgres', '-c', 'work_mem=512MB' ]
+    deploy:
+      endpoint_mode: dnsrr
 
   rabbitmq:
     image: rabbitmq:3-management
