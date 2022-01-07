@@ -1,4 +1,4 @@
-db_url: postgresql://postgres:postgres@postgres/postgres
+db_url: postgresql://admin:admin@postgresql/inbox
 db_print_logs: false
 s3_endpoint_url: http://localstack:4566
 s3_access_key_id: test

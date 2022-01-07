@@ -42,7 +42,11 @@ services:
     image: postgres:latest
     restart: unless-stopped
     volumes:
-      - postgres_fs:/var/lib/postgresql/data
+      - type: volume
+        source: postgres_fs
+        target: /var/lib/postgresql/data
+        volume:
+          nocopy: true
     environment:
       POSTGRES_USER: admin
       POSTGRES_DB: inbox

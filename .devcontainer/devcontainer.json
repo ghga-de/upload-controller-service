@@ -16,9 +16,9 @@
 				"previewLimit": 50,
 				"server": "localhost",
 				"port": 5432,
-				"database": "postgres",
-				"username": "postgres",
-				"password": "postgres"
+				"database": "inbox",
+				"username": "admin",
+				"password": "admin"
 			}
 		],
 		"python.pythonPath": "/usr/local/bin/python",
