@@ -13,9 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This sub-package contains the main business functionality of this service.
-It should not contain any service API-related code.
-"""
+"""Read in schemas from json files"""
 
-from .main import handle_new_study  # noqa: F401
+import json
+from pathlib import Path
+from typing import Dict
+
+HERE = Path(__file__).parent.resolve()
+
+
+def read_schema(topic_name: str) -> Dict[str, object]:
+    """Read schemas from file"""
+    with open(HERE / f"{topic_name}.json", "r", encoding="utf8") as schema_file:
+        return json.load(schema_file)
+
+
+NEW_STUDY = read_schema("new_study_created.json")
