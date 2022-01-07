@@ -40,7 +40,7 @@ async def index():
 @app.get("/health", summary="health", status_code=status.HTTP_200_OK)
 async def health():
     """Used to test if this service is alive"""
-    return
+    return {"status": "OK"}
 
 
 @app.get("/presigned_post/{file_id}", summary="health")
