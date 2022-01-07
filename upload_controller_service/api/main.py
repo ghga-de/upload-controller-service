@@ -19,7 +19,7 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from ghga_service_chassis_lib.api import configure_app
 
 from ..config import CONFIG
@@ -32,3 +32,9 @@ configure_app(app, config=CONFIG)
 async def index():
     """Index"""
     return "Hello World."
+
+
+@app.get("/health", summary="health", status_code=status.HTTP_200_OK)
+async def health():
+    """Used to test if this service is alive"""
+    return
