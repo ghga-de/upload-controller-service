@@ -27,7 +27,7 @@ from ..core import get_upload_url
 from ..dao.db import FileInfoNotFoundError
 from .deps import get_config
 
-app = FastAPI(openapi_url="/openapi.yaml")
+app = FastAPI()
 configure_app(app, config=CONFIG)
 
 

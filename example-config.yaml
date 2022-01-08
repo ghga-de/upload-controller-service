@@ -5,7 +5,7 @@ workers: 2
 auto_reload: False
 
 api_root_path: "/"
-openapi_url: "/openapi.json"
+openapi_url: "/openapi.yaml"
 docs_url: "/docs"
 
 cors_allowed_origins: ["http://the-other-domain-to-accept.xy"]
