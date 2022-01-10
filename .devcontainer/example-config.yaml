@@ -5,7 +5,7 @@ workers: 2
 auto_reload: False
 
 api_root_path: "/"
-openapi_url: "/openapi.yaml"
+openapi_url: "-/openapi.yaml"
 docs_url: "/docs"
 
 cors_allowed_origins: ["http://the-other-domain-to-accept.xy"]
@@ -16,7 +16,7 @@ cors_allowed_headers: ["*"]
 rabbitmq_host: "rabbitmq"
 rabbitmq_port: 5672
 
-db_url: postgresql://admin:admin@postgres/inbox
+db_url: postgresql://admin:admin@postgresql/inbox
 db_print_logs: false
 s3_endpoint_url: http://internal_file_registry_service_s3:4566
 s3_access_key_id: test
