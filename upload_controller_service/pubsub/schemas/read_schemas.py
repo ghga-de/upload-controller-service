@@ -28,5 +28,5 @@ def read_schema(topic_name: str) -> Dict[str, object]:
         return json.load(schema_file)
 
 
-# NEW_STUDY = read_schema("new_study_created")
+NEW_STUDY = read_schema("new_study_created")
 UPLOAD_RECIEVED = read_schema("file_upload_received")
