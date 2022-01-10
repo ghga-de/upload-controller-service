@@ -21,9 +21,10 @@ Additional endpoints might be structured in dedicated modules
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from ghga_service_chassis_lib.api import configure_app
+from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 
 from ..config import CONFIG, Config
-from ..core import get_upload_url
+from ..core import check_uploaded_file, get_upload_url
 from ..dao.db import FileInfoNotFoundError
 from .deps import get_config
 
@@ -37,7 +38,7 @@ async def health():
     return {"status": "OK"}
 
 
-@app.get("/presigned_post/{file_id}", summary="health")
+@app.get("/presigned_post/{file_id}", summary="presigned_post")
 async def get_presigned_post(
     file_id: str,
     config: Config = Depends(get_config),
@@ -56,3 +57,30 @@ async def get_presigned_post(
         ) from file_info_not_found_error
 
     return {"presigned_post": url}
+
+
+@app.get("/confirm_upload/{file_id}", summary="confirm_upload")
+async def confirm_upload(
+    file_id: str,
+    config: Config = Depends(get_config),
+):
+    """
+    Requesting a confirmation of the upload of a specific file using the file id.
+    Returns 200, if the file exists in the inbox, 404 if not
+    """
+
+    # call core functionality
+    try:
+        check_uploaded_file(file_id=file_id, config=config)
+    except FileInfoNotFoundError as file_info_not_found_error:
+        raise HTTPException(
+            status_code=400,
+            detail=f"The submitted file_id {file_id} does not exist.",
+        ) from file_info_not_found_error
+    except ObjectNotFoundError as object_not_found_error:
+        raise HTTPException(
+            status_code=404,
+            detail=f"The file with the file_id {file_id} does not exist.",
+        ) from object_not_found_error
+
+    return True

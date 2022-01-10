@@ -18,6 +18,11 @@
 
 from typing import List
 
+from ghga_service_chassis_lib.object_storage_dao import (
+    BucketNotFoundError,
+    ObjectNotFoundError,
+)
+
 from ..config import CONFIG, Config
 from ..dao import Database, ObjectStorage
 from ..models import FileInfoInternal
@@ -53,3 +58,22 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
         )
 
     return presigned_post
+
+
+def check_uploaded_file(file_id: str, config: Config = CONFIG):
+    """
+    Checks if the file with the specified file_id was uploaded
+    """
+
+    with Database(config=config) as database:
+        database.get_file(file_id=file_id)
+
+    with ObjectStorage(config=config) as storage:
+        if not storage.does_bucket_exist(bucket_id=config.inbox_bucket_name):
+            raise BucketNotFoundError
+
+        if not storage.does_object_exist(
+            object_id=file_id,
+            bucket_id=config.inbox_bucket_name,
+        ):
+            raise ObjectNotFoundError
