@@ -31,12 +31,6 @@ app = FastAPI()
 configure_app(app, config=CONFIG)
 
 
-@app.get("/", summary="index")
-async def index():
-    """Index"""
-    return "Hello World."
-
-
 @app.get("/health", summary="health", status_code=status.HTTP_200_OK)
 async def health():
     """Used to test if this service is alive"""

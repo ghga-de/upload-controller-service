@@ -13,8 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Fixtures that exclusively used in unit tests"""
-
-from pathlib import Path
-
-BASE_DIR = Path(__file__).parent.resolve()
+"""Fixtures that are used excusively in unit tests"""

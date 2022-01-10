@@ -18,9 +18,9 @@ rabbitmq_port: 5672
 
 db_url: postgresql://admin:admin@postgres/inbox
 db_print_logs: false
-s3_endpoint_url: http://internal_file_registry_service_s3:4566
+s3_endpoint_url: http://upload_controller_service_s3:4566
 s3_access_key_id: test
 s3_secret_access_key: test
 aws_config_ini: None
 
-inbox_bucket_name: inbox
+s3_inbox_bucket_id: inbox
