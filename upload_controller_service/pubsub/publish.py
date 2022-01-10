@@ -42,7 +42,7 @@ def publish_upload_received(file: models.FileInfoInternal, config: Config = CONF
     topic = AmqpTopic(
         config=config,
         topic_name=topic_name,
-        json_schema=schemas.UPLOAD_RECIEVED,
+        json_schema=schemas.UPLOAD_RECEIVED,
     )
 
     topic.publish(message)

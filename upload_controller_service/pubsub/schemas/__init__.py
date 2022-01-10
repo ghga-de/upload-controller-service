@@ -15,4 +15,4 @@
 
 """Package containing schemas."""
 
-from .read_schemas import NEW_STUDY, UPLOAD_RECIEVED  # noqa: F401
+from .read_schemas import NEW_STUDY, UPLOAD_RECEIVED  # noqa: F401
