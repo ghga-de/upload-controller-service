@@ -26,6 +26,7 @@ from ghga_service_chassis_lib.object_storage_dao import (
 from ..config import CONFIG, Config
 from ..dao import Database, ObjectStorage
 from ..models import FileInfoInternal
+from ..pubsub import publish_upload_received
 
 
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
@@ -66,7 +67,7 @@ def check_uploaded_file(file_id: str, config: Config = CONFIG):
     """
 
     with Database(config=config) as database:
-        database.get_file(file_id=file_id)
+        file = database.get_file(file_id=file_id)
 
     with ObjectStorage(config=config) as storage:
         if not storage.does_bucket_exist(bucket_id=config.inbox_bucket_name):
@@ -77,3 +78,5 @@ def check_uploaded_file(file_id: str, config: Config = CONFIG):
             bucket_id=config.inbox_bucket_name,
         ):
             raise ObjectNotFoundError
+
+    publish_upload_received(file=file, config=config)
