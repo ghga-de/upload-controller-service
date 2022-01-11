@@ -36,12 +36,12 @@ def process_new_study_message(message: dict, config):
     """
 
     files = message["associated_files"]
-    study_id = message["study_id"]
+    grouping_label = message["study_id"]
 
     study_files = [
         FileInfoInternal(
             file_id=file.file_id,
-            study_id=study_id,
+            grouping_label=grouping_label,
             md5_checksum=file.md5_checksum,
             size=file.file_size,
             file_name=file.file_name,

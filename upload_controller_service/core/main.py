@@ -45,11 +45,11 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
 
     # Create presigned post for file_id
     with ObjectStorage(config=config) as storage:
-        if not storage.does_bucket_exist(bucket_id=config.inbox_bucket_name):
-            storage.create_bucket(config.inbox_bucket_name)
+        if not storage.does_bucket_exist(bucket_id=config.s3_inbox_bucket_id):
+            storage.create_bucket(config.s3_inbox_bucket_id)
 
         presigned_post = storage.get_object_upload_url(
-            bucket_id=config.inbox_bucket_name, object_id=file_id
+            bucket_id=config.s3_inbox_bucket_id, object_id=file_id
         )
 
     return presigned_post

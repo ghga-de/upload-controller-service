@@ -67,7 +67,7 @@ class FileInfo(Base):
         default=None,
         doc=("Size of the file content in bytes."),
     )
-    study_id = Column(
+    grouping_label = Column(
         String,
         nullable=False,
         doc=("ID used to refer to the study this file belongs to"),

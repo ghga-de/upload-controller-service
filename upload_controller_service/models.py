@@ -26,7 +26,7 @@ class FileInfoInternal(BaseModel):
     with the new_study_created topic.
     """
 
-    study_id: str
+    grouping_label: str
     file_id: str
     md5_checksum: str
     size: Optional[int]
