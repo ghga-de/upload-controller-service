@@ -24,11 +24,11 @@ def upgrade():
         sa.Column("file_id", sa.String(), nullable=False),
         sa.Column("md5_checksum", sa.String(), nullable=False),
         sa.Column("size", sa.Integer(), nullable=True),
-        sa.Column("grouping_label", sa.String(), nullable=False),
+        sa.Column("study_id", sa.String(), nullable=False),
         sa.Column("registration_date", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("file_id"),
-        sa.UniqueConstraint("grouping_label"),
+        sa.UniqueConstraint("study_id"),
     )
     # ### end Alembic commands ###
 
