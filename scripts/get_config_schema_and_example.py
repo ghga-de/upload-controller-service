@@ -15,26 +15,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Extracts the package name from the setup.cfg"""
+"""Generate a JSON schema from the service's Config class.
+"""
 
 from pathlib import Path
 
-REPO_ROOT_DIR = Path(__file__).parent.parent.resolve()
-SETUP_CFG_PATH = REPO_ROOT_DIR / "setup.cfg"
-NAME_PREFIX = "name = "
+import yaml
+from typer import Typer
+
+from upload_controller_service.config import Config
+
+HERE = Path(__file__).parent.resolve()
+DEV_CONFIG_YAML = HERE.parent.resolve() / ".devcontainer" / ".dev_config.yaml"
+
+cli = Typer()
 
 
-def run():
-    """Extracts the package name"""
+def get_dev_config():
+    """Get dev config object."""
+    return Config(config_yaml=DEV_CONFIG_YAML)
 
-    with open(SETUP_CFG_PATH, "r", encoding="utf8") as setup_cfg:
-        for line in setup_cfg.readlines():
-            line_stripped = line.strip()
-            if line_stripped.startswith(NAME_PREFIX):
-                package_name = line_stripped[len(NAME_PREFIX) :]
-                print(package_name)
-                return
+
+@cli.command()
+def print_schema():
+    """Prints a JSON schema generated from a Config class."""
+    config = get_dev_config()
+    print(config.schema_json(indent=2))
+
+
+@cli.command()
+def print_example():
+    """Prints an example config yaml."""
+    config = get_dev_config()
+    print(yaml.dump(config.dict()))
 
 
 if __name__ == "__main__":
-    run()
+    cli()
