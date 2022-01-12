@@ -19,7 +19,7 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 
@@ -67,7 +67,7 @@ async def confirm_upload(
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
-    Returns 200, if the file exists in the inbox, 404 if not
+    Returns 200, if the file exists in the inbox, 404 if not, 400 if not in database
     """
 
     # call core functionality
@@ -88,4 +88,4 @@ async def confirm_upload(
             detail=f"The file with the file_id {file_id} does not exist.",
         ) from object_not_found_error
 
-    return True
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
