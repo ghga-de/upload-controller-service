@@ -34,7 +34,7 @@ def publish_upload_received(file: models.FileInfoInternal, config: Config = CONF
     message = {
         "request_id": "",
         "file_id": file.file_id,
-        "grouping_label": file.study_id,
+        "grouping_label": file.grouping_label,
         "md5_checksum": file.md5_checksum,
     }
 
