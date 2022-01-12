@@ -20,7 +20,10 @@ from typing import Optional, Type
 import pytest
 
 from upload_controller_service.core.main import (
+    FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
+    FileNotRegisteredError,
+    get_upload_url,
     handle_new_study,
 )
 
@@ -46,6 +49,32 @@ def test_handle_new_study(
         run()
         # check if file exists in db:
         psql_fixture.database.get_file(file_state.file_info.file_id)
+    else:
+        with pytest.raises(expected_exception):
+            run()
+
+
+@pytest.mark.parametrize(
+    "file_state_name,expected_exception",
+    [
+        ("in_db_only", None),
+        ("unknown", FileNotRegisteredError),
+        ("in_inbox", FileAlreadyInInboxError),
+    ],
+)
+def test_get_upload_url(
+    file_state_name: str,
+    expected_exception: Optional[Type[BaseException]],
+    psql_fixture,  # noqa: F811
+    s3_fixture,  # noqa: F811
+):
+    """Test the `get_upload_url` function."""
+    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    file_state = state.FILES[file_state_name]
+
+    run = lambda: get_upload_url(file_state.file_info.file_id, config=config)
+    if expected_exception is None:
+        run()
     else:
         with pytest.raises(expected_exception):
             run()
