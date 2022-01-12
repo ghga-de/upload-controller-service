@@ -28,6 +28,47 @@ from ..dao import Database, ObjectStorage
 from ..models import FileInfoInternal
 
 
+class FileAlreadyInInboxError(RuntimeError):
+    """Thrown when a file is unexpectedly already in the inbox."""
+
+    def __init__(self, external_file_id: str):
+        message = (
+            f"The file with external id {external_file_id} is already in the inbox."
+        )
+        super().__init__(message)
+
+
+class FileAlreadyRegisteredError(RuntimeError):
+    """Thrown when a file is unexpectedly already registered."""
+
+    def __init__(self, external_file_id: str):
+        message = (
+            f"The file with external id {external_file_id} has already been"
+            + " registered for upload."
+        )
+        super().__init__(message)
+
+
+class FileNotRegisteredError(RuntimeError):
+    """Thrown when a file is unexpectedly not registered."""
+
+    def __init__(self, external_file_id: str):
+        message = (
+            f"The file with external id {external_file_id} has not been registered yet."
+        )
+        super().__init__(message)
+
+
+class FileNotInInboxError(RuntimeError):
+    """Thrown when a file is unexpectedly not in the inbox."""
+
+    def __init__(self, external_file_id: str):
+        message = (
+            f"The file with external id {external_file_id} does not exist in the inbox."
+        )
+        super().__init__(message)
+
+
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
     """
     Put the information for files into the database
