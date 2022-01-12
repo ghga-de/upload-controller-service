@@ -23,4 +23,6 @@
 # )
 from ghga_service_chassis_lib.s3 import ObjectStorageS3 as ObjectStorage  # noqa: F401
 
+from .db import FileInfoAlreadyExistsError  # noqa: F401
+from .db import FileInfoNotFoundError  # noqa: F401
 from .db import PostgresDatabase as Database  # noqa: F401

@@ -97,21 +97,21 @@ FILES: Dict[str, FileState] = {
     "in_inbox": FileState(
         id=get_file_id_example(1),
         grouping_label=get_grouping_label_example(1),
-        file_path=TEST_FILE_PATHS[1],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=True,
     ),
     "uploaded_but_not_in_inbox": FileState(
         id=get_file_id_example(2),
         grouping_label=get_grouping_label_example(2),
-        file_path=TEST_FILE_PATHS[2],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=False,
     ),
     "db_inconsistency": FileState(
         id=get_file_id_example(3),
         grouping_label=get_grouping_label_example(3),
-        file_path=TEST_FILE_PATHS[3],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=True,
         in_db=False,
@@ -119,7 +119,7 @@ FILES: Dict[str, FileState] = {
     "unknown": FileState(
         id=get_file_id_example(4),
         grouping_label=get_grouping_label_example(4),
-        file_path=TEST_FILE_PATHS[4],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=False,
         in_inbox=False,
         in_db=False,

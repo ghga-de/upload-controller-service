@@ -24,7 +24,7 @@ from ghga_service_chassis_lib.object_storage_dao import (
 )
 
 from ..config import CONFIG, Config
-from ..dao import Database, ObjectStorage
+from ..dao import Database, FileInfoAlreadyExistsError, ObjectStorage
 from ..models import FileInfoInternal
 
 
@@ -76,7 +76,12 @@ def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFI
 
     for file in study_files:
         with Database(config=config) as database:
-            database.register_file(file)
+            try:
+                database.register_file(file)
+            except FileInfoAlreadyExistsError as error:
+                raise FileAlreadyRegisteredError(
+                    external_file_id=file.file_id
+                ) from error
 
 
 def get_upload_url(file_id: str, config: Config = CONFIG):
