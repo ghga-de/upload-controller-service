@@ -13,4 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Package containing integration tests"""
+"""
+This sub-package contains the main business functionality of this service.
+It should not contain any service API-related code.
+"""
+
+from .main import check_uploaded_file, get_upload_url, handle_new_study  # noqa: F401
