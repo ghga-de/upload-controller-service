@@ -10,6 +10,7 @@
 .devcontainer/devcontainer.json
 .devcontainer/docker-compose.yml
 .devcontainer/Dockerfile
+.devcontainer/license_header.txt
 
 .github/workflows/dev_cd.yaml
 .github/workflows/unit_and_int_tests.yaml
@@ -20,8 +21,6 @@ docs/README.md
 
 example_data
 
-scripts
-scripts/get_config_schema_and_example.py
 
 tests/fixtures/__init__.py
 tests/integration/fixtures/__init__.py
