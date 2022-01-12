@@ -16,7 +16,7 @@
 
 """Main business-logic of this service"""
 
-from typing import List
+from typing import Callable, List
 
 from ghga_service_chassis_lib.object_storage_dao import (
     BucketNotFoundError,
@@ -26,7 +26,6 @@ from ghga_service_chassis_lib.object_storage_dao import (
 from ..config import CONFIG, Config
 from ..dao import Database, ObjectStorage
 from ..models import FileInfoInternal
-from ..pubsub import publish_upload_received
 
 
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
@@ -61,7 +60,11 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
     return presigned_post
 
 
-def check_uploaded_file(file_id: str, config: Config = CONFIG):
+def check_uploaded_file(
+    file_id: str,
+    publish_upload_received: Callable[[FileInfoInternal, Config], None],
+    config: Config = CONFIG,
+):
     """
     Checks if the file with the specified file_id was uploaded
     """
@@ -79,4 +82,4 @@ def check_uploaded_file(file_id: str, config: Config = CONFIG):
         ):
             raise ObjectNotFoundError
 
-    publish_upload_received(file=file, config=config)
+    publish_upload_received(file, config)

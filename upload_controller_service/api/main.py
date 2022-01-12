@@ -26,6 +26,7 @@ from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 from ..config import CONFIG, Config
 from ..core import check_uploaded_file, get_upload_url
 from ..dao.db import FileInfoNotFoundError
+from ..pubsub import publish_upload_received
 from .deps import get_config
 
 app = FastAPI()
@@ -71,7 +72,11 @@ async def confirm_upload(
 
     # call core functionality
     try:
-        check_uploaded_file(file_id=file_id, config=config)
+        check_uploaded_file(
+            file_id=file_id,
+            publish_upload_received=publish_upload_received,
+            config=config,
+        )
     except FileInfoNotFoundError as file_info_not_found_error:
         raise HTTPException(
             status_code=400,
