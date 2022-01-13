@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,4 +15,4 @@
 
 """Package containing schemas."""
 
-from .read_schemas import NEW_STUDY  # noqa: F401
+from .read_schemas import NEW_STUDY, UPLOAD_RECEIVED  # noqa: F401

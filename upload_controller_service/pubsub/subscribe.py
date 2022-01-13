@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,7 @@ def subscribe_new_study_created(
     # create a topic object:
     topic = AmqpTopic(
         config=config,
-        topic_name=config.topic_name_file_staged,
+        topic_name=config.topic_name_study_created,
         json_schema=schemas.NEW_STUDY,
     )
 
