@@ -30,7 +30,6 @@ from ..fixtures import (  # noqa: F401
     state,
 )
 
-
 # def test_subscribe_new_study_created(
 #     psql_fixture, s3_fixture, amqp_fixture
 # ):  # noqa: F811
