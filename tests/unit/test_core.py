@@ -15,7 +15,7 @@
 
 """Test the core functionality"""
 
-from typing import Callable, Optional, Type
+from typing import Optional, Type
 
 import pytest
 
@@ -96,7 +96,6 @@ def test_check_uploaded_file(
     expected_exception: Optional[Type[BaseException]],
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
-    publish_func: Callable = null_func,
 ):
     """Test the `check_uploaded_file` function."""
     config = get_config(sources=[psql_fixture.config, s3_fixture.config])
@@ -104,7 +103,7 @@ def test_check_uploaded_file(
 
     run = lambda: check_uploaded_file(
         file_state.file_info.file_id,
-        publish_upload_received=publish_func,  # dummy function
+        publish_upload_received=null_func,
         config=config,
     )
     if expected_exception is None:

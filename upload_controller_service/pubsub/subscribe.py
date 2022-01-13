@@ -52,9 +52,7 @@ def process_new_study_message(message: dict, config):
     handle_new_study(study_files=study_files, config=config)
 
 
-def subscribe_new_study_created(
-    config: Config = CONFIG, run_forever: bool = True
-) -> None:
+def subscribe_new_study(config: Config = CONFIG, run_forever: bool = True) -> None:
     """
     Runs a subscribing process for the "new_study_created" topic
     """

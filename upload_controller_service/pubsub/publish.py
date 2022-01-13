@@ -17,6 +17,8 @@
 Publish asynchronous topics
 """
 
+from datetime import datetime
+
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from .. import models
@@ -29,19 +31,18 @@ def publish_upload_received(file: models.FileInfoInternal, config: Config = CONF
     Publishes a message to a specified topic
     """
 
-    topic_name = config.topic_name_upload_received
-
     message = {
         "request_id": "",
         "file_id": file.file_id,
         "grouping_label": file.grouping_label,
         "md5_checksum": file.md5_checksum,
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
     # create a topic object:
     topic = AmqpTopic(
         config=config,
-        topic_name=topic_name,
+        topic_name=config.topic_name_upload_received,
         json_schema=schemas.UPLOAD_RECEIVED,
     )
 

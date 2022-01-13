@@ -19,7 +19,12 @@ from datetime import datetime
 
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
-from upload_controller_service.pubsub import schemas, subscribe_new_study_created
+from upload_controller_service.core.main import check_uploaded_file
+from upload_controller_service.pubsub import (
+    publish_upload_received,
+    schemas,
+    subscribe_new_study,
+)
 
 from ..fixtures import (  # noqa: F401
     DEFAULT_CONFIG,
@@ -31,12 +36,12 @@ from ..fixtures import (  # noqa: F401
 )
 
 
-def test_subscribe_new_study_created(
+def test_subscribe_new_study(
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
     amqp_fixture,  # noqa: F811
 ):  # noqa: F811
-    """Test `subscribe_new_study_created` function"""
+    """Test `subscribe_new_study` function"""
 
     config = get_config(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
@@ -61,8 +66,7 @@ def test_subscribe_new_study_created(
         "timestamp": now_isostring,
     }
 
-    # initialize upstream and downstream test services that will publish or receive
-    # messages to or from this service:
+    # initialize upstream test service that will publish to this service:
     upstream_publisher = amqp_fixture.get_test_publisher(
         topic_name=DEFAULT_CONFIG.topic_name_new_study,
         message_schema=schemas.NEW_STUDY,
@@ -73,9 +77,38 @@ def test_subscribe_new_study_created(
 
     # process the stage request:
     exec_with_timeout(
-        func=lambda: subscribe_new_study_created(config=config, run_forever=False),
+        func=lambda: subscribe_new_study(config=config, run_forever=False),
         timeout_after=1000,
     )
 
     # check if file exists in db:
     psql_fixture.database.get_file(file_info.file_id)
+
+
+def test_publish_upload_received(
+    psql_fixture,  # noqa: F811
+    s3_fixture,  # noqa: F811
+    amqp_fixture,  # noqa: F811
+):  # noqa: F811
+    """Test `subscribe_new_study` function"""
+    config = get_config(
+        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
+    )
+
+    file_info = state.FILES["in_inbox"].file_info
+
+    # initialize downstream test service that will receive the message from this service:
+    downstream_subscriber = amqp_fixture.get_test_subscriber(
+        topic_name=DEFAULT_CONFIG.topic_name_upload_received,
+        message_schema=schemas.UPLOAD_RECEIVED,
+    )
+
+    check_uploaded_file(
+        file_info.file_id,
+        publish_upload_received=publish_upload_received,
+        config=config,
+    )
+
+    # receive the published message:
+    downstream_message = downstream_subscriber.subscribe(timeout_after=2)
+    assert downstream_message["file_id"] == file_info.file_id
