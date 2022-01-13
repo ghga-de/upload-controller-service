@@ -18,3 +18,8 @@
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.resolve()
+
+
+def null_func(*args, **kwargs):
+    """I am accepting any args and kwargs but I am doing nothing."""
+    pass

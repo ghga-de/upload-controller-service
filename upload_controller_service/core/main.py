@@ -18,11 +18,6 @@
 
 from typing import Callable, List
 
-from ghga_service_chassis_lib.object_storage_dao import (
-    BucketNotFoundError,
-    ObjectNotFoundError,
-)
-
 from upload_controller_service.dao.db import FileInfoNotFoundError
 
 from ..config import CONFIG, Config
@@ -40,6 +35,14 @@ class FileAlreadyInInboxError(RuntimeError):
 
     def __init__(self, file_id: str):
         message = f"The file with external id {file_id} is already in the inbox."
+        super().__init__(message)
+
+
+class FileNotInInboxError(RuntimeError):
+    """Thrown when a file is unexpectedly not found in the inbox."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} not in the inbox."
         super().__init__(message)
 
 
@@ -109,20 +112,21 @@ def check_uploaded_file(
     config: Config = CONFIG,
 ):
     """
-    Checks if the file with the specified file_id was uploaded
+    Checks if the file with the specified file_id was uploaded. Throws an
+    FileNotInInboxError if this is not the case.
     """
 
     with Database(config=config) as database:
-        file = database.get_file(file_id=file_id)
+        try:
+            file = database.get_file(file_id=file_id)
+        except FileInfoNotFoundError as error:
+            raise FileNotRegisteredError(file_id=file_id) from error
 
     with ObjectStorage(config=config) as storage:
-        if not storage.does_bucket_exist(bucket_id=config.inbox_bucket_name):
-            raise BucketNotFoundError
-
         if not storage.does_object_exist(
             object_id=file_id,
-            bucket_id=config.inbox_bucket_name,
+            bucket_id=config.s3_inbox_bucket_id,
         ):
-            raise ObjectNotFoundError
+            raise FileNotInInboxError(file_id=file_id)
 
     publish_upload_received(file, config)

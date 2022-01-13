@@ -21,16 +21,30 @@ Additional endpoints might be structured in dedicated modules
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
-from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 
 from ..config import CONFIG, Config
-from ..core import FileNotRegisteredError, check_uploaded_file, get_upload_url
-from ..dao.db import FileInfoNotFoundError
+from ..core import (
+    FileNotInInboxError,
+    FileNotRegisteredError,
+    check_uploaded_file,
+    get_upload_url,
+)
 from ..pubsub import publish_upload_received
 from .deps import get_config
 
 app = FastAPI()
 configure_app(app, config=CONFIG)
+
+
+class HttpFileNotFoundException(HTTPException):
+    """Thrown when a file with given ID could not be found."""
+
+    def __init__(self, file_id: str):
+        """Construct message and init the exception."""
+        super().__init__(
+            status_code=404,
+            detail=f"The file with the file_id {file_id} does not exist.",
+        )
 
 
 @app.get("/health", summary="health", status_code=status.HTTP_200_OK)
@@ -52,10 +66,8 @@ async def get_presigned_post(
     # call core functionality
     try:
         url = get_upload_url(file_id=file_id, config=config)
-    except FileNotRegisteredError as file_info_not_found_error:
-        raise HTTPException(
-            status_code=404, detail="The submitted file_id does not exist."
-        ) from file_info_not_found_error
+    except FileNotRegisteredError as error:
+        raise HttpFileNotFoundException(file_id) from error
 
     return {"presigned_post": url}
 
@@ -67,7 +79,7 @@ async def confirm_upload(
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
-    Returns 200, if the file exists in the inbox, 404 if not, 400 if not in database
+    Returns 200, if the file exists in the inbox or database, 404.
     """
 
     # call core functionality
@@ -77,15 +89,9 @@ async def confirm_upload(
             publish_upload_received=publish_upload_received,
             config=config,
         )
-    except FileInfoNotFoundError as file_info_not_found_error:
-        raise HTTPException(
-            status_code=400,
-            detail=f"The submitted file_id {file_id} does not exist.",
-        ) from file_info_not_found_error
-    except ObjectNotFoundError as object_not_found_error:
-        raise HTTPException(
-            status_code=404,
-            detail=f"The file with the file_id {file_id} does not exist.",
-        ) from object_not_found_error
+    except FileNotRegisteredError as error:
+        raise HttpFileNotFoundException(file_id) from error
+    except FileNotInInboxError as error:
+        raise HttpFileNotFoundException(file_id) from error
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

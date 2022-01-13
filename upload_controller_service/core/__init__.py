@@ -21,6 +21,7 @@ It should not contain any service API-related code.
 from .main import (  # noqa: F401
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
+    FileNotInInboxError,
     FileNotRegisteredError,
     check_uploaded_file,
     get_upload_url,
