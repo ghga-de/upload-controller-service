@@ -24,7 +24,7 @@ from ghga_service_chassis_lib.api import configure_app
 from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 
 from ..config import CONFIG, Config
-from ..core import check_uploaded_file, get_upload_url, FileNotRegisteredError
+from ..core import FileNotRegisteredError, check_uploaded_file, get_upload_url
 from ..dao.db import FileInfoNotFoundError
 from ..pubsub import publish_upload_received
 from .deps import get_config

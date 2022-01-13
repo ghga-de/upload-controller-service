@@ -15,7 +15,7 @@
 
 """Test the messaging API (pubsub)"""
 
-from typing import Any, Callable, Dict
+from datetime import datetime
 
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
@@ -30,27 +30,52 @@ from ..fixtures import (  # noqa: F401
     state,
 )
 
-# def test_subscribe_new_study_created(
-#     psql_fixture, s3_fixture, amqp_fixture
-# ):  # noqa: F811
-#     """Test `subscribe_new_study_created` function"""
 
-#     config = get_config(
-#         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
-#     )
+def test_subscribe_new_study_created(
+    psql_fixture,  # noqa: F811
+    s3_fixture,  # noqa: F811
+    amqp_fixture,  # noqa: F811
+):  # noqa: F811
+    """Test `subscribe_new_study_created` function"""
 
-#     # initialize upstream and downstream test services that will publish or receive
-#     # messages to or from this service:
-#     upstream_publisher = amqp_fixture.get_test_publisher(
-#         topic_name=DEFAULT_CONFIG.topic_name_new_study,
-#         message_schema=schemas.NEW_STUDY,
-#     )
+    config = get_config(
+        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
+    )
+    file_info = state.FILES["unknown"].file_info
 
-#     # publish a stage request:
-#     upstream_publisher.publish(upstream_message)
+    # build the upstream message:
+    now_isostring = datetime.utcnow().isoformat()
+    upstream_message = {
+        "study": {"id": file_info.grouping_label},
+        "associated_files": [
+            {
+                "file_id": file_info.file_id,
+                "md5_checksum": file_info.md5_checksum,
+                "size": str(file_info.size),
+                "file_name": file_info.file_name,
+                "creation_date": now_isostring,
+                "update_date": now_isostring,
+                "format": "yaml",
+            }
+        ],
+        "timestamp": now_isostring,
+    }
 
-#     # process the stage request:
-#     exec_with_timeout(
-#         func=lambda: subscribe_new_study_created(config=config, run_forever=False),
-#         timeout_after=2,
-#     )
+    # initialize upstream and downstream test services that will publish or receive
+    # messages to or from this service:
+    upstream_publisher = amqp_fixture.get_test_publisher(
+        topic_name=DEFAULT_CONFIG.topic_name_new_study,
+        message_schema=schemas.NEW_STUDY,
+    )
+
+    # publish a stage request:
+    upstream_publisher.publish(upstream_message)
+
+    # process the stage request:
+    exec_with_timeout(
+        func=lambda: subscribe_new_study_created(config=config, run_forever=False),
+        timeout_after=1000,
+    )
+
+    # check if file exists in db:
+    psql_fixture.database.get_file(file_info.file_id)

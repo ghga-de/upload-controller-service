@@ -127,6 +127,5 @@ FILES: Dict[str, FileState] = {
         already_uploaded=False,
         in_inbox=False,
         in_db=False,
-        message={"associated_files": []},
     ),
 }
