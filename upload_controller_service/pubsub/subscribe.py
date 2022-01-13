@@ -62,7 +62,7 @@ def subscribe_new_study_created(
     # create a topic object:
     topic = AmqpTopic(
         config=config,
-        topic_name=config.topic_name_study_created,
+        topic_name=config.topic_name_new_study,
         json_schema=schemas.NEW_STUDY,
     )
 

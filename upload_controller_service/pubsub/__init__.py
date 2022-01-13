@@ -18,3 +18,4 @@ Subpackage defining functions for publishing to or subscribing from
 asynchronous messaging topics.
 """
 from .publish import publish_upload_received  # noqa: F401
+from subscribe import subscribe_new_study_created  # noqa: F401

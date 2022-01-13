@@ -17,7 +17,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
@@ -46,6 +46,7 @@ class FileState:
         already_uploaded: bool,
         in_inbox: bool,
         in_db: bool = True,
+        message: Optional[dict] = None,
     ):
         """
         Initialize file state and create imputed attributes.
@@ -61,6 +62,9 @@ class FileState:
         self.in_inbox = in_inbox
         self.already_uploaded = already_uploaded
         self.in_db = in_db
+
+        if message is not None:
+            self.message = message
 
         # computed attributes:
         with open(self.file_path, "rb") as file:
@@ -123,5 +127,6 @@ FILES: Dict[str, FileState] = {
         already_uploaded=False,
         in_inbox=False,
         in_db=False,
+        message={"associated_files": []},
     ),
 }
