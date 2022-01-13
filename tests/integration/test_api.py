@@ -15,17 +15,54 @@
 
 """Test the api module"""
 
+import pytest
 from fastapi import status
-from fastapi.testclient import TestClient
 
-from upload_controller_service.api.main import app
+from ..fixtures import (  # noqa: F401
+    ApiTestClient,
+    get_config,
+    psql_fixture,
+    s3_fixture,
+    state,
+)
 
 
-def test_health():
-    """Test the index endpoint"""
+def test_get_health():
+    """Test the GET /health endpoint"""
 
-    client = TestClient(app)
+    client = ApiTestClient()
     response = client.get("/health")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "OK"}
+
+
+@pytest.mark.parametrize(
+    "file_state_name,expected_status_code",
+    [
+        ("in_db_only", status.HTTP_200_OK),
+        ("unknown", status.HTTP_404_NOT_FOUND),
+    ],
+)
+def test_get_presigned_post(
+    file_state_name: str,
+    expected_status_code: int,
+    s3_fixture,  # noqa: F811
+    psql_fixture,  # noqa: F811
+):
+    """Test the GET /presigned_post/{file_id} endpoint"""
+    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    file_state = state.FILES[file_state_name]
+
+    client = ApiTestClient(config=config)
+    response = client.get(f"/presigned_post/{file_state.file_info.file_id}")
+
+    assert response.status_code == expected_status_code
+
+    if expected_status_code == status.HTTP_200_OK:
+        response_body = response.json()
+        assert "presigned_post" in response_body
+        assert (
+            "url" in response_body["presigned_post"]
+            and "fields" in response_body["presigned_post"]
+        )

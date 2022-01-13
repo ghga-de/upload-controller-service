@@ -24,7 +24,7 @@ from ghga_service_chassis_lib.api import configure_app
 from ghga_service_chassis_lib.object_storage_dao import ObjectNotFoundError
 
 from ..config import CONFIG, Config
-from ..core import check_uploaded_file, get_upload_url
+from ..core import check_uploaded_file, get_upload_url, FileNotRegisteredError
 from ..dao.db import FileInfoNotFoundError
 from ..pubsub import publish_upload_received
 from .deps import get_config
@@ -52,7 +52,7 @@ async def get_presigned_post(
     # call core functionality
     try:
         url = get_upload_url(file_id=file_id, config=config)
-    except FileInfoNotFoundError as file_info_not_found_error:
+    except FileNotRegisteredError as file_info_not_found_error:
         raise HTTPException(
             status_code=404, detail="The submitted file_id does not exist."
         ) from file_info_not_found_error

@@ -18,4 +18,10 @@ This sub-package contains the main business functionality of this service.
 It should not contain any service API-related code.
 """
 
-from .main import check_uploaded_file, get_upload_url, handle_new_study  # noqa: F401
+from .main import (  # noqa: F401
+    FileAlreadyInInboxError,
+    FileAlreadyRegisteredError,
+    FileNotRegisteredError,
+    get_upload_url,
+    handle_new_study,
+)
