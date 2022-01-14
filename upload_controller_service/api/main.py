@@ -43,7 +43,7 @@ class HttpFileNotFoundException(HTTPException):
         """Construct message and init the exception."""
         super().__init__(
             status_code=404,
-            detail=f"The file with the file_id {file_id} does not exist.",
+            detail=f'The file with the file_id "{file_id}" does not exist.',
         )
 
 
@@ -72,14 +72,21 @@ async def get_presigned_post(
     return {"presigned_post": url}
 
 
-@app.get("/confirm_upload/{file_id}", summary="confirm_upload")
+@app.get(
+    "/confirm_upload/{file_id}",
+    summary="confirm_upload",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def confirm_upload(
     file_id: str,
     config: Config = Depends(get_config),
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
-    Returns 200, if the file exists in the inbox or database, 404.
+    Returns:
+        204 - if the file is registered and its content is in the inbox
+        404 - if the file is unkown
+        422 - if the file is registered and its content is not in the inbox
     """
 
     # call core functionality
@@ -92,6 +99,12 @@ async def confirm_upload(
     except FileNotRegisteredError as error:
         raise HttpFileNotFoundException(file_id) from error
     except FileNotInInboxError as error:
-        raise HttpFileNotFoundException(file_id) from error
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                'The file with id "{file_id}" is registered for upload'
+                + " but its content was not found in the inbox."
+            ),
+        ) from error
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

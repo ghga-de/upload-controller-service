@@ -23,3 +23,8 @@ BASE_DIR = Path(__file__).parent.resolve()
 def null_func(*args, **kwargs):
     """I am accepting any args and kwargs but I am doing nothing."""
     pass
+
+
+def is_success_http_code(http_code: int) -> bool:
+    """Checks if a http response code indicates success (a 2xx code)."""
+    return http_code >= 200 and http_code < 300

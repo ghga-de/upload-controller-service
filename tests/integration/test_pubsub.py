@@ -27,7 +27,6 @@ from upload_controller_service.pubsub import (
 )
 
 from ..fixtures import (  # noqa: F401
-    DEFAULT_CONFIG,
     amqp_fixture,
     get_config,
     psql_fixture,
@@ -68,7 +67,7 @@ def test_subscribe_new_study(
 
     # initialize upstream test service that will publish to this service:
     upstream_publisher = amqp_fixture.get_test_publisher(
-        topic_name=DEFAULT_CONFIG.topic_name_new_study,
+        topic_name=config.topic_name_new_study,
         message_schema=schemas.NEW_STUDY,
     )
 
@@ -95,20 +94,20 @@ def test_publish_upload_received(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
 
-    file_info = state.FILES["in_inbox"].file_info
+    file_id = state.FILES["in_inbox"].file_info.file_id
 
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
-        topic_name=DEFAULT_CONFIG.topic_name_upload_received,
+        topic_name=config.topic_name_upload_received,
         message_schema=schemas.UPLOAD_RECEIVED,
     )
 
     check_uploaded_file(
-        file_info.file_id,
+        file_id,
         publish_upload_received=publish_upload_received,
         config=config,
     )
 
     # receive the published message:
     downstream_message = downstream_subscriber.subscribe(timeout_after=2)
-    assert downstream_message["file_id"] == file_info.file_id
+    assert downstream_message["file_id"] == file_id
