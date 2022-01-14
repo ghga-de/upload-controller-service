@@ -20,7 +20,7 @@ s3_inbox_bucket_id: inbox
 s3_secret_access_key: test
 s3_session_token: null
 service_name: upload_controller_service
-topic_name_study_created: new_study_created
+topic_name_new_study: new_study_created
 topic_name_upload_received: file_upload_received
 workers: 1
 
