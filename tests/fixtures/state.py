@@ -17,7 +17,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
@@ -46,6 +46,7 @@ class FileState:
         already_uploaded: bool,
         in_inbox: bool,
         in_db: bool = True,
+        message: Optional[dict] = None,
     ):
         """
         Initialize file state and create imputed attributes.
@@ -61,6 +62,9 @@ class FileState:
         self.in_inbox = in_inbox
         self.already_uploaded = already_uploaded
         self.in_db = in_db
+
+        if message is not None:
+            self.message = message
 
         # computed attributes:
         with open(self.file_path, "rb") as file:
@@ -97,21 +101,21 @@ FILES: Dict[str, FileState] = {
     "in_inbox": FileState(
         id=get_file_id_example(1),
         grouping_label=get_grouping_label_example(1),
-        file_path=TEST_FILE_PATHS[1],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=True,
     ),
     "uploaded_but_not_in_inbox": FileState(
         id=get_file_id_example(2),
         grouping_label=get_grouping_label_example(2),
-        file_path=TEST_FILE_PATHS[2],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=False,
     ),
     "db_inconsistency": FileState(
         id=get_file_id_example(3),
         grouping_label=get_grouping_label_example(3),
-        file_path=TEST_FILE_PATHS[3],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=True,
         in_inbox=True,
         in_db=False,
@@ -119,7 +123,7 @@ FILES: Dict[str, FileState] = {
     "unknown": FileState(
         id=get_file_id_example(4),
         grouping_label=get_grouping_label_example(4),
-        file_path=TEST_FILE_PATHS[4],
+        file_path=TEST_FILE_PATHS[0],
         already_uploaded=False,
         in_inbox=False,
         in_db=False,

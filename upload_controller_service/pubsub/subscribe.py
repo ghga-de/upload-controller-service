@@ -36,15 +36,15 @@ def process_new_study_message(message: dict, config):
     """
 
     files = message["associated_files"]
-    grouping_label = message["study_id"]
+    grouping_label = message["study"]["id"]
 
     study_files = [
         FileInfoInternal(
-            file_id=file.file_id,
+            file_id=file["file_id"],
             grouping_label=grouping_label,
-            md5_checksum=file.md5_checksum,
-            size=file.file_size,
-            file_name=file.file_name,
+            md5_checksum=file["md5_checksum"],
+            size=int(file["size"]),
+            file_name=file["file_name"],
         )
         for file in files
     ]
@@ -52,9 +52,7 @@ def process_new_study_message(message: dict, config):
     handle_new_study(study_files=study_files, config=config)
 
 
-def subscribe_new_study_created(
-    config: Config = CONFIG, run_forever: bool = True
-) -> None:
+def subscribe_new_study(config: Config = CONFIG, run_forever: bool = True) -> None:
     """
     Runs a subscribing process for the "new_study_created" topic
     """
@@ -62,7 +60,7 @@ def subscribe_new_study_created(
     # create a topic object:
     topic = AmqpTopic(
         config=config,
-        topic_name=config.topic_name_study_created,
+        topic_name=config.topic_name_new_study,
         json_schema=schemas.NEW_STUDY,
     )
 

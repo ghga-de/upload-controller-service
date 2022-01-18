@@ -18,14 +18,51 @@
 
 from typing import Callable, List
 
-from ghga_service_chassis_lib.object_storage_dao import (
-    BucketNotFoundError,
-    ObjectNotFoundError,
-)
+from upload_controller_service.dao.db import FileInfoNotFoundError
 
 from ..config import CONFIG, Config
-from ..dao import Database, ObjectStorage
+from ..dao import (
+    Database,
+    FileInfoAlreadyExistsError,
+    ObjectAlreadyExistsError,
+    ObjectStorage,
+)
 from ..models import FileInfoInternal
+
+
+class FileAlreadyInInboxError(RuntimeError):
+    """Thrown when a file is unexpectedly already in the inbox."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} is already in the inbox."
+        super().__init__(message)
+
+
+class FileNotInInboxError(RuntimeError):
+    """Thrown when a file is unexpectedly not found in the inbox."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} not in the inbox."
+        super().__init__(message)
+
+
+class FileAlreadyRegisteredError(RuntimeError):
+    """Thrown when a file is unexpectedly already registered."""
+
+    def __init__(self, file_id: str):
+        message = (
+            f"The file with external id {file_id} has already been"
+            + " registered for upload."
+        )
+        super().__init__(message)
+
+
+class FileNotRegisteredError(RuntimeError):
+    """Thrown when a file is unexpectedly not registered."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} has not been registered yet."
+        super().__init__(message)
 
 
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
@@ -35,7 +72,10 @@ def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFI
 
     for file in study_files:
         with Database(config=config) as database:
-            database.register_file(file)
+            try:
+                database.register_file(file)
+            except FileInfoAlreadyExistsError as error:
+                raise FileAlreadyRegisteredError(file_id=file.file_id) from error
 
 
 def get_upload_url(file_id: str, config: Config = CONFIG):
@@ -44,18 +84,24 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
     post url for an s3 staging bucket
     """
 
-    # Check if file is in db, will throw an exception if not
+    # Check if file is in db
     with Database(config=config) as database:
-        database.get_file(file_id=file_id)
+        try:
+            database.get_file(file_id=file_id)
+        except FileInfoNotFoundError as error:
+            raise FileNotRegisteredError(file_id=file_id) from error
 
     # Create presigned post for file_id
     with ObjectStorage(config=config) as storage:
         if not storage.does_bucket_exist(bucket_id=config.s3_inbox_bucket_id):
             storage.create_bucket(config.s3_inbox_bucket_id)
 
-        presigned_post = storage.get_object_upload_url(
-            bucket_id=config.s3_inbox_bucket_id, object_id=file_id
-        )
+        try:
+            presigned_post = storage.get_object_upload_url(
+                bucket_id=config.s3_inbox_bucket_id, object_id=file_id
+            )
+        except ObjectAlreadyExistsError as error:
+            raise FileAlreadyInInboxError(file_id=file_id) from error
 
     return presigned_post
 
@@ -66,20 +112,21 @@ def check_uploaded_file(
     config: Config = CONFIG,
 ):
     """
-    Checks if the file with the specified file_id was uploaded
+    Checks if the file with the specified file_id was uploaded. Throws an
+    FileNotInInboxError if this is not the case.
     """
 
     with Database(config=config) as database:
-        file = database.get_file(file_id=file_id)
+        try:
+            file = database.get_file(file_id=file_id)
+        except FileInfoNotFoundError as error:
+            raise FileNotRegisteredError(file_id=file_id) from error
 
     with ObjectStorage(config=config) as storage:
-        if not storage.does_bucket_exist(bucket_id=config.inbox_bucket_name):
-            raise BucketNotFoundError
-
         if not storage.does_object_exist(
             object_id=file_id,
-            bucket_id=config.inbox_bucket_name,
+            bucket_id=config.s3_inbox_bucket_id,
         ):
-            raise ObjectNotFoundError
+            raise FileNotInInboxError(file_id=file_id)
 
     publish_upload_received(file, config)

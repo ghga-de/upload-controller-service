@@ -203,11 +203,11 @@
       ],
       "type": "string"
     },
-    "topic_name_study_created": {
-      "title": "Topic Name Study Created",
+    "topic_name_new_study": {
+      "title": "Topic Name New Study",
       "default": "new_study_created",
       "env_names": [
-        "upload_controller_service_topic_name_study_created"
+        "upload_controller_service_topic_name_new_study"
       ],
       "type": "string"
     }

@@ -36,10 +36,10 @@ openapi: 3.0.2
 paths:
   /confirm_upload/{file_id}:
     get:
-      description: 'Requesting a confirmation of the upload of a specific file using
-        the file id.
-
-        Returns 200, if the file exists in the inbox, 404 if not'
+      description: "Requesting a confirmation of the upload of a specific file using\
+        \ the file id.\nReturns:\n    204 - if the file is registered and its content\
+        \ is in the inbox\n    404 - if the file is unkown\n    422 - if the file\
+        \ is registered and its content is not in the inbox"
       operationId: confirm_upload_confirm_upload__file_id__get
       parameters:
       - in: path
@@ -49,10 +49,7 @@ paths:
           title: File Id
           type: string
       responses:
-        '200':
-          content:
-            application/json:
-              schema: {}
+        '204':
           description: Successful Response
         '422':
           content:

@@ -62,8 +62,8 @@ class DatabaseDao(DaoGenericBase):
     """
     A DAO base class for interacting with the database.
     It might throw following exception to communicate selected error events:
-        - FileNotFoundError
-        - FileAlreadyExistsError
+        - FileInfoNotFoundError
+        - FileInfoAlreadyExistsError
     """
 
     def get_file(self, file_id: str) -> models.FileInfoInternal:
@@ -132,7 +132,7 @@ class PostgresDatabase(DatabaseDao):
         # check for collisions in the database:
         try:
             self._get_orm_file(file_id=file.file_id)
-        except FileNotFoundError:
+        except FileInfoNotFoundError:
             # this is expected
             pass
         else:
