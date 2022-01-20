@@ -66,7 +66,7 @@ class DatabaseDao(DaoGenericBase):
         - FileInfoAlreadyExistsError
     """
 
-    def get_file(self, file_id: str) -> models.FileInfoInternal:
+    def get_file(self, file_id: str) -> models.FileInfoExternal:
         """Get file from the database"""
         ...
 
@@ -120,11 +120,11 @@ class PostgresDatabase(DatabaseDao):
 
         return orm_file
 
-    def get_file(self, file_id: str) -> models.FileInfoInternal:
+    def get_file(self, file_id: str) -> models.FileInfoExternal:
         """Get file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
-        return models.FileInfoInternal.from_orm(orm_file)
+        return models.FileInfoExternal.from_orm(orm_file)
 
     def register_file(self, file: models.FileInfoInternal) -> None:
         """Register a new file to the database."""

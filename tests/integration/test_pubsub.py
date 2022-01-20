@@ -15,7 +15,7 @@
 
 """Test the messaging API (pubsub)"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
@@ -48,14 +48,14 @@ def test_subscribe_new_study(
     file_info = state.FILES["unknown"].file_info
 
     # build the upstream message:
-    now_isostring = datetime.utcnow().isoformat()
+    now_isostring = datetime.now(timezone.utc).isoformat()
     upstream_message = {
         "study": {"id": file_info.grouping_label},
         "associated_files": [
             {
                 "file_id": file_info.file_id,
                 "md5_checksum": file_info.md5_checksum,
-                "size": str(file_info.size),
+                "size": file_info.size,
                 "file_name": file_info.file_name,
                 "creation_date": now_isostring,
                 "update_date": now_isostring,

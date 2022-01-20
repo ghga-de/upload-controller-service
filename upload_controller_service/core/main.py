@@ -27,7 +27,7 @@ from ..dao import (
     ObjectAlreadyExistsError,
     ObjectStorage,
 )
-from ..models import FileInfoInternal
+from ..models import FileInfoExternal, FileInfoInternal
 
 
 class FileAlreadyInInboxError(RuntimeError):
@@ -108,7 +108,7 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
 
 def check_uploaded_file(
     file_id: str,
-    publish_upload_received: Callable[[FileInfoInternal, Config], None],
+    publish_upload_received: Callable[[FileInfoExternal, Config], None],
     config: Config = CONFIG,
 ):
     """

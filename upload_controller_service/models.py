@@ -33,6 +33,11 @@ class FileInfoExternal(BaseModel):
     update_date: datetime
     format: str
 
+    class Config:
+        """Additional pydantic configs."""
+
+        orm_mode = True
+
 
 class FileInfoInternal(FileInfoExternal):
     """
@@ -41,8 +46,3 @@ class FileInfoInternal(FileInfoExternal):
     """
 
     file_name: str
-
-    class Config:
-        """Additional pydantic configs."""
-
-        orm_mode = True

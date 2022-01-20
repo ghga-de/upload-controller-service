@@ -43,8 +43,11 @@ def process_new_study_message(message: dict, config):
             file_id=file["file_id"],
             grouping_label=grouping_label,
             md5_checksum=file["md5_checksum"],
-            size=int(file["size"]),
+            size=file["size"],
             file_name=file["file_name"],
+            creation_date=file["creation_date"],
+            update_date=file["update_date"],
+            format=file["format"],
         )
         for file in files
     ]
