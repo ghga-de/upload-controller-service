@@ -17,12 +17,12 @@
 
 from datetime import datetime
 
+from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
 from upload_controller_service.core.main import check_uploaded_file
 from upload_controller_service.pubsub import (
     publish_upload_received,
-    schemas,
     subscribe_new_study,
 )
 
@@ -68,7 +68,7 @@ def test_subscribe_new_study(
     # initialize upstream test service that will publish to this service:
     upstream_publisher = amqp_fixture.get_test_publisher(
         topic_name=config.topic_name_new_study,
-        message_schema=schemas.NEW_STUDY,
+        message_schema=schemas.SCHEMAS["new_study_created"],
     )
 
     # publish a stage request:
@@ -99,7 +99,7 @@ def test_publish_upload_received(
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
         topic_name=config.topic_name_upload_received,
-        message_schema=schemas.UPLOAD_RECEIVED,
+        message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
     check_uploaded_file(

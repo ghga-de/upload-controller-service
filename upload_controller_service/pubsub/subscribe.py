@@ -19,12 +19,12 @@ Subscriptions to async topics
 
 from pathlib import Path
 
+from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from ..config import CONFIG, Config
 from ..core import handle_new_study
 from ..models import FileInfoInternal
-from . import schemas
 
 HERE = Path(__file__).parent.resolve()
 
@@ -61,7 +61,7 @@ def subscribe_new_study(config: Config = CONFIG, run_forever: bool = True) -> No
     topic = AmqpTopic(
         config=config,
         topic_name=config.topic_name_new_study,
-        json_schema=schemas.NEW_STUDY,
+        json_schema=schemas.SCHEMAS["new_study_created"],
     )
 
     # subscribe:

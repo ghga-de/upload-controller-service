@@ -17,8 +17,7 @@
 
 import pytest
 from fastapi import status
-
-from upload_controller_service.pubsub import schemas
+from ghga_message_schemas import schemas
 
 from ..fixtures import (  # noqa: F401
     ApiTestClient,
@@ -96,7 +95,7 @@ def test_confirm_upload(
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
         topic_name=config.topic_name_upload_received,
-        message_schema=schemas.UPLOAD_RECEIVED,
+        message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
     # make request:

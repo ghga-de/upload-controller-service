@@ -19,11 +19,11 @@ Publish asynchronous topics
 
 from datetime import datetime
 
+from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from .. import models
 from ..config import CONFIG, Config
-from . import schemas
 
 
 def publish_upload_received(file: models.FileInfoInternal, config: Config = CONFIG):
@@ -43,7 +43,7 @@ def publish_upload_received(file: models.FileInfoInternal, config: Config = CONF
     topic = AmqpTopic(
         config=config,
         topic_name=config.topic_name_upload_received,
-        json_schema=schemas.UPLOAD_RECEIVED,
+        json_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
     topic.publish(message)
