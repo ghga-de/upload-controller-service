@@ -15,21 +15,31 @@
 
 """Defines dataclasses for holding business-logic data"""
 
-from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
 
-class FileInfoInternal(BaseModel):
+class FileInfoExternal(BaseModel):
     """
-    A model containing all the metadata submitted for one file from the metadata service
-    with the new_study_created topic.
+    A model containing all the metadata needed to pass it on to other microservices
     """
 
     grouping_label: str
     file_id: str
     md5_checksum: str
-    size: Optional[int]
+    size: int
+    creation_date: datetime
+    update_date: datetime
+    format: str
+
+
+class FileInfoInternal(FileInfoExternal):
+    """
+    A model containing all the metadata submitted for one file from the metadata service
+    with the new_study_created topic.
+    """
+
     file_name: str
 
     class Config:

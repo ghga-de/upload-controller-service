@@ -63,7 +63,7 @@ class FileInfo(Base):
     )
     size = Column(
         Integer,
-        nullable=True,
+        nullable=False,
         default=None,
         doc=("Size of the file content in bytes."),
     )
