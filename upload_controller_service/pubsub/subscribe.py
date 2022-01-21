@@ -88,7 +88,9 @@ def subscribe_new_study(config: Config = CONFIG, run_forever: bool = True) -> No
     )
 
 
-def subscribe_file_regitered(config: Config = CONFIG, run_forever: bool = True) -> None:
+def subscribe_file_registered(
+    config: Config = CONFIG, run_forever: bool = True
+) -> None:
     """
     Runs a subscribing process for the "new_study_created" topic
     """
