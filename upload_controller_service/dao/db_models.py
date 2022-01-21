@@ -63,7 +63,7 @@ class FileInfo(Base):
     )
     size = Column(
         Integer,
-        nullable=True,
+        nullable=False,
         default=None,
         doc=("Size of the file content in bytes."),
     )
@@ -72,8 +72,21 @@ class FileInfo(Base):
         nullable=False,
         doc=("ID used to refer to the study this file belongs to"),
     )
-    registration_date = Column(
+    creation_date = Column(
         DateTime,
-        nullable=True,
-        doc=("Date/time when the file was registered."),
+        nullable=False,
+        unique=False,
+        doc="Timestamp (in ISO 8601 format) when the entity was created.",
+    )
+    update_date = Column(
+        DateTime,
+        nullable=False,
+        unique=False,
+        doc="Timestamp (in ISO 8601 format) when the entity was updated.",
+    )
+    format = Column(
+        String,
+        nullable=False,
+        unique=False,
+        doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
     )

@@ -25,9 +25,10 @@ from ..dao import (
     Database,
     FileInfoAlreadyExistsError,
     ObjectAlreadyExistsError,
+    ObjectNotFoundError,
     ObjectStorage,
 )
-from ..models import FileInfoInternal
+from ..models import FileInfoExternal, FileInfoInternal
 
 
 class FileAlreadyInInboxError(RuntimeError):
@@ -78,6 +79,22 @@ def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFI
                 raise FileAlreadyRegisteredError(file_id=file.file_id) from error
 
 
+def handle_file_registered(file_id: str, config: Config = CONFIG):
+    """
+    Delete the file from inbox, flag it as registered in the database
+    """
+
+    # Flagging will be done in GDEV-478
+
+    with ObjectStorage(config=config) as storage:
+        try:
+            storage.delete_object(
+                bucket_id=config.s3_inbox_bucket_id, object_id=file_id
+            )
+        except ObjectNotFoundError as error:
+            raise FileNotInInboxError(file_id=file_id) from error
+
+
 def get_upload_url(file_id: str, config: Config = CONFIG):
     """
     Checks if the file_id is in the database, the proceeds to create a presigned
@@ -108,7 +125,7 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
 
 def check_uploaded_file(
     file_id: str,
-    publish_upload_received: Callable[[FileInfoInternal, Config], None],
+    publish_upload_received: Callable[[FileInfoExternal, Config], None],
     config: Config = CONFIG,
 ):
     """

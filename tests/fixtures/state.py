@@ -16,6 +16,7 @@
 """Test data"""
 
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -71,12 +72,17 @@ class FileState:
             self.content = file.read()
 
         self.md5 = calc_md5(self.content)
+        filename, file_extension = os.path.splitext(self.file_path)
+
         self.file_info = models.FileInfoInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
             md5_checksum=self.md5,
             size=len(self.content),
             file_name=os.path.basename(self.file_path),
+            format=file_extension,
+            creation_date=datetime.now(timezone.utc),
+            update_date=datetime.now(timezone.utc),
         )
 
         self.storage_objects: List[ObjectFixture] = []

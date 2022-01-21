@@ -16,7 +16,6 @@
 """Fixtures for testing the PostgreSQL functionalities"""
 
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Generator, List
 
 import pytest
@@ -55,7 +54,6 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
         for existing_file_info in file_infos:
             param_dict = {
                 **existing_file_info.dict(),
-                "registration_date": datetime.now(),
             }
             orm_entry = db_models.FileInfo(**param_dict)
             session.add(orm_entry)
