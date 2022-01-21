@@ -25,5 +25,6 @@ from .main import (  # noqa: F401
     FileNotRegisteredError,
     check_uploaded_file,
     get_upload_url,
+    handle_file_registered,
     handle_new_study,
 )
