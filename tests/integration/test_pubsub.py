@@ -128,7 +128,7 @@ def test_file_registered(
 
     # now the file should be deleted:
     # with pytest.raises(ObjectNotFoundError):
-    assert s3_fixture.storage.does_object_exist(
+    assert not s3_fixture.storage.does_object_exist(
         bucket_id=config.s3_inbox_bucket_id, object_id=file_info.file_id
     )
 

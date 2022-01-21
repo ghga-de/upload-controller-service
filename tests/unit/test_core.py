@@ -26,6 +26,7 @@ from upload_controller_service.core.main import (
     FileNotRegisteredError,
     check_uploaded_file,
     get_upload_url,
+    handle_file_registered,
     handle_new_study,
 )
 
@@ -52,6 +53,38 @@ def test_handle_new_study(
         run()
         # check if file exists in db:
         psql_fixture.database.get_file(file_state.file_info.file_id)
+    else:
+        with pytest.raises(expected_exception):
+            run()
+
+
+@pytest.mark.parametrize(
+    "file_state_name,expected_exception",
+    [
+        ("in_db_only", FileNotInInboxError),
+        ("unknown", FileNotInInboxError),
+        ("in_inbox", None),
+    ],
+)
+def test_handle_file_registered(
+    file_state_name: str,
+    expected_exception: Optional[Type[BaseException]],
+    psql_fixture,  # noqa: F811
+    s3_fixture,  # noqa: F811
+):
+    """Test the `handle_file_registered` function."""
+    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    file_state = state.FILES[file_state_name]
+
+    run = lambda: handle_file_registered(
+        file_id=file_state.file_info.file_id, config=config
+    )
+    if expected_exception is None:
+        run()
+        # check if file exists in db:
+        assert not s3_fixture.storage.does_object_exist(
+            bucket_id=config.s3_inbox_bucket_id, object_id=file_state.file_info.file_id
+        )
     else:
         with pytest.raises(expected_exception):
             run()

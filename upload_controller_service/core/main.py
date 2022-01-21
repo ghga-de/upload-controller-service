@@ -25,6 +25,7 @@ from ..dao import (
     Database,
     FileInfoAlreadyExistsError,
     ObjectAlreadyExistsError,
+    ObjectNotFoundError,
     ObjectStorage,
 )
 from ..models import FileInfoExternal, FileInfoInternal
@@ -90,7 +91,7 @@ def handle_file_registered(file_id: str, config: Config = CONFIG):
             storage.delete_object(
                 bucket_id=config.s3_inbox_bucket_id, object_id=file_id
             )
-        except FileNotInInboxError as error:
+        except ObjectNotFoundError as error:
             raise FileNotInInboxError(file_id=file_id) from error
 
 
