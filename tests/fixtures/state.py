@@ -24,6 +24,7 @@ from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, c
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
 from upload_controller_service import models
+from upload_controller_service.dao.db_models import UploadState
 
 from .config import DEFAULT_CONFIG
 
@@ -74,6 +75,13 @@ class FileState:
         self.md5 = calc_md5(self.content)
         filename, file_extension = os.path.splitext(self.file_path)
 
+        state = UploadState.REGISTERED
+
+        if in_inbox:
+            state = UploadState.UPLOADED
+        if already_uploaded:
+            state = UploadState.COMPLETED
+
         self.file_info = models.FileInfoInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
@@ -83,6 +91,7 @@ class FileState:
             format=file_extension,
             creation_date=datetime.now(timezone.utc),
             update_date=datetime.now(timezone.utc),
+            state=state,
         )
 
         self.storage_objects: List[ObjectFixture] = []

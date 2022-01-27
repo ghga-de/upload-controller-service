@@ -29,9 +29,10 @@ Base: DeclarativeMeta = declarative_base()
 class UploadState(enum.Enum):
 
     """
-    The current upload state. Can be pending (no information),
-    confirmed (the user has confirmed the upload)
-    or registered (the file has been registered with the upload-controller).
+    The current upload state. Can be registered (no information),
+    pending (the user has requested an upload url),
+    uploaded (the user has confirmed the upload),
+    or registered (the file has been registered with the internal-file-registry).
     """
 
     REGISTERED = ("registered",)
@@ -107,7 +108,7 @@ class FileInfo(Base):
     )
     state = Column(
         Enum(UploadState),
-        default=UploadState.PENDING,
+        default=UploadState.REGISTERED,
         nullable=False,
         unique=False,
         doc=(

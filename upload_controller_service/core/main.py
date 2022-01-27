@@ -28,6 +28,7 @@ from ..dao import (
     ObjectNotFoundError,
     ObjectStorage,
 )
+from ..dao.db_models import UploadState
 from ..models import FileInfoExternal, FileInfoInternal
 
 
@@ -94,6 +95,12 @@ def handle_file_registered(file_id: str, config: Config = CONFIG):
         except ObjectNotFoundError as error:
             raise FileNotInInboxError(file_id=file_id) from error
 
+    with Database(config=config) as database:
+        try:
+            database.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
+        except FileInfoNotFoundError as error:
+            raise FileNotRegisteredError(file_id=file_id) from error
+
 
 def get_upload_url(file_id: str, config: Config = CONFIG):
     """
@@ -105,6 +112,8 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
     with Database(config=config) as database:
         try:
             database.get_file(file_id=file_id)
+            database.update_file_state(file_id=file_id, state=UploadState.PENDING)
+
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
@@ -136,6 +145,7 @@ def check_uploaded_file(
     with Database(config=config) as database:
         try:
             file = database.get_file(file_id=file_id)
+            database.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 

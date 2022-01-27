@@ -19,6 +19,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from .dao.db_models import UploadState
+
 
 class FileInfoExternal(BaseModel):
     """
@@ -32,6 +34,7 @@ class FileInfoExternal(BaseModel):
     creation_date: datetime
     update_date: datetime
     format: str
+    state: UploadState = UploadState.REGISTERED
 
     class Config:
         """Additional pydantic configs."""
