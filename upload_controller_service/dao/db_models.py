@@ -15,14 +15,29 @@
 
 """Defines all database specific ORM models"""
 
+import enum
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Enum, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 Base: DeclarativeMeta = declarative_base()
+
+
+class UploadState(enum.Enum):
+
+    """
+    The current upload state. Can be pending (no information),
+    confirmed (the user has confirmed the upload)
+    or registered (the file has been registered with the upload-controller).
+    """
+
+    REGISTERED = ("registered",)
+    PENDING = ("pending",)
+    UPLOADED = ("uploaded",)
+    COMPLETED = ("completed",)
 
 
 class FileInfo(Base):
@@ -89,4 +104,15 @@ class FileInfo(Base):
         nullable=False,
         unique=False,
         doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
+    )
+    state = Column(
+        Enum(UploadState),
+        default=UploadState.PENDING,
+        nullable=False,
+        unique=False,
+        doc=(
+            "The current upload state. Can be pending (no information), "
+            + "confirmed (the user has confirmed the upload) "
+            + "or registered (the file has been registered with the upload-controller)."
+        ),
     )

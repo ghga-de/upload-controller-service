@@ -115,7 +115,7 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
 
         try:
             presigned_post = storage.get_object_upload_url(
-                bucket_id=config.s3_inbox_bucket_id, object_id=file_id
+                bucket_id=config.s3_inbox_bucket_id, object_id=file_id, expires_after=10
             )
         except ObjectAlreadyExistsError as error:
             raise FileAlreadyInInboxError(file_id=file_id) from error
