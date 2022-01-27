@@ -152,8 +152,8 @@ class PostgresDatabase(DatabaseDao):
     def update_file_state(self, file_id: str, state: db_models.UploadState) -> None:
         """Update the file state of a file in the database."""
 
-        orm_file: Any = self._get_orm_file(file_id=file_id)
-        orm_file.state = state
+        orm_file = self._get_orm_file(file_id=file_id)
+        orm_file.state = state  # type: ignore
 
     def unregister_file(self, file_id: str) -> None:
         """
