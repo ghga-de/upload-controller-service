@@ -22,6 +22,7 @@ from .main import (  # noqa: F401
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
     check_uploaded_file,
     get_upload_url,

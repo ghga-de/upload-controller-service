@@ -66,6 +66,14 @@ class FileNotRegisteredError(RuntimeError):
         super().__init__(message)
 
 
+class FileNotReadyForConfirmUpload(RuntimeError):
+    """Thrown when a file is not set to 'pending' when trying to confirm."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} is not set to 'pending'."
+        super().__init__(message)
+
+
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
     """
     Put the information for files into the database
@@ -144,6 +152,8 @@ def check_uploaded_file(
     with Database(config=config) as database:
         try:
             file = database.get_file(file_id=file_id)
+            if file.state is not UploadState.PENDING:
+                raise FileNotReadyForConfirmUpload(file_id=file_id)
             database.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error

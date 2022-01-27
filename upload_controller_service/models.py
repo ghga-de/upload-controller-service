@@ -44,7 +44,7 @@ class FileInfoPatchState(BaseModel):
     state: UploadState = UploadState.REGISTERED
 
 
-class FileInfoExternal(BaseModel):
+class FileInfoExternal(FileInfoPatchState):
     """
     A model containing all the metadata needed to pass it on to other microservices
     """
