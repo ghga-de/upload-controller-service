@@ -28,8 +28,7 @@ from ..dao import (
     ObjectNotFoundError,
     ObjectStorage,
 )
-from ..dao.db_models import UploadState
-from ..models import FileInfoExternal, FileInfoInternal
+from ..models import FileInfoExternal, FileInfoInternal, UploadState
 
 
 class FileAlreadyInInboxError(RuntimeError):

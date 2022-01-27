@@ -16,10 +16,32 @@
 """Defines dataclasses for holding business-logic data"""
 
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel
 
-from .dao.db_models import UploadState
+
+class UploadState(Enum):
+
+    """
+    The current upload state. Can be registered (no information),
+    pending (the user has requested an upload url),
+    uploaded (the user has confirmed the upload),
+    or registered (the file has been registered with the internal-file-registry).
+    """
+
+    REGISTERED = ("registered",)
+    PENDING = ("pending",)
+    UPLOADED = ("uploaded",)
+    COMPLETED = ("completed",)
+
+
+class FileInfoPatchState(BaseModel):
+    """
+    A model containing all the metadata needed to perform a patch on an orm field
+    """
+
+    state: UploadState = UploadState.REGISTERED
 
 
 class FileInfoExternal(BaseModel):
@@ -34,7 +56,6 @@ class FileInfoExternal(BaseModel):
     creation_date: datetime
     update_date: datetime
     format: str
-    state: UploadState = UploadState.REGISTERED
 
     class Config:
         """Additional pydantic configs."""

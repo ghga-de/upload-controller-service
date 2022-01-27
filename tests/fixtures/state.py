@@ -23,8 +23,7 @@ from typing import Dict, List, Optional
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
-from upload_controller_service import models
-from upload_controller_service.dao.db_models import UploadState
+from upload_controller_service.models import FileInfoInternal, UploadState
 
 from .config import DEFAULT_CONFIG
 
@@ -82,7 +81,7 @@ class FileState:
         if already_uploaded:
             state = UploadState.COMPLETED
 
-        self.file_info = models.FileInfoInternal(
+        self.file_info = FileInfoInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
             md5_checksum=self.md5,

@@ -72,11 +72,17 @@ def test_get_presigned_post(
 
 
 @pytest.mark.parametrize(
-    "file_state_name,expected_status_code",
+    "file_state_name,expected_status_code,json_body",
     [
-        ("in_inbox", status.HTTP_204_NO_CONTENT),
-        ("unknown", status.HTTP_404_NOT_FOUND),
-        ("in_db_only", status.HTTP_422_UNPROCESSABLE_ENTITY),
+        ("in_inbox", status.HTTP_204_NO_CONTENT, {"state": "uploaded"}),
+        ("unknown", status.HTTP_404_NOT_FOUND, {"state": "uploaded"}),
+        ("in_db_only", status.HTTP_422_UNPROCESSABLE_ENTITY, {"state": "uploaded"}),
+        ("in_inbox", status.HTTP_400_BAD_REQUEST, {"state": "completed"}),
+        (
+            "in_inbox",
+            status.HTTP_400_BAD_REQUEST,
+            {"state": "uploaded", "file_id": "test123"},
+        ),
     ],
 )
 def test_confirm_upload(

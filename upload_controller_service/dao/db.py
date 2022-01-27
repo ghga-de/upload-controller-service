@@ -74,7 +74,7 @@ class DatabaseDao(DaoGenericBase):
         """Register a new file to the database."""
         ...
 
-    def update_file_state(self, file_id: str, state: db_models.UploadState) -> None:
+    def update_file_state(self, file_id: str, state: models.UploadState) -> None:
         """Update the file state of a file in the database."""
         ...
 
