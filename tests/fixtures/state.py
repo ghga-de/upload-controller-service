@@ -44,25 +44,23 @@ class FileState:
         id: str,
         grouping_label: str,
         file_path: Path,
-        already_uploaded: bool,
         in_inbox: bool,
         in_db: bool = True,
         message: Optional[dict] = None,
+        state: UploadState = UploadState.REGISTERED,
     ):
         """
         Initialize file state and create imputed attributes.
-        Please specify whether the file has been already uploaded (`already_uploaded`)
-        and whether the file is available in the inbox (`in_inbox`).
-        These options are separate because, after an uploaded file has been processed by
-        the downstream service, it will be removed from the inbox but stays marked as
-        `already_uploaded`.
+        Please specify whether the file is available in the inbox (`in_inbox`) and
+        specify the current file state in the database.
+
         """
         self.id = id
         self.grouping_label = grouping_label
         self.file_path = file_path
         self.in_inbox = in_inbox
-        self.already_uploaded = already_uploaded
         self.in_db = in_db
+        self.state = state
 
         if message is not None:
             self.message = message
@@ -74,13 +72,6 @@ class FileState:
         self.md5 = calc_md5(self.content)
         filename, file_extension = os.path.splitext(self.file_path)
 
-        state = UploadState.REGISTERED
-
-        if in_inbox:
-            state = UploadState.UPLOADED
-        if already_uploaded:
-            state = UploadState.COMPLETED
-
         self.file_info = FileInfoInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
@@ -90,7 +81,7 @@ class FileState:
             format=file_extension,
             creation_date=datetime.now(timezone.utc),
             update_date=datetime.now(timezone.utc),
-            state=state,
+            state=self.state,
         )
 
         self.storage_objects: List[ObjectFixture] = []
@@ -109,28 +100,27 @@ FILES: Dict[str, FileState] = {
         id=get_file_id_example(0),
         grouping_label=get_grouping_label_example(0),
         file_path=TEST_FILE_PATHS[0],
-        already_uploaded=False,
         in_inbox=False,
+        state=UploadState.REGISTERED,
     ),
     "in_inbox": FileState(
         id=get_file_id_example(1),
         grouping_label=get_grouping_label_example(1),
         file_path=TEST_FILE_PATHS[0],
-        already_uploaded=True,
         in_inbox=True,
+        state=UploadState.PENDING,
     ),
     "uploaded_but_not_in_inbox": FileState(
         id=get_file_id_example(2),
         grouping_label=get_grouping_label_example(2),
         file_path=TEST_FILE_PATHS[0],
-        already_uploaded=True,
         in_inbox=False,
+        state=UploadState.COMPLETED,
     ),
     "db_inconsistency": FileState(
         id=get_file_id_example(3),
         grouping_label=get_grouping_label_example(3),
         file_path=TEST_FILE_PATHS[0],
-        already_uploaded=True,
         in_inbox=True,
         in_db=False,
     ),
@@ -138,8 +128,14 @@ FILES: Dict[str, FileState] = {
         id=get_file_id_example(4),
         grouping_label=get_grouping_label_example(4),
         file_path=TEST_FILE_PATHS[0],
-        already_uploaded=False,
         in_inbox=False,
         in_db=False,
+    ),
+    "in_inbox_confirmed": FileState(
+        id=get_file_id_example(5),
+        grouping_label=get_grouping_label_example(5),
+        file_path=TEST_FILE_PATHS[0],
+        in_inbox=True,
+        state=UploadState.UPLOADED,
     ),
 }

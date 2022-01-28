@@ -27,6 +27,21 @@ from ..models import UploadState
 Base: DeclarativeMeta = declarative_base()
 
 
+# class UploadState(Enum):
+
+#     """
+#     The current upload state. Can be registered (no information),
+#     pending (the user has requested an upload url),
+#     uploaded (the user has confirmed the upload),
+#     or registered (the file has been registered with the internal-file-registry).
+#     """
+
+#     REGISTERED = ("registered",)
+#     PENDING = ("pending",)
+#     UPLOADED = ("uploaded",)
+#     COMPLETED = ("completed",)
+
+
 class FileInfo(Base):
     """
     GHGA Files announced by an uploader.

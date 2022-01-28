@@ -21,6 +21,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 
+# fmt: off
 class UploadState(Enum):
 
     """
@@ -30,10 +31,11 @@ class UploadState(Enum):
     or registered (the file has been registered with the internal-file-registry).
     """
 
-    REGISTERED = ("registered",)
-    PENDING = ("pending",)
-    UPLOADED = ("uploaded",)
-    COMPLETED = ("completed",)
+    REGISTERED = "registered"
+    PENDING = "pending"
+    UPLOADED = "uploaded"
+    COMPLETED = "completed"
+# fmt: on
 
 
 class FileInfoPatchState(BaseModel):
