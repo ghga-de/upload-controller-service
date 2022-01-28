@@ -29,7 +29,7 @@ from ..core import (
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    check_uploaded_file,
+    confirm_file_upload,
     get_upload_url,
 )
 from ..pubsub import publish_upload_received
@@ -91,7 +91,6 @@ async def patch_confirm_upload(
         204 - if the file is registered and its content is in the inbox
         400 - if there is a bad request
         404 - if the file is unkown
-        422 - if the file is registered and its content is not in the inbox
     """
 
     if file_info_patch.state is not UploadState.UPLOADED:
@@ -104,7 +103,7 @@ async def patch_confirm_upload(
 
     # call core functionality
     try:
-        check_uploaded_file(
+        confirm_file_upload(
             file_id=file_id,
             publish_upload_received=publish_upload_received,
             config=config,
@@ -120,7 +119,7 @@ async def patch_confirm_upload(
         raise HttpFileNotFoundException(file_id) from error
     except FileNotInInboxError as error:
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail=(
                 'The file with id "{file_id}" is registered for upload'
                 + " but its content was not found in the inbox."

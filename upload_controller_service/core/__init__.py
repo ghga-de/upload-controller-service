@@ -24,7 +24,7 @@ from .main import (  # noqa: F401
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    check_uploaded_file,
+    confirm_file_upload,
     get_upload_url,
     handle_file_registered,
     handle_new_study,
