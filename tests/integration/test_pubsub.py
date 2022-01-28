@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
-from upload_controller_service.core.main import check_uploaded_file
+from upload_controller_service.core.main import confirm_file_upload
 from upload_controller_service.pubsub import (
     publish_upload_received,
     subscribe_file_registered,
@@ -151,7 +151,7 @@ def test_publish_upload_received(
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
-    check_uploaded_file(
+    confirm_file_upload(
         file_id,
         publish_upload_received=publish_upload_received,
         config=config,
