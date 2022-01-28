@@ -23,6 +23,7 @@ from upload_controller_service.core.main import (
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
     confirm_file_upload,
     get_upload_url,
@@ -121,7 +122,8 @@ def test_get_upload_url(
     [
         ("in_inbox", None),
         ("unknown", FileNotRegisteredError),
-        ("in_db_only", FileNotInInboxError),
+        ("in_db_only", FileNotReadyForConfirmUpload),
+        ("in_inbox_confirmed", FileNotReadyForConfirmUpload),
     ],
 )
 def test_confirm_file_upload(

@@ -111,8 +111,10 @@ def test_get_presigned_post(
         ),
         (
             "in_inbox",
-            status.HTTP_400_BAD_REQUEST,
-            {"state": "uploaded", "file_id": "test123"},
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {
+                "state": "teapot",
+            },
         ),
     ],
 )
