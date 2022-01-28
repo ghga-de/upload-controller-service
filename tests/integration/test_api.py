@@ -72,16 +72,56 @@ def test_get_presigned_post(
 
 
 @pytest.mark.parametrize(
-    "file_state_name,expected_status_code",
+    "file_state_name,expected_status_code,json_body",
     [
-        ("in_inbox", status.HTTP_204_NO_CONTENT),
-        ("unknown", status.HTTP_404_NOT_FOUND),
-        ("in_db_only", status.HTTP_422_UNPROCESSABLE_ENTITY),
+        (
+            "in_inbox",
+            status.HTTP_204_NO_CONTENT,
+            {
+                "state": "uploaded",
+            },
+        ),
+        (
+            "in_inbox_confirmed",
+            status.HTTP_400_BAD_REQUEST,
+            {
+                "state": "uploaded",
+            },
+        ),
+        (
+            "unknown",
+            status.HTTP_404_NOT_FOUND,
+            {
+                "state": "uploaded",
+            },
+        ),
+        (
+            "in_db_only",
+            status.HTTP_400_BAD_REQUEST,
+            {
+                "state": "uploaded",
+            },
+        ),
+        (
+            "in_inbox",
+            status.HTTP_400_BAD_REQUEST,
+            {
+                "state": "completed",
+            },
+        ),
+        (
+            "in_inbox",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {
+                "state": "teapot",
+            },
+        ),
     ],
 )
 def test_confirm_upload(
     file_state_name: str,
     expected_status_code: int,
+    json_body: dict,
     s3_fixture,  # noqa: F811
     psql_fixture,  # noqa: F811
     amqp_fixture,  # noqa: F811
@@ -100,7 +140,7 @@ def test_confirm_upload(
 
     # make request:
     client = ApiTestClient(config=config)
-    response = client.get(f"/confirm_upload/{file_id}")
+    response = client.patch(url=f"/confirm_upload/{file_id}", json=json_body)
 
     assert response.status_code == expected_status_code
 

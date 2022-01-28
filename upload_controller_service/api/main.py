@@ -22,11 +22,14 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 
+from upload_controller_service.models import FileInfoPatchState, UploadState
+
 from ..config import CONFIG, Config
 from ..core import (
     FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    check_uploaded_file,
+    confirm_file_upload,
     get_upload_url,
 )
 from ..pubsub import publish_upload_received
@@ -72,35 +75,51 @@ async def get_presigned_post(
     return {"presigned_post": url}
 
 
-@app.get(
+@app.patch(
     "/confirm_upload/{file_id}",
     summary="confirm_upload",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def confirm_upload(
+async def patch_confirm_upload(
     file_id: str,
+    file_info_patch: FileInfoPatchState,
     config: Config = Depends(get_config),
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
     Returns:
         204 - if the file is registered and its content is in the inbox
+        400 - if there is a bad request
         404 - if the file is unkown
-        422 - if the file is registered and its content is not in the inbox
     """
+
+    if file_info_patch.state is not UploadState.UPLOADED:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                'The file with id "{file_id}" can`t be set to "{file_info_patch.state}"'
+            ),
+        )
 
     # call core functionality
     try:
-        check_uploaded_file(
+        confirm_file_upload(
             file_id=file_id,
             publish_upload_received=publish_upload_received,
             config=config,
         )
+    except FileNotReadyForConfirmUpload as error:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                'The file with id "{file_id}" is not ready to be set to "CONFIRMED"'
+            ),
+        ) from error
     except FileNotRegisteredError as error:
         raise HttpFileNotFoundException(file_id) from error
     except FileNotInInboxError as error:
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail=(
                 'The file with id "{file_id}" is registered for upload'
                 + " but its content was not found in the inbox."

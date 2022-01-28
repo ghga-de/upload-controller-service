@@ -28,7 +28,7 @@ from ..dao import (
     ObjectNotFoundError,
     ObjectStorage,
 )
-from ..models import FileInfoExternal, FileInfoInternal
+from ..models import FileInfoExternal, FileInfoInternal, UploadState
 
 
 class FileAlreadyInInboxError(RuntimeError):
@@ -66,6 +66,14 @@ class FileNotRegisteredError(RuntimeError):
         super().__init__(message)
 
 
+class FileNotReadyForConfirmUpload(RuntimeError):
+    """Thrown when a file is not set to 'pending' when trying to confirm."""
+
+    def __init__(self, file_id: str):
+        message = f"The file with external id {file_id} is not set to 'pending'."
+        super().__init__(message)
+
+
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
     """
     Put the information for files into the database
@@ -94,6 +102,12 @@ def handle_file_registered(file_id: str, config: Config = CONFIG):
         except ObjectNotFoundError as error:
             raise FileNotInInboxError(file_id=file_id) from error
 
+    with Database(config=config) as database:
+        try:
+            database.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
+        except FileInfoNotFoundError as error:
+            raise FileNotRegisteredError(file_id=file_id) from error
+
 
 def get_upload_url(file_id: str, config: Config = CONFIG):
     """
@@ -105,25 +119,29 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
     with Database(config=config) as database:
         try:
             database.get_file(file_id=file_id)
+
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
-    # Create presigned post for file_id
-    with ObjectStorage(config=config) as storage:
-        if not storage.does_bucket_exist(bucket_id=config.s3_inbox_bucket_id):
-            storage.create_bucket(config.s3_inbox_bucket_id)
+        # Create presigned post for file_id
+        with ObjectStorage(config=config) as storage:
+            if not storage.does_bucket_exist(bucket_id=config.s3_inbox_bucket_id):
+                storage.create_bucket(config.s3_inbox_bucket_id)
 
-        try:
-            presigned_post = storage.get_object_upload_url(
-                bucket_id=config.s3_inbox_bucket_id, object_id=file_id
-            )
-        except ObjectAlreadyExistsError as error:
-            raise FileAlreadyInInboxError(file_id=file_id) from error
+            try:
+                presigned_post = storage.get_object_upload_url(
+                    bucket_id=config.s3_inbox_bucket_id,
+                    object_id=file_id,
+                    expires_after=10,
+                )
+            except ObjectAlreadyExistsError as error:
+                raise FileAlreadyInInboxError(file_id=file_id) from error
 
+        database.update_file_state(file_id=file_id, state=UploadState.PENDING)
     return presigned_post
 
 
-def check_uploaded_file(
+def confirm_file_upload(
     file_id: str,
     publish_upload_received: Callable[[FileInfoExternal, Config], None],
     config: Config = CONFIG,
@@ -136,14 +154,18 @@ def check_uploaded_file(
     with Database(config=config) as database:
         try:
             file = database.get_file(file_id=file_id)
+            if file.state is not UploadState.PENDING:
+                raise FileNotReadyForConfirmUpload(file_id=file_id)
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
-    with ObjectStorage(config=config) as storage:
-        if not storage.does_object_exist(
-            object_id=file_id,
-            bucket_id=config.s3_inbox_bucket_id,
-        ):
-            raise FileNotInInboxError(file_id=file_id)
+        with ObjectStorage(config=config) as storage:
+            if not storage.does_object_exist(
+                object_id=file_id,
+                bucket_id=config.s3_inbox_bucket_id,
+            ):
+                raise FileNotInInboxError(file_id=file_id)
+
+        database.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
     publish_upload_received(file, config)

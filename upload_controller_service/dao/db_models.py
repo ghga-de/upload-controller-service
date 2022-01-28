@@ -17,10 +17,12 @@
 
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Enum, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
+
+from ..models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 
@@ -89,4 +91,17 @@ class FileInfo(Base):
         nullable=False,
         unique=False,
         doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
+    )
+    state = Column(
+        Enum(UploadState),
+        default=UploadState.REGISTERED,
+        nullable=False,
+        unique=False,
+        doc=(
+            "The current upload state. Can be registered (no upload requested yet), "
+            + "pending (upload link has been requested) "
+            + "uploaded (the user has confirmed the upload) "
+            + "or completed (the file has been registered in the downstream "
+            + "system and deleted from inbox)."
+        ),
     )
