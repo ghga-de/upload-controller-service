@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,3 +17,15 @@
 This sub-package contains the main business functionality of this service.
 It should not contain any service API-related code.
 """
+
+from .main import (  # noqa: F401
+    FileAlreadyInInboxError,
+    FileAlreadyRegisteredError,
+    FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
+    FileNotRegisteredError,
+    confirm_file_upload,
+    get_upload_url,
+    handle_file_registered,
+    handle_new_study,
+)

@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,10 @@ class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase
     """Config parameters and their defaults."""
 
     service_name: str = "upload_controller_service"
+
+    s3_inbox_bucket_id: str = "inbox"
+    topic_name_upload_received: str = "file_upload_received"
+    topic_name_new_study: str = "new_study_created"
 
 
 CONFIG = Config()

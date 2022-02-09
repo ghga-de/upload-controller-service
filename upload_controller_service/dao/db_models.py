@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,93 @@
 
 """Defines all database specific ORM models"""
 
-from sqlalchemy import JSON, Boolean, Column, Integer, String
+import uuid
+
+from sqlalchemy import Column, DateTime, Enum, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
+
+from ..models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 
 
-class ExampleObjectA(Base):
-    """An example object stored in the DB"""
+class FileInfo(Base):
+    """
+    GHGA Files announced by an uploader.
+    """
 
-    __tablename__ = "visas"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    some_json_details = Column(JSON, nullable=False)
-
-
-class ExampleObjectB(Base):
-    """Another example object stored in the DB"""
-
-    __tablename__ = "table_b"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    active = Column(Boolean, nullable=False)
+    __tablename__ = "files"
+    id = Column(
+        UUID(
+            as_uuid=True,
+        ),
+        default=uuid.uuid4,
+        primary_key=True,
+        doc="Service-internal file ID.",
+    )
+    file_id = Column(
+        String,
+        nullable=False,
+        unique=True,
+        doc=(
+            "ID used to refer to this file across services."
+            + " May be presented to users."
+            + " This string is also used to derive the DRS ID."
+        ),
+    )
+    file_name = Column(
+        String,
+        nullable=False,
+        default=None,
+        doc=("Name of the uploaded file"),
+    )
+    md5_checksum = Column(
+        String,
+        nullable=False,
+        default=None,
+        doc=("MD5 checksum of the file content."),
+    )
+    size = Column(
+        Integer,
+        nullable=False,
+        default=None,
+        doc=("Size of the file content in bytes."),
+    )
+    grouping_label = Column(
+        String,
+        nullable=False,
+        doc=("ID used to refer to the study this file belongs to"),
+    )
+    creation_date = Column(
+        DateTime,
+        nullable=False,
+        unique=False,
+        doc="Timestamp (in ISO 8601 format) when the entity was created.",
+    )
+    update_date = Column(
+        DateTime,
+        nullable=False,
+        unique=False,
+        doc="Timestamp (in ISO 8601 format) when the entity was updated.",
+    )
+    format = Column(
+        String,
+        nullable=False,
+        unique=False,
+        doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
+    )
+    state = Column(
+        Enum(UploadState),
+        default=UploadState.REGISTERED,
+        nullable=False,
+        unique=False,
+        doc=(
+            "The current upload state. Can be registered (no upload requested yet), "
+            + "pending (upload link has been requested) "
+            + "uploaded (the user has confirmed the upload) "
+            + "or completed (the file has been registered in the downstream "
+            + "system and deleted from inbox)."
+        ),
+    )

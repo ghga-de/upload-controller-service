@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,4 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Consuming or Subscribing to Async Messaging Topics"""
+"""Pub sub fixtures"""
+
+from ghga_service_chassis_lib.pubsub_testing import amqp_fixture_factory
+
+from .config import DEFAULT_CONFIG
+
+amqp_fixture = amqp_fixture_factory(service_name=DEFAULT_CONFIG.service_name)

@@ -1,4 +1,4 @@
-# Copyright 2021 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utils for Fixture handling"""
+"""General testing utilities"""
 
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.resolve()
+
+
+def null_func(*args, **kwargs):
+    """I am accepting any args and kwargs but I am doing nothing."""
+    pass
+
+
+def is_success_http_code(http_code: int) -> bool:
+    """Checks if a http response code indicates success (a 2xx code)."""
+    return http_code >= 200 and http_code < 300
