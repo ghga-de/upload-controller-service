@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from ..models import UploadState
+from ..domain.models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 

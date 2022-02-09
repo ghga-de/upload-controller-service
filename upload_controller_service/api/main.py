@@ -22,10 +22,10 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 
-from upload_controller_service.models import FileInfoPatchState, UploadState
+from upload_controller_service.domain.models import FileInfoPatchState, UploadState
 
 from ..config import CONFIG, Config
-from ..core import (
+from ..domain import (
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,

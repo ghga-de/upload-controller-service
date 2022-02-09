@@ -25,7 +25,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from upload_controller_service import models
+from upload_controller_service.domain import models
 from upload_controller_service.dao import db_models
 from upload_controller_service.dao.db import PostgresDatabase
 

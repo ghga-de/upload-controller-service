@@ -28,50 +28,18 @@ from ..dao import (
     ObjectNotFoundError,
     ObjectStorage,
 )
-from ..models import FileInfoExternal, FileInfoInternal, UploadState
-
-
-class FileAlreadyInInboxError(RuntimeError):
-    """Thrown when a file is unexpectedly already in the inbox."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with external id {file_id} is already in the inbox."
-        super().__init__(message)
-
-
-class FileNotInInboxError(RuntimeError):
-    """Thrown when a file is unexpectedly not found in the inbox."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with external id {file_id} not in the inbox."
-        super().__init__(message)
-
-
-class FileAlreadyRegisteredError(RuntimeError):
-    """Thrown when a file is unexpectedly already registered."""
-
-    def __init__(self, file_id: str):
-        message = (
-            f"The file with external id {file_id} has already been"
-            + " registered for upload."
-        )
-        super().__init__(message)
-
-
-class FileNotRegisteredError(RuntimeError):
-    """Thrown when a file is unexpectedly not registered."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with external id {file_id} has not been registered yet."
-        super().__init__(message)
-
-
-class FileNotReadyForConfirmUpload(RuntimeError):
-    """Thrown when a file is not set to 'pending' when trying to confirm."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with external id {file_id} is not set to 'pending'."
-        super().__init__(message)
+from upload_controller_service.domain.models import (
+    FileInfoExternal,
+    FileInfoInternal,
+    UploadState,
+)
+from upload_controller_service.domain.exceptions import (
+    FileAlreadyInInboxError,
+    FileAlreadyRegisteredError,
+    FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
+    FileNotRegisteredError,
+)
 
 
 def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):

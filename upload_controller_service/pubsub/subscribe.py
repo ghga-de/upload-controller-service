@@ -23,8 +23,8 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from ..config import CONFIG, Config
-from ..core import handle_file_registered, handle_new_study
-from ..models import FileInfoInternal
+from ..domain import handle_file_registered, handle_new_study
+from ..domain.models import FileInfoInternal
 
 HERE = Path(__file__).parent.resolve()
 

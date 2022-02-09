@@ -20,7 +20,7 @@ Publish asynchronous topics
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
-from .. import models
+from ..domain import models
 from ..config import CONFIG, Config
 
 

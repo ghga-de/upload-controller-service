@@ -21,10 +21,9 @@ from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
 )
-from ghga_service_chassis_lib.utils import DaoGenericBase
 from sqlalchemy.future import select
 
-from .. import models
+from ..domain import models
 from ..config import CONFIG
 from . import db_models
 
