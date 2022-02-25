@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interfaces for outbound File Info DAO adapters and the exception they may throw."""
+"""Interfaces for File Info DAO adapters and the exception they may throw."""
 
-from typing import Protocol, Optional
+from typing import Optional, Protocol
 
 from upload_controller_service.domain import models
 

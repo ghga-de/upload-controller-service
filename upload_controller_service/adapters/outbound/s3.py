@@ -13,4 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Database"""
+"""Implementation of object storage adapters."""
+
+# pylint: disable=unused-import
+from ghga_service_chassis_lib.s3 import ObjectStorageS3

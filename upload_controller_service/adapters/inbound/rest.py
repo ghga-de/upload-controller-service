@@ -22,8 +22,6 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 
-from upload_controller_service.domain.models import FileInfoPatchState, UploadState
-
 from upload_controller_service.config import CONFIG, Config
 from upload_controller_service.domain import (
     FileNotInInboxError,
@@ -32,6 +30,8 @@ from upload_controller_service.domain import (
     confirm_file_upload,
     get_upload_url,
 )
+from upload_controller_service.domain.models import FileInfoPatchState, UploadState
+
 from ...pubsub import publish_upload_received
 
 app = FastAPI()

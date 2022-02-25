@@ -13,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interfaces for outbound object storage adapters and the exception they may throw."""
+"""Interfaces for object storage adapters and the exception they may throw."""
 
 # pylint: disable=unused-import
 from ghga_service_chassis_lib.object_storage_dao import (
-    ObjectStorageDao as IObjectStorage,
-    ObjectStorageDaoError,
-    ObjectNotFoundError,
     ObjectAlreadyExistsError,
     ObjectIdValidationError,
+    ObjectNotFoundError,
 )
+from ghga_service_chassis_lib.object_storage_dao import (
+    ObjectStorageDao as IObjectStorage,
+)
+from ghga_service_chassis_lib.object_storage_dao import ObjectStorageDaoError
