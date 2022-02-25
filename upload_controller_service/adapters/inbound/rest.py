@@ -32,7 +32,9 @@ from upload_controller_service.domain import (
 )
 from upload_controller_service.domain.models import FileInfoPatchState, UploadState
 
-from ...pubsub import publish_upload_received
+from upload_controller_service.adapters.outbound.kafka_produce import (
+    publish_upload_received,
+)
 
 app = FastAPI()
 configure_app(app, config=CONFIG)
