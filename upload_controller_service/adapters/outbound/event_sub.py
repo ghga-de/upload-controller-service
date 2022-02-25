@@ -20,8 +20,8 @@ Publish asynchronous topics
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
-from ..domain import models
-from ..config import CONFIG, Config
+from upload_controller_service.domain import models
+from upload_controller_service.config import CONFIG, Config
 
 
 def publish_upload_received(file: models.FileInfoExternal, config: Config = CONFIG):

@@ -24,19 +24,23 @@ from ghga_service_chassis_lib.api import configure_app
 
 from upload_controller_service.domain.models import FileInfoPatchState, UploadState
 
-from ..config import CONFIG, Config
-from ..domain import (
+from upload_controller_service.config import CONFIG, Config
+from upload_controller_service.domain import (
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
     confirm_file_upload,
     get_upload_url,
 )
-from ..pubsub import publish_upload_received
-from .deps import get_config
+from ...pubsub import publish_upload_received
 
 app = FastAPI()
 configure_app(app, config=CONFIG)
+
+
+def get_config():
+    """Get runtime configuration. For use as FastAPI dependency."""
+    return CONFIG
 
 
 class HttpFileNotFoundException(HTTPException):

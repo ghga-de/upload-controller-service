@@ -18,15 +18,17 @@
 
 from typing import Callable, List
 
-from upload_controller_service.dao.db import FileInfoNotFoundError
+from upload_controller_service.adapters.outbound.db.daos import FileInfoNotFoundError
 
-from ..config import CONFIG, Config
-from ..dao import (
-    Database,
+from upload_controller_service.config import CONFIG, Config
+from upload_controller_service.domain.outbound_interfaces.file_info import (
+    IFileInfoDAO,
     FileInfoAlreadyExistsError,
+)
+from upload_controller_service.domain.outbound_interfaces.storage import (
+    IObjectStorage,
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
-    ObjectStorage,
 )
 from upload_controller_service.domain.models import (
     FileInfoExternal,
@@ -42,27 +44,37 @@ from upload_controller_service.domain.exceptions import (
 )
 
 
-def handle_new_study(study_files: List[FileInfoInternal], config: Config = CONFIG):
+def handle_new_study(
+    study_files: List[FileInfoInternal],
+    *,
+    file_info_dao: IFileInfoDAO,
+):
     """
     Put the information for files into the database
     """
 
     for file in study_files:
-        with Database(config=config) as database:
+        with file_info_dao as file_info:
             try:
-                database.register_file(file)
+                file_info.register_file(file)
             except FileInfoAlreadyExistsError as error:
                 raise FileAlreadyRegisteredError(file_id=file.file_id) from error
 
 
-def handle_file_registered(file_id: str, config: Config = CONFIG):
+def handle_file_registered(
+    file_id: str,
+    *,
+    file_info_dao: IFileInfoDAO,
+    object_storage_dao: IObjectStorage,
+    config: Config = CONFIG,
+):
     """
     Delete the file from inbox, flag it as registered in the database
     """
 
     # Flagging will be done in GDEV-478
 
-    with ObjectStorage(config=config) as storage:
+    with object_storage_dao as storage:
         try:
             storage.delete_object(
                 bucket_id=config.s3_inbox_bucket_id, object_id=file_id
@@ -70,29 +82,35 @@ def handle_file_registered(file_id: str, config: Config = CONFIG):
         except ObjectNotFoundError as error:
             raise FileNotInInboxError(file_id=file_id) from error
 
-    with Database(config=config) as database:
+    with file_info_dao as file_info:
         try:
-            database.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
+            file_info.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
 
-def get_upload_url(file_id: str, config: Config = CONFIG):
+def get_upload_url(
+    file_id: str,
+    *,
+    file_info_dao: IFileInfoDAO,
+    object_storage_dao: IObjectStorage,
+    config: Config = CONFIG,
+):
     """
     Checks if the file_id is in the database, the proceeds to create a presigned
     post url for an s3 staging bucket
     """
 
     # Check if file is in db
-    with Database(config=config) as database:
+    with file_info_dao as file_info:
         try:
-            database.get_file(file_id=file_id)
+            file_info.get_file(file_id=file_id)
 
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
         # Create presigned post for file_id
-        with ObjectStorage(config=config) as storage:
+        with object_storage_dao as storage:
             if not storage.does_bucket_exist(bucket_id=config.s3_inbox_bucket_id):
                 storage.create_bucket(config.s3_inbox_bucket_id)
 
@@ -105,12 +123,15 @@ def get_upload_url(file_id: str, config: Config = CONFIG):
             except ObjectAlreadyExistsError as error:
                 raise FileAlreadyInInboxError(file_id=file_id) from error
 
-        database.update_file_state(file_id=file_id, state=UploadState.PENDING)
+        file_info.update_file_state(file_id=file_id, state=UploadState.PENDING)
     return presigned_post
 
 
 def confirm_file_upload(
     file_id: str,
+    *,
+    file_info_dao: IFileInfoDAO,
+    object_storage_dao: IObjectStorage,
     publish_upload_received: Callable[[FileInfoExternal, Config], None],
     config: Config = CONFIG,
 ):
@@ -119,21 +140,21 @@ def confirm_file_upload(
     FileNotInInboxError if this is not the case.
     """
 
-    with Database(config=config) as database:
+    with file_info_dao as file_info:
         try:
-            file = database.get_file(file_id=file_id)
+            file = file_info.get_file(file_id=file_id)
             if file.state is not UploadState.PENDING:
                 raise FileNotReadyForConfirmUpload(file_id=file_id)
         except FileInfoNotFoundError as error:
             raise FileNotRegisteredError(file_id=file_id) from error
 
-        with ObjectStorage(config=config) as storage:
+        with object_storage_dao as storage:
             if not storage.does_object_exist(
                 object_id=file_id,
                 bucket_id=config.s3_inbox_bucket_id,
             ):
                 raise FileNotInInboxError(file_id=file_id)
 
-        database.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
+        file_info.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
     publish_upload_received(file, config)

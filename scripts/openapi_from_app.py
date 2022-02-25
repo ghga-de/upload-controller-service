@@ -26,7 +26,7 @@ import sys
 
 import yaml
 
-from upload_controller_service.api.main import app
+from upload_controller_service.adapters.inbound.rest import app
 
 # get openapi spec as dict:
 openapi_spec = app.openapi()

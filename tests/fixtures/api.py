@@ -19,8 +19,8 @@ from typing import Optional
 
 import fastapi.testclient
 
-from upload_controller_service.api.deps import get_config
-from upload_controller_service.api.main import app
+from upload_controller_service.adapters.inbound.deps import get_config
+from upload_controller_service.adapters.inbound.rest import app
 from upload_controller_service.config import Config
 
 

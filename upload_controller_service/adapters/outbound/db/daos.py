@@ -15,7 +15,7 @@
 
 """DAO interface implementation to connect to the database."""
 
-from typing import Any, Optional
+from typing import Any
 
 from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
@@ -23,68 +23,17 @@ from ghga_service_chassis_lib.postgresql import (
 )
 from sqlalchemy.future import select
 
-from ..domain import models
-from ..config import CONFIG
-from . import db_models
+from upload_controller_service.domain import models
+from upload_controller_service.domain.outbound_interfaces.file_info import (
+    IFileInfoDAO,
+    FileInfoNotFoundError,
+    FileInfoAlreadyExistsError,
+)
+from upload_controller_service.config import CONFIG
+from upload_controller_service.adapters.outbound.db import orm_models
 
 
-class FileInfoNotFoundError(RuntimeError):
-    """Thrown when trying to access a file with a file ID that doesn't
-    exist in the database."""
-
-    def __init__(self, file_id: Optional[str]):
-        message = (
-            "The file"
-            + (f" with file ID '{file_id}' " if file_id else "")
-            + " does not exist in the database."
-        )
-        super().__init__(message)
-
-
-class FileInfoAlreadyExistsError(RuntimeError):
-    """Thrown when trying to add a file with an file ID that already
-    exist in the database."""
-
-    def __init__(self, file_id: Optional[str]):
-        message = (
-            "The file"
-            + (f" with file ID '{file_id}' " if file_id else "")
-            + " already exist in the database."
-        )
-        super().__init__(message)
-
-
-# Since this is just a DAO stub without implementation, following pylint error are
-# expected:
-# pylint: disable=unused-argument,no-self-use
-class DatabaseDao(DaoGenericBase):
-    """
-    A DAO base class for interacting with the database.
-    It might throw following exception to communicate selected error events:
-        - FileInfoNotFoundError
-        - FileInfoAlreadyExistsError
-    """
-
-    def get_file(self, file_id: str) -> models.FileInfoExternal:
-        """Get file from the database"""
-        ...
-
-    def register_file(self, file: models.FileInfoInternal) -> None:
-        """Register a new file to the database."""
-        ...
-
-    def update_file_state(self, file_id: str, state: models.UploadState) -> None:
-        """Update the file state of a file in the database."""
-        ...
-
-    def unregister_file(self, file_id: str) -> None:
-        """
-        Unregister a new file with the specified file ID from the database.
-        """
-        ...
-
-
-class PostgresDatabase(DatabaseDao):
+class PostgresDatabase(IFileInfoDAO):
     """
     An implementation of the DatabaseDao interface using a PostgreSQL backend.
     """
@@ -111,11 +60,11 @@ class PostgresDatabase(DatabaseDao):
         # pylint: disable=no-member
         self._session_cm.__exit__(error_type, error_value, error_traceback)
 
-    def _get_orm_file(self, file_id: str) -> db_models.FileInfo:
+    def _get_orm_file(self, file_id: str) -> orm_models.FileInfo:
         """Internal method to get the ORM representation of a file by specifying
         its file ID"""
 
-        statement = select(db_models.FileInfo).filter_by(file_id=file_id)
+        statement = select(orm_models.FileInfo).filter_by(file_id=file_id)
         orm_file = self._session.execute(statement).scalars().one_or_none()
 
         if orm_file is None:
@@ -145,10 +94,10 @@ class PostgresDatabase(DatabaseDao):
         file_dict = {
             **file.dict(),
         }
-        orm_file = db_models.FileInfo(**file_dict)
+        orm_file = orm_models.FileInfo(**file_dict)
         self._session.add(orm_file)
 
-    def update_file_state(self, file_id: str, state: db_models.UploadState) -> None:
+    def update_file_state(self, file_id: str, state: orm_models.UploadState) -> None:
         """Update the file state of a file in the database."""
 
         orm_file = self._get_orm_file(file_id=file_id)
