@@ -30,7 +30,7 @@ from ghga_service_chassis_lib.postgresql import (
 
 from upload_controller_service.domain.models import UploadState
 from upload_controller_service.domain import models
-from upload_controller_service.domain.outbound_interfaces.file_info import (
+from upload_controller_service.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,

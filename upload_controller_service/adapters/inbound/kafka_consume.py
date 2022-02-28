@@ -29,84 +29,80 @@ from upload_controller_service.domain.models import FileInfoInternal
 HERE = Path(__file__).parent.resolve()
 
 
-def process_file_registered_message(message: dict, config):
-    """
-    Processes the message by checking if the file really is in the outbox,
-    otherwise throwing an error
-    """
+class KafkaEventConsumer:
+    """Adapter that consumes events received from an Apache Kafka broker."""
 
-    file_id = message["file_id"]
+    def __init__(self, config: Config = CONFIG):
+        """Ininitalize class instance with config object."""
+        self._config = config
 
-    handle_file_registered(file_id=file_id, config=config)
+    def _process_file_registered_message(self, message: dict):
+        """
+        Processes the message by checking if the file really is in the outbox,
+        otherwise throwing an error
+        """
 
+        file_id = message["file_id"]
 
-def process_new_study_message(message: dict, config):
-    """
-    Processes the message by checking if the file really is in the outbox,
-    otherwise throwing an error
-    """
+        handle_file_registered(file_id=file_id, config=self._config)
 
-    files = message["associated_files"]
-    grouping_label = message["study"]["id"]
+    def _process_new_study_message(self, message: dict):
+        """
+        Processes the message by checking if the file really is in the outbox,
+        otherwise throwing an error
+        """
 
-    study_files = [
-        FileInfoInternal(
-            file_id=file["file_id"],
-            grouping_label=grouping_label,
-            md5_checksum=file["md5_checksum"],
-            size=file["size"],
-            file_name=file["file_name"],
-            creation_date=file["creation_date"],
-            update_date=file["update_date"],
-            format=file["format"],
+        files = message["associated_files"]
+        grouping_label = message["study"]["id"]
+
+        study_files = [
+            FileInfoInternal(
+                file_id=file["file_id"],
+                grouping_label=grouping_label,
+                md5_checksum=file["md5_checksum"],
+                size=file["size"],
+                file_name=file["file_name"],
+                creation_date=file["creation_date"],
+                update_date=file["update_date"],
+                format=file["format"],
+            )
+            for file in files
+        ]
+
+        handle_new_study(study_files=study_files, config=self._config)
+
+    def subscribe_new_study(self, run_forever: bool = True) -> None:
+        """
+        Runs a subscribing process for the "new_study_created" topic
+        """
+
+        # create a topic object:
+        topic = AmqpTopic(
+            config=self._config,
+            topic_name=self._config.topic_name_new_study,
+            json_schema=schemas.SCHEMAS["new_study_created"],
         )
-        for file in files
-    ]
 
-    handle_new_study(study_files=study_files, config=config)
+        # subscribe:
+        topic.subscribe(
+            exec_on_message=self._process_new_study_message,
+            run_forever=run_forever,
+        )
 
+    def subscribe_file_registered(self, run_forever: bool = True) -> None:
+        """
+        Runs a subscribing process for the "new_study_created" topic
+        """
 
-def subscribe_new_study(config: Config = CONFIG, run_forever: bool = True) -> None:
-    """
-    Runs a subscribing process for the "new_study_created" topic
-    """
+        # create a topic object:
+        topic = AmqpTopic(
+            config=self._config,
+            topic_name=self._config.topic_name_new_study,
+            json_schema=schemas.SCHEMAS["file_internally_registered"],
+        )
 
-    # create a topic object:
-    topic = AmqpTopic(
-        config=config,
-        topic_name=config.topic_name_new_study,
-        json_schema=schemas.SCHEMAS["new_study_created"],
-    )
-
-    # subscribe:
-    topic.subscribe(
-        exec_on_message=lambda message: process_new_study_message(
-            message,
-            config=config,
-        ),
-        run_forever=run_forever,
-    )
-
-
-def subscribe_file_registered(
-    config: Config = CONFIG, run_forever: bool = True
-) -> None:
-    """
-    Runs a subscribing process for the "new_study_created" topic
-    """
-
-    # create a topic object:
-    topic = AmqpTopic(
-        config=config,
-        topic_name=config.topic_name_new_study,
-        json_schema=schemas.SCHEMAS["file_internally_registered"],
-    )
-
-    # subscribe:
-    topic.subscribe(
-        exec_on_message=lambda message: process_file_registered_message(
-            message,
-            config=config,
-        ),
-        run_forever=run_forever,
-    )
+        # subscribe:
+        topic.subscribe(
+            exec_on_message=self._process_file_registered_message,
+            run_forever=run_forever,
+        )

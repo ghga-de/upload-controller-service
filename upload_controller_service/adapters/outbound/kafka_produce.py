@@ -21,29 +21,43 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from upload_controller_service.config import CONFIG, Config
+
 from upload_controller_service.domain import models
+from upload_controller_service.domain.interfaces.outbound.event_pub import (
+    IEventPublisher,
+)
 
 
-def publish_upload_received(file: models.FileInfoExternal, config: Config = CONFIG):
-    """
-    Publishes a message to a specified topic
-    """
+class KafkaEventPublisher(IEventPublisher):
+    """A Kafka-based implementation of the IEventPublisher interface."""
 
-    message = {
-        "file_id": file.file_id,
-        "grouping_label": file.grouping_label,
-        "md5_checksum": file.md5_checksum,
-        "format": file.format,
-        "creation_date": file.creation_date.isoformat(),
-        "update_date": file.update_date.isoformat(),
-        "size": file.size,
-    }
+    def __init__(self, config: Config = CONFIG):
+        """Ininitalize class instance with config object."""
+        self._config = config
 
-    # create a topic object:
-    topic = AmqpTopic(
-        config=config,
-        topic_name=config.topic_name_upload_received,
-        json_schema=schemas.SCHEMAS["file_upload_received"],
-    )
+    def publish_upload_received(
+        self,
+        file: models.FileInfoExternal,
+    ) -> None:
+        """
+        Publishes a message to a specified topic
+        """
 
-    topic.publish(message)
+        message = {
+            "file_id": file.file_id,
+            "grouping_label": file.grouping_label,
+            "md5_checksum": file.md5_checksum,
+            "format": file.format,
+            "creation_date": file.creation_date.isoformat(),
+            "update_date": file.update_date.isoformat(),
+            "size": file.size,
+        }
+
+        # create a topic object:
+        topic = AmqpTopic(
+            config=self._config,
+            topic_name=self._config.topic_name_upload_received,
+            json_schema=schemas.SCHEMAS["file_upload_received"],
+        )
+
+        topic.publish(message)

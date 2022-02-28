@@ -31,12 +31,12 @@ from upload_controller_service.domain.models import (
     FileInfoInternal,
     UploadState,
 )
-from upload_controller_service.domain.outbound_interfaces.file_info import (
+from upload_controller_service.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-from upload_controller_service.domain.outbound_interfaces.storage import (
+from upload_controller_service.domain.interfaces.outbound.storage import (
     IObjectStorage,
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
