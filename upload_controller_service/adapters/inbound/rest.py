@@ -22,18 +22,13 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 
-from upload_controller_service.config import CONFIG, Config
-from upload_controller_service.domain import (
+from upload_controller_service.config import CONFIG
+from upload_controller_service.domain.models import FileInfoPatchState, UploadState
+from upload_controller_service.domain.interfaces.inbound.upload import (
+    IUploadHandler,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    confirm_file_upload,
-    get_upload_url,
-)
-from upload_controller_service.domain.models import FileInfoPatchState, UploadState
-
-from upload_controller_service.adapters.outbound.kafka_produce import (
-    publish_upload_received,
 )
 
 app = FastAPI()
@@ -65,7 +60,7 @@ async def health():
 @app.get("/presigned_post/{file_id}", summary="presigned_post")
 async def get_presigned_post(
     file_id: str,
-    config: Config = Depends(get_config),
+    upload_handler: IUploadHandler = Depends(lambda: ...),
 ):
     """
     Requesting a pre-signed post URL for a new file in the inbox
@@ -74,7 +69,7 @@ async def get_presigned_post(
 
     # call core functionality
     try:
-        url = get_upload_url(file_id=file_id, config=config)
+        url = upload_handler.get_upload_url(file_id=file_id)
     except FileNotRegisteredError as error:
         raise HttpFileNotFoundException(file_id) from error
 
@@ -89,7 +84,7 @@ async def get_presigned_post(
 async def patch_confirm_upload(
     file_id: str,
     file_info_patch: FileInfoPatchState,
-    config: Config = Depends(get_config),
+    upload_handler: IUploadHandler = Depends(lambda: ...),
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
@@ -109,11 +104,7 @@ async def patch_confirm_upload(
 
     # call core functionality
     try:
-        confirm_file_upload(
-            file_id=file_id,
-            publish_upload_received=publish_upload_received,
-            config=config,
-        )
+        upload_handler.confirm_file_upload(file_id)
     except FileNotReadyForConfirmUpload as error:
         raise HTTPException(
             status_code=400,

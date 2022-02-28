@@ -19,7 +19,7 @@ from typing import Optional, Type
 
 import pytest
 
-from upload_controller_service.domain.main import (
+from upload_controller_service.domain.upload import (
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,

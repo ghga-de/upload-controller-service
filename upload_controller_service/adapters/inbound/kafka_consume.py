@@ -23,7 +23,7 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
 from upload_controller_service.config import CONFIG, Config
-from upload_controller_service.domain import handle_file_registered, handle_new_study
+from upload_controller_service.domain.interfaces.inbound.upload import IUploadHandler
 from upload_controller_service.domain.models import FileInfoInternal
 
 HERE = Path(__file__).parent.resolve()
@@ -32,9 +32,11 @@ HERE = Path(__file__).parent.resolve()
 class KafkaEventConsumer:
     """Adapter that consumes events received from an Apache Kafka broker."""
 
-    def __init__(self, config: Config = CONFIG):
-        """Ininitalize class instance with config object."""
+    # pylint: disable=super-init-not-called
+    def __init__(self, *, upload_handler: IUploadHandler, config: Config = CONFIG):
+        """Ininitalize class instance with config and inbound adapter objects."""
         self._config = config
+        self._upload_handler = upload_handler
 
     def _process_file_registered_message(self, message: dict):
         """
@@ -44,7 +46,7 @@ class KafkaEventConsumer:
 
         file_id = message["file_id"]
 
-        handle_file_registered(file_id=file_id, config=self._config)
+        self._upload_handler.handle_file_registered(file_id)
 
     def _process_new_study_message(self, message: dict):
         """
@@ -69,7 +71,7 @@ class KafkaEventConsumer:
             for file in files
         ]
 
-        handle_new_study(study_files=study_files, config=self._config)
+        self._upload_handler.handle_new_study(study_files)
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """

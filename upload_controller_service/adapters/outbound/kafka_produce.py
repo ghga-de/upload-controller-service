@@ -31,7 +31,8 @@ from upload_controller_service.domain.interfaces.outbound.event_pub import (
 class KafkaEventPublisher(IEventPublisher):
     """A Kafka-based implementation of the IEventPublisher interface."""
 
-    def __init__(self, config: Config = CONFIG):
+    # pylint: disable=super-init-not-called
+    def __init__(self, *, config: Config = CONFIG):
         """Ininitalize class instance with config object."""
         self._config = config
 

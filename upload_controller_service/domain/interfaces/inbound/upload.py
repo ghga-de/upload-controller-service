@@ -13,7 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Exceptions thrown by the domain package."""
+"""Interfaces for the main upload handling logic of this service."""
+
+
+from typing import Protocol, List
+
+from upload_controller_service.domain.models import (
+    FileInfoInternal,
+)
 
 
 class FileAlreadyInInboxError(RuntimeError):
@@ -57,3 +64,42 @@ class FileNotReadyForConfirmUpload(RuntimeError):
     def __init__(self, file_id: str):
         message = f"The file with external id {file_id} is not set to 'pending'."
         super().__init__(message)
+
+
+class IUploadHandler(Protocol):
+    """Interface for the main service class for handling uploads to the Inbox."""
+
+    def handle_new_study(self, study_files: List[FileInfoInternal]):
+        """
+        Put the information for files into the database
+        """
+        ...
+
+    def handle_file_registered(
+        self,
+        file_id: str,
+    ):
+        """
+        Delete the file from inbox, flag it as registered in the database
+        """
+        ...
+
+    def get_upload_url(
+        self,
+        file_id: str,
+    ):
+        """
+        Checks if the file_id is in the database, the proceeds to create a presigned
+        post url for an s3 staging bucket
+        """
+        ...
+
+    def confirm_file_upload(
+        self,
+        file_id: str,
+    ):
+        """
+        Checks if the file with the specified file_id was uploaded. Throws an
+        FileNotInInboxError if this is not the case.
+        """
+        ...

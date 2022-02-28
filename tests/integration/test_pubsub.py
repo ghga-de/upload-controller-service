@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
-from upload_controller_service.domain.main import confirm_file_upload
+from upload_controller_service.domain.upload import confirm_file_upload
 from upload_controller_service.pubsub import (
     publish_upload_received,
     subscribe_file_registered,
