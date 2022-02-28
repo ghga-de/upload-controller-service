@@ -17,8 +17,8 @@
 
 from typing import Protocol
 
-from upload_controller_service.config import CONFIG, Config
-from upload_controller_service.domain import models
+from ulc.config import CONFIG, Config
+from ulc.domain import models
 
 
 class IEventPublisher(Protocol):

@@ -22,9 +22,9 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from ghga_service_chassis_lib.api import configure_app
 
-from upload_controller_service.config import CONFIG
-from upload_controller_service.domain.models import FileInfoPatchState, UploadState
-from upload_controller_service.domain.interfaces.inbound.upload import (
+from ulc.config import CONFIG
+from ulc.domain.models import FileInfoPatchState, UploadState
+from ulc.domain.interfaces.inbound.upload import (
     IUploadHandler,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,

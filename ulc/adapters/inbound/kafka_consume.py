@@ -22,9 +22,9 @@ from pathlib import Path
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
-from upload_controller_service.config import CONFIG, Config
-from upload_controller_service.domain.interfaces.inbound.upload import IUploadHandler
-from upload_controller_service.domain.models import FileInfoInternal
+from ulc.config import CONFIG, Config
+from ulc.domain.interfaces.inbound.upload import IUploadHandler
+from ulc.domain.models import FileInfoInternal
 
 HERE = Path(__file__).parent.resolve()
 

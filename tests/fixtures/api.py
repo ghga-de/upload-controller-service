@@ -19,9 +19,9 @@ from typing import Optional
 
 import fastapi.testclient
 
-from upload_controller_service.adapters.inbound.deps import get_config
-from upload_controller_service.adapters.inbound.rest import app
-from upload_controller_service.config import Config
+from ulc.adapters.inbound.deps import get_config
+from ulc.adapters.inbound.rest import app
+from ulc.config import Config
 
 
 class ApiTestClient(fastapi.testclient.TestClient):

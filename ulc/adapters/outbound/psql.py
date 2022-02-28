@@ -28,14 +28,14 @@ from ghga_service_chassis_lib.postgresql import (
     SyncPostgresqlConnector,
 )
 
-from upload_controller_service.domain.models import UploadState
-from upload_controller_service.domain import models
-from upload_controller_service.domain.interfaces.outbound.file_info import (
+from ulc.domain.models import UploadState
+from ulc.domain import models
+from ulc.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-from upload_controller_service.config import CONFIG
+from ulc.config import CONFIG
 
 
 Base: DeclarativeMeta = declarative_base()

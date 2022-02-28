@@ -17,7 +17,7 @@
 
 import pytest
 
-from upload_controller_service.dao.db import (
+from ulc.adapters.outbound.db.daos import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
 )

@@ -20,10 +20,10 @@ Publish asynchronous topics
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic
 
-from upload_controller_service.config import CONFIG, Config
+from ulc.config import CONFIG, Config
 
-from upload_controller_service.domain import models
-from upload_controller_service.domain.interfaces.outbound.event_pub import (
+from ulc.domain import models
+from ulc.domain.interfaces.outbound.event_pub import (
     IEventPublisher,
 )
 

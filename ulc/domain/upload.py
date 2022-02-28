@@ -18,32 +18,32 @@
 
 from typing import List
 
-from upload_controller_service.config import CONFIG, Config
-from upload_controller_service.domain.exceptions import (
+from ulc.config import CONFIG, Config
+from ulc.domain.models import (
+    FileInfoInternal,
+    UploadState,
+)
+from ulc.domain.interfaces.outbound.file_info import (
+    FileInfoAlreadyExistsError,
+    FileInfoNotFoundError,
+    IFileInfoDAO,
+)
+from ulc.domain.interfaces.outbound.storage import (
+    IObjectStorage,
+    ObjectAlreadyExistsError,
+    ObjectNotFoundError,
+)
+from ulc.domain.interfaces.outbound.event_pub import (
+    IEventPublisher,
+)
+from ulc.domain.interfaces.inbound.upload import (
+    IUploadHandler,
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
 )
-from upload_controller_service.domain.models import (
-    FileInfoInternal,
-    UploadState,
-)
-from upload_controller_service.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
-    IFileInfoDAO,
-)
-from upload_controller_service.domain.interfaces.outbound.storage import (
-    IObjectStorage,
-    ObjectAlreadyExistsError,
-    ObjectNotFoundError,
-)
-from upload_controller_service.domain.interfaces.outbound.event_pub import (
-    IEventPublisher,
-)
-from upload_controller_service.domain.interfaces.inbound.upload import IUploadHandler
 
 
 class UploadHandler(IUploadHandler):

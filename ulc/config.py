@@ -22,7 +22,7 @@ from ghga_service_chassis_lib.pubsub import PubSubConfigBase
 from ghga_service_chassis_lib.s3 import S3ConfigBase
 
 
-@config_from_yaml(prefix="upload_controller_service")
+@config_from_yaml(prefix="ulc")
 class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase):
     """Config parameters and their defaults."""
 

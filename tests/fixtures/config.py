@@ -20,7 +20,7 @@ from typing import Dict, List, Optional
 
 from pydantic.env_settings import BaseSettings
 
-from upload_controller_service.config import Config
+from ulc.config import Config
 
 from .utils import BASE_DIR
 

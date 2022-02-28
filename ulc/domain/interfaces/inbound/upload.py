@@ -18,7 +18,7 @@
 
 from typing import Protocol, List
 
-from upload_controller_service.domain.models import (
+from ulc.domain.models import (
     FileInfoInternal,
 )
 

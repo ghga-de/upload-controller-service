@@ -25,9 +25,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from upload_controller_service.domain import models
-from upload_controller_service.dao import db_models
-from upload_controller_service.dao.db import PostgresDatabase
+from ulc.domain import models
+from ulc.adapters.outbound.db import orm_models
+from ulc.adapters.outbound.db.daos import PostgresDatabase
 
 from . import state
 
@@ -46,7 +46,7 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
 
     # setup database and tables:
     engine = create_engine(db_url)
-    db_models.Base.metadata.create_all(engine)
+    orm_models.Base.metadata.create_all(engine)
 
     # populate with test data:
     session_factor = sessionmaker(engine)
@@ -55,7 +55,7 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
             param_dict = {
                 **existing_file_info.dict(),
             }
-            orm_entry = db_models.FileInfo(**param_dict)
+            orm_entry = orm_models.FileInfo(**param_dict)
             session.add(orm_entry)
         session.commit()
 

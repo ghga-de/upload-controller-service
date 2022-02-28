@@ -17,7 +17,7 @@
 
 from typing import Optional, Protocol
 
-from upload_controller_service.domain import models
+from ulc.domain import models
 
 
 # Since this is just a DAO stub without implementation, following pylint error are
