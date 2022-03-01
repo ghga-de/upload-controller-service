@@ -17,7 +17,7 @@
 
 import pytest
 
-from ulc.adapters.outbound.db.daos import (
+from ulc.adapters.outbound.psql.daos import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
 )

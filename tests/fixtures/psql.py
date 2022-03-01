@@ -26,8 +26,8 @@ from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from ulc.domain import models
-from ulc.adapters.outbound.db import orm_models
-from ulc.adapters.outbound.db.daos import PostgresDatabase
+from ulc.adapters.outbound.psql import orm_models
+from ulc.adapters.outbound.psql.daos import PostgresDatabase
 
 from . import state
 
