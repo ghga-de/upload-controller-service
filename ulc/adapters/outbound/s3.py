@@ -32,6 +32,7 @@ class S3ObjectStorage(_S3ObjectStorage):
         self,
         s3_endpoint_url: str,
         s3_access_key_id: str,
+        s3_secret_access_key: str,
         s3_session_token: str,
         aws_config_ini: str,
     ):
@@ -40,6 +41,7 @@ class S3ObjectStorage(_S3ObjectStorage):
         config = S3ConfigBase(
             s3_endpoint_url=s3_endpoint_url,
             s3_access_key_id=s3_access_key_id,
+            s3_secret_access_key=s3_secret_access_key,
             s3_session_token=s3_session_token,
             aws_config_ini=aws_config_ini,
         )

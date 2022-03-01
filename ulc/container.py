@@ -41,6 +41,7 @@ class Container(containers.DeclarativeContainer):
         S3ObjectStorage,
         s3_endpoint_url=config.s3_endpoint_url,
         s3_access_key_id=config.s3_access_key_id,
+        s3_secret_access_key=config.s3_secret_access_key,
         s3_session_token=config.s3_session_token,
         aws_config_ini=config.aws_config_ini,
     )
@@ -70,6 +71,7 @@ class Container(containers.DeclarativeContainer):
         service_name=config.service_name,
         rabbitmq_host=config.rabbitmq_host,
         rabbitmq_port=config.rabbitmq_port,
+        topic_new_study=config.topic_new_study,
         topic_file_registered=config.topic_file_registered,
         upload_service=upload_service,
     )

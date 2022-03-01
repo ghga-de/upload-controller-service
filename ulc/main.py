@@ -7,7 +7,7 @@
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
+# Unless required by apilicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
@@ -34,18 +34,18 @@ def create_container(*, config: Config) -> Container:
     return container
 
 
-def get_rest_app(*, config: Config) -> FastAPI:
+def get_rest_api(*, config: Config) -> FastAPI:
     """Creates a FastAPI app."""
 
-    app = FastAPI()
-    app.container = create_container(config=config)
-    app.include_router(router)
-    configure_app(app, config=config)
+    api = FastAPI()
+    api.container = create_container(config=config)
+    api.include_router(router)
+    configure_app(api, config=config)
 
-    return app
+    return api
 
 
 def get_event_consumer(*, config: Config) -> KafkaEventConsumer:
     """Create an instance of KafkaEventConsumer"""
     container = create_container(config=config)
-    return container.kafka_consumer
+    return container.kafka_consumer()

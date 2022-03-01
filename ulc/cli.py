@@ -17,13 +17,13 @@
 
 from enum import Enum
 
-from typer import Typer
+import typer
 from ghga_service_chassis_lib.api import run_server
 
 from ulc.config import CONFIG
 from ulc.main import (
     get_event_consumer,
-    get_rest_app,
+    get_rest_api,
 )
 
 
@@ -34,20 +34,20 @@ class Topics(str, Enum):
     FILE_REGISTERED = "file_registered"
 
 
-rest_app = get_rest_app(config=CONFIG)
+api = get_rest_api(config=CONFIG)
 
-cli = Typer()
-
-
-@cli.command()
-def run_rest():
-    """Run the REST API."""
-
-    run_server(app="upload_controller_service.__main__:rest_app", config=CONFIG)
+cli = typer.Typer()
 
 
 @cli.command()
-def consume_events(topic: Topics, run_forever: bool = True):
+def run_api():
+    """Run the HTTP REST API."""
+
+    run_server(app="upload_controller_service.__main__:api", config=CONFIG)
+
+
+@cli.command()
+def consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
 
     event_consumer = get_event_consumer(config=CONFIG)
