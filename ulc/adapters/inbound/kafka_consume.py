@@ -20,10 +20,9 @@ Subscriptions to async topics
 from pathlib import Path
 
 from ghga_message_schemas import schemas
-from ghga_service_chassis_lib.pubsub import AmqpTopic
+from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ulc.config import CONFIG, Config
-from ulc.domain.interfaces.inbound.upload import IUploadHandler
+from ulc.domain.interfaces.inbound.upload import IUploadService
 from ulc.domain.models import FileInfoInternal
 
 HERE = Path(__file__).parent.resolve()
@@ -33,10 +32,25 @@ class KafkaEventConsumer:
     """Adapter that consumes events received from an Apache Kafka broker."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, *, upload_handler: IUploadHandler, config: Config = CONFIG):
+    def __init__(
+        self,
+        *,
+        service_name: str,
+        rabbitmq_host: str,
+        rabbitmq_port: str,
+        topic_new_study: str,
+        topic_file_registered: str,
+        upload_service: IUploadService,
+    ):
         """Ininitalize class instance with config and inbound adapter objects."""
-        self._config = config
-        self._upload_handler = upload_handler
+        self._upload_service = upload_service
+        self._config = PubSubConfigBase(
+            service_name=service_name,
+            rabbitmq_host=rabbitmq_host,
+            rabbitmq_port=rabbitmq_port,
+        )
+        self._topic_new_study = topic_new_study
+        self._topic_file_registered = topic_file_registered
 
     def _process_file_registered_message(self, message: dict):
         """
@@ -46,7 +60,7 @@ class KafkaEventConsumer:
 
         file_id = message["file_id"]
 
-        self._upload_handler.handle_file_registered(file_id)
+        self._upload_service.handle_file_registered(file_id)
 
     def _process_new_study_message(self, message: dict):
         """
@@ -71,7 +85,7 @@ class KafkaEventConsumer:
             for file in files
         ]
 
-        self._upload_handler.handle_new_study(study_files)
+        self._upload_service.handle_new_study(study_files)
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """
@@ -81,7 +95,7 @@ class KafkaEventConsumer:
         # create a topic object:
         topic = AmqpTopic(
             config=self._config,
-            topic_name=self._config.topic_name_new_study,
+            topic_name=self._topic_new_study,
             json_schema=schemas.SCHEMAS["new_study_created"],
         )
 
@@ -99,7 +113,7 @@ class KafkaEventConsumer:
         # create a topic object:
         topic = AmqpTopic(
             config=self._config,
-            topic_name=self._config.topic_name_new_study,
+            topic_name=self._topic_file_registered,
             json_schema=schemas.SCHEMAS["file_internally_registered"],
         )
 

@@ -19,25 +19,20 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import Depends, FastAPI, HTTPException, Response, status
-from ghga_service_chassis_lib.api import configure_app
+from fastapi import Depends, APIRouter, HTTPException, Response, status
+from dependency_injector.wiring import inject, Provide
 
-from ulc.config import CONFIG
 from ulc.domain.models import FileInfoPatchState, UploadState
 from ulc.domain.interfaces.inbound.upload import (
-    IUploadHandler,
+    IUploadService,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
 )
-
-app = FastAPI()
-configure_app(app, config=CONFIG)
+from ulc.container import Container
 
 
-def get_config():
-    """Get runtime configuration. For use as FastAPI dependency."""
-    return CONFIG
+router = APIRouter()
 
 
 class HttpFileNotFoundException(HTTPException):
@@ -51,16 +46,17 @@ class HttpFileNotFoundException(HTTPException):
         )
 
 
-@app.get("/health", summary="health", status_code=status.HTTP_200_OK)
+@router.get("/health", summary="health", status_code=status.HTTP_200_OK)
 async def health():
     """Used to test if this service is alive"""
     return {"status": "OK"}
 
 
-@app.get("/presigned_post/{file_id}", summary="presigned_post")
+@router.get("/presigned_post/{file_id}", summary="presigned_post")
+@inject
 async def get_presigned_post(
     file_id: str,
-    upload_handler: IUploadHandler = Depends(lambda: ...),
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """
     Requesting a pre-signed post URL for a new file in the inbox
@@ -69,22 +65,23 @@ async def get_presigned_post(
 
     # call core functionality
     try:
-        url = upload_handler.get_upload_url(file_id=file_id)
+        url = upload_service.get_upload_url(file_id=file_id)
     except FileNotRegisteredError as error:
         raise HttpFileNotFoundException(file_id) from error
 
     return {"presigned_post": url}
 
 
-@app.patch(
+@router.patch(
     "/confirm_upload/{file_id}",
     summary="confirm_upload",
     status_code=status.HTTP_204_NO_CONTENT,
 )
+@inject
 async def patch_confirm_upload(
     file_id: str,
     file_info_patch: FileInfoPatchState,
-    upload_handler: IUploadHandler = Depends(lambda: ...),
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
@@ -104,7 +101,7 @@ async def patch_confirm_upload(
 
     # call core functionality
     try:
-        upload_handler.confirm_file_upload(file_id)
+        upload_service.confirm_file_upload(file_id)
     except FileNotReadyForConfirmUpload as error:
         raise HTTPException(
             status_code=400,

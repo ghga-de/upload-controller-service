@@ -16,4 +16,32 @@
 """Implementation of object storage adapters."""
 
 # pylint: disable=unused-import
-from ghga_service_chassis_lib.s3 import ObjectStorageS3
+from ghga_service_chassis_lib.s3 import (
+    ObjectStorageS3 as _S3ObjectStorage,
+    S3ConfigBase,
+)
+
+
+class S3ObjectStorage(_S3ObjectStorage):
+    """
+    An implementation of the IObjectStorage interface for interacting specifically
+    with S3 object storages.
+    """
+
+    def __init__(
+        self,
+        s3_endpoint_url: str,
+        s3_access_key_id: str,
+        s3_session_token: str,
+        aws_config_ini: str,
+    ):
+        """Init S3 object storage with config params."""
+
+        config = S3ConfigBase(
+            s3_endpoint_url=s3_endpoint_url,
+            s3_access_key_id=s3_access_key_id,
+            s3_session_token=s3_session_token,
+            aws_config_ini=aws_config_ini,
+        )
+
+        super().__init__(config=config)

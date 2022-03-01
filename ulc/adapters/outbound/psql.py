@@ -35,7 +35,6 @@ from ulc.domain.interfaces.outbound.file_info import (
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-from ulc.config import CONFIG
 
 
 Base: DeclarativeMeta = declarative_base()
@@ -121,16 +120,19 @@ class FileInfo(Base):
     )
 
 
-class PostgresDatabase(IFileInfoDAO):
+class PsqlFileInfoDAO(IFileInfoDAO):
     """
-    An implementation of the DatabaseDao interface using a PostgreSQL backend.
+    An implementation of the IFileInfoDAO interface using a PostgreSQL backend.
     """
 
-    def __init__(self, config: PostgresqlConfigBase = CONFIG):
+    # pylint: disable=super-init-not-called
+    def __init__(self, *, db_url: str, db_print_logs: bool = False):
         """initialze DAO implementation"""
 
-        super().__init__(config)
-        self._postgresql_connector = SyncPostgresqlConnector(config)
+        self._config = PostgresqlConfigBase()
+        self._db_url = db_url
+        self._db_print_logs = db_print_logs
+        self._postgresql_connector = SyncPostgresqlConnector(self._config)
 
         # will be defined on __enter__:
         self._session_cm: Any = None

@@ -20,7 +20,7 @@ from typing import Optional
 import fastapi.testclient
 
 from ulc.adapters.inbound.deps import get_config
-from ulc.adapters.inbound.rest import app
+from ulc.adapters.inbound.fastapi_rest import app
 from ulc.config import Config
 
 

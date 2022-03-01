@@ -17,4 +17,59 @@
 
 from dependency_injector import containers, providers
 
-class Container(containers)
+from ulc.adapters.outbound.psql import PsqlFileInfoDAO
+from ulc.adapters.outbound.s3 import S3ObjectStorage
+from ulc.adapters.outbound.kafka_produce import KafkaEventPublisher
+
+from ulc.adapters.inbound.kafka_consume import KafkaEventConsumer
+
+from ulc.domain.upload import UploadService
+
+
+class Container(containers.DeclarativeContainer):
+    """DI Container"""
+
+    config = providers.Configuration()
+
+    # outbound adapters:
+
+    file_info_dao = providers.Factory(
+        PsqlFileInfoDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
+    )
+
+    object_storage_dao = providers.Factory(
+        S3ObjectStorage,
+        s3_endpoint_url=config.s3_endpoint_url,
+        s3_access_key_id=config.s3_access_key_id,
+        s3_session_token=config.s3_session_token,
+        aws_config_ini=config.aws_config_ini,
+    )
+
+    event_publisher = providers.Factory(
+        KafkaEventPublisher,
+        service_name=config.service_name,
+        rabbitmq_host=config.rabbitmq_host,
+        rabbitmq_port=config.rabbitmq_port,
+        topic_upload_received=config.topic_upload_received,
+    )
+
+    # domain:
+
+    upload_service = providers.Factory(
+        UploadService,
+        s3_inbox_bucket_id=config.s3_inbox_bucket_id,
+        file_info_dao=file_info_dao,
+        object_storage_dao=object_storage_dao,
+        event_publisher=event_publisher,
+    )
+
+    # inbound adapters:
+
+    kafka_consumer = providers.Factory(
+        KafkaEventConsumer,
+        service_name=config.service_name,
+        rabbitmq_host=config.rabbitmq_host,
+        rabbitmq_port=config.rabbitmq_port,
+        topic_file_registered=config.topic_file_registered,
+        upload_service=upload_service,
+    )

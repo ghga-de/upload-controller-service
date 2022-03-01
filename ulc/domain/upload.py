@@ -18,7 +18,6 @@
 
 from typing import List
 
-from ulc.config import CONFIG, Config
 from ulc.domain.models import (
     FileInfoInternal,
     UploadState,
@@ -37,7 +36,7 @@ from ulc.domain.interfaces.outbound.event_pub import (
     IEventPublisher,
 )
 from ulc.domain.interfaces.inbound.upload import (
-    IUploadHandler,
+    IUploadService,
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
@@ -46,23 +45,23 @@ from ulc.domain.interfaces.inbound.upload import (
 )
 
 
-class UploadHandler(IUploadHandler):
+class UploadService(IUploadService):
     """Main service class for handling uploads to the Inbox."""
 
     # pylint: disable=super-init-not-called
     def __init__(
         self,
         *,
+        s3_inbox_bucket_id: str,
         file_info_dao: IFileInfoDAO,
         object_storage_dao: IObjectStorage,
         event_publisher: IEventPublisher,
-        config: Config = CONFIG,
     ):
         """Ininitalize class instance with configs and outbound adapter objects."""
-        self._config = config
         self._file_info_dao = file_info_dao
         self._object_storage_dao = object_storage_dao
         self._event_publisher = event_publisher
+        self._s3_inbox_bucket_id = s3_inbox_bucket_id
 
     def handle_new_study(self, study_files: List[FileInfoInternal]):
         """
@@ -89,7 +88,7 @@ class UploadHandler(IUploadHandler):
         with self._object_storage_dao as storage:
             try:
                 storage.delete_object(
-                    bucket_id=self._config.s3_inbox_bucket_id, object_id=file_id
+                    bucket_id=self._s3_inbox_bucket_id, object_id=file_id
                 )
             except ObjectNotFoundError as error:
                 raise FileNotInInboxError(file_id=file_id) from error
@@ -121,14 +120,12 @@ class UploadHandler(IUploadHandler):
 
             # Create presigned post for file_id
             with self._object_storage_dao as storage:
-                if not storage.does_bucket_exist(
-                    bucket_id=self._config.s3_inbox_bucket_id
-                ):
-                    storage.create_bucket(self._config.s3_inbox_bucket_id)
+                if not storage.does_bucket_exist(bucket_id=self._s3_inbox_bucket_id):
+                    storage.create_bucket(self._s3_inbox_bucket_id)
 
                 try:
                     presigned_post = storage.get_object_upload_url(
-                        bucket_id=self._config.s3_inbox_bucket_id,
+                        bucket_id=self._s3_inbox_bucket_id,
                         object_id=file_id,
                         expires_after=10,
                     )
@@ -158,10 +155,10 @@ class UploadHandler(IUploadHandler):
             with self._object_storage_dao as storage:
                 if not storage.does_object_exist(
                     object_id=file_id,
-                    bucket_id=self._config.s3_inbox_bucket_id,
+                    bucket_id=self._s3_inbox_bucket_id,
                 ):
                     raise FileNotInInboxError(file_id=file_id)
 
             file_info.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
-        self._event_publisher.publish_upload_received(file, self._config)
+        self._event_publisher.publish_upload_received(file)

@@ -18,9 +18,7 @@ Publish asynchronous topics
 """
 
 from ghga_message_schemas import schemas
-from ghga_service_chassis_lib.pubsub import AmqpTopic
-
-from ulc.config import CONFIG, Config
+from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
 from ulc.domain import models
 from ulc.domain.interfaces.outbound.event_pub import (
@@ -32,9 +30,22 @@ class KafkaEventPublisher(IEventPublisher):
     """A Kafka-based implementation of the IEventPublisher interface."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, *, config: Config = CONFIG):
+    def __init__(
+        self,
+        *,
+        service_name: str,
+        rabbitmq_host: str,
+        rabbitmq_port: str,
+        topic_upload_received: str,
+    ):
         """Ininitalize class instance with config object."""
-        self._config = config
+
+        self._config = PubSubConfigBase(
+            service_name=service_name,
+            rabbitmq_host=rabbitmq_host,
+            rabbitmq_port=rabbitmq_port,
+        )
+        self._topic_upload_received = topic_upload_received
 
     def publish_upload_received(
         self,
@@ -57,7 +68,7 @@ class KafkaEventPublisher(IEventPublisher):
         # create a topic object:
         topic = AmqpTopic(
             config=self._config,
-            topic_name=self._config.topic_name_upload_received,
+            topic_name=self._topic_upload_received,
             json_schema=schemas.SCHEMAS["file_upload_received"],
         )
 

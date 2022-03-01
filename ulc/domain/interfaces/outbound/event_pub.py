@@ -17,7 +17,6 @@
 
 from typing import Protocol
 
-from ulc.config import CONFIG, Config
 from ulc.domain import models
 
 

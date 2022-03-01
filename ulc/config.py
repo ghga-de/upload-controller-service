@@ -29,8 +29,9 @@ class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase
     service_name: str = "upload_controller_service"
 
     s3_inbox_bucket_id: str = "inbox"
-    topic_name_upload_received: str = "file_upload_received"
-    topic_name_new_study: str = "new_study_created"
+    topic_file_registered: str = "file_internally_registered"
+    topic_new_study: str = "new_study_created"
+    topic_upload_received: str = "file_upload_received"
 
 
 CONFIG = Config()

@@ -66,7 +66,7 @@ class FileNotReadyForConfirmUpload(RuntimeError):
         super().__init__(message)
 
 
-class IUploadHandler(Protocol):
+class IUploadService(Protocol):
     """Interface for the main service class for handling uploads to the Inbox."""
 
     def handle_new_study(self, study_files: List[FileInfoInternal]):
