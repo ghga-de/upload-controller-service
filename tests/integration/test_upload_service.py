@@ -27,7 +27,13 @@ from ulc.domain.interfaces.inbound.upload import (
     FileNotRegisteredError,
 )
 
-from ..fixtures import get_cont_and_conf, psql_fixture, s3_fixture, state  # noqa: F401
+from ..fixtures import (  # noqa: F401
+    amqp_fixture,
+    get_cont_and_conf,
+    psql_fixture,
+    s3_fixture,
+    state,
+)
 
 
 @pytest.mark.parametrize(
@@ -103,10 +109,11 @@ def test_get_upload_url(
     expected_exception: Optional[Type[BaseException]],
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
+    amqp_fixture,  # noqa: F811
 ):
     """Test the `get_upload_url` method."""
-    container, config = get_cont_and_conf(
-        sources=[psql_fixture.config, s3_fixture.config]
+    container, _ = get_cont_and_conf(
+        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
     upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
