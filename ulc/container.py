@@ -17,12 +17,14 @@
 
 from dependency_injector import containers, providers
 
-from ulc.adapters.outbound.psql import PsqlFileInfoDAO
-from ulc.adapters.outbound.s3 import S3ObjectStorage
-from ulc.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
-
 from ulc.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-
+from ulc.adapters.outbound.psql import PsqlFileInfoDAO
+from ulc.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ulc.adapters.outbound.s3 import S3ObjectStorage
+from ulc.domain.interfaces.inbound.upload import IUploadService
+from ulc.domain.interfaces.outbound.event_pub import IEventPublisher
+from ulc.domain.interfaces.outbound.file_info import IFileInfoDAO
+from ulc.domain.interfaces.outbound.storage import IObjectStorage
 from ulc.domain.upload import UploadService
 
 
@@ -33,11 +35,11 @@ class Container(containers.DeclarativeContainer):
 
     # outbound adapters:
 
-    file_info_dao = providers.Factory(
+    file_info_dao = providers.Factory[IFileInfoDAO](
         PsqlFileInfoDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
     )
 
-    object_storage_dao = providers.Factory(
+    object_storage_dao = providers.Factory[IObjectStorage](
         S3ObjectStorage,
         s3_endpoint_url=config.s3_endpoint_url,
         s3_access_key_id=config.s3_access_key_id,
@@ -46,7 +48,7 @@ class Container(containers.DeclarativeContainer):
         aws_config_ini=config.aws_config_ini,
     )
 
-    event_publisher = providers.Factory(
+    event_publisher = providers.Factory[IEventPublisher](
         RabbitMQEventPublisher,
         service_name=config.service_name,
         rabbitmq_host=config.rabbitmq_host,
@@ -56,7 +58,7 @@ class Container(containers.DeclarativeContainer):
 
     # domain:
 
-    upload_service = providers.Factory(
+    upload_service = providers.Factory[IUploadService](
         UploadService,
         s3_inbox_bucket_id=config.s3_inbox_bucket_id,
         file_info_dao=file_info_dao,
@@ -66,7 +68,7 @@ class Container(containers.DeclarativeContainer):
 
     # inbound adapters:
 
-    event_subscriber = providers.Factory(
+    event_subscriber = providers.Factory[RabbitMQEventConsumer](
         RabbitMQEventConsumer,
         service_name=config.service_name,
         rabbitmq_host=config.rabbitmq_host,

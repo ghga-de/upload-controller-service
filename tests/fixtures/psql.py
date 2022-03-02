@@ -25,10 +25,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from ulc.domain import models
 from ulc.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
+from ulc.domain import models
 
-from . import state, get_cont_and_conf
+from . import get_cont_and_conf, state
 
 existing_file_infos: List[models.FileInfoInternal] = []
 non_existing_file_infos: List[models.FileInfoInternal] = []

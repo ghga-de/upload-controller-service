@@ -28,7 +28,6 @@ from ulc.domain.interfaces.inbound.upload import (
 )
 
 from ..fixtures import get_cont_and_conf, psql_fixture, s3_fixture, state  # noqa: F401
-from ..fixtures.utils import null_func
 
 
 @pytest.mark.parametrize(

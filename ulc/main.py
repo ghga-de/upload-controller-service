@@ -18,11 +18,10 @@
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app
 
-from ulc.config import Config
-from ulc.container import Container
-
 from ulc.adapters.inbound.fastapi_ import router
 from ulc.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ulc.config import Config
+from ulc.container import Container
 
 
 def setup_container(*, config: Config) -> Container:
@@ -38,9 +37,10 @@ def setup_container(*, config: Config) -> Container:
 def get_rest_api(*, config: Config) -> FastAPI:
     """Creates a FastAPI app."""
 
+    container = setup_container(config=config)
+    container.wire(modules=["ulc.adapters.inbound.fastapi_"])
+
     api = FastAPI()
-    api.container = setup_container(config=config)
-    api.container.wire(modules=["ulc.adapters.inbound.fastapi_"])
     api.include_router(router)
     configure_app(api, config=config)
 
@@ -49,5 +49,6 @@ def get_rest_api(*, config: Config) -> FastAPI:
 
 def get_event_consumer(*, config: Config) -> RabbitMQEventConsumer:
     """Create an instance of RabbitMQEventConsumer"""
+
     container = setup_container(config=config)
     return container.event_subscriber()

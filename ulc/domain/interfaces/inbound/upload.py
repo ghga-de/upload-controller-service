@@ -16,11 +16,9 @@
 """Interfaces for the main upload handling logic of this service."""
 
 
-from typing import Protocol, List
+from typing import List, Protocol
 
-from ulc.domain.models import (
-    FileInfoInternal,
-)
+from ulc.domain.models import FileInfoInternal
 
 
 class FileAlreadyInInboxError(RuntimeError):

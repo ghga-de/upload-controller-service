@@ -15,17 +15,9 @@
 
 """Test the event consumption"""
 
-
-from datetime import datetime, timezone
-
 from ghga_message_schemas import schemas
-from ghga_service_chassis_lib.utils import exec_with_timeout
 
-from ..fixtures import (  # noqa: F401
-    amqp_fixture,
-    get_cont_and_conf,
-    state,
-)
+from ..fixtures import amqp_fixture, get_cont_and_conf, state  # noqa: F401
 
 
 def test_publish_upload_received(

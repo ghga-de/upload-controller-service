@@ -18,10 +18,15 @@
 
 from typing import List
 
-from ulc.domain.models import (
-    FileInfoInternal,
-    UploadState,
+from ulc.domain.interfaces.inbound.upload import (
+    FileAlreadyInInboxError,
+    FileAlreadyRegisteredError,
+    FileNotInInboxError,
+    FileNotReadyForConfirmUpload,
+    FileNotRegisteredError,
+    IUploadService,
 )
+from ulc.domain.interfaces.outbound.event_pub import IEventPublisher
 from ulc.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
@@ -32,17 +37,7 @@ from ulc.domain.interfaces.outbound.storage import (
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ulc.domain.interfaces.outbound.event_pub import (
-    IEventPublisher,
-)
-from ulc.domain.interfaces.inbound.upload import (
-    IUploadService,
-    FileAlreadyInInboxError,
-    FileAlreadyRegisteredError,
-    FileNotInInboxError,
-    FileNotReadyForConfirmUpload,
-    FileNotRegisteredError,
-)
+from ulc.domain.models import FileInfoInternal, UploadState
 
 
 class UploadService(IUploadService):

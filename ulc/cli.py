@@ -21,10 +21,7 @@ import typer
 from ghga_service_chassis_lib.api import run_server
 
 from ulc.config import Config
-from ulc.main import (
-    get_event_consumer,
-    get_rest_api,
-)
+from ulc.main import get_event_consumer, get_rest_api
 
 
 class Topics(str, Enum):

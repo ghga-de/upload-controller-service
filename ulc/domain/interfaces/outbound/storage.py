@@ -16,12 +16,14 @@
 """Interfaces for object storage adapters and the exception they may throw."""
 
 # pylint: disable=unused-import
-from ghga_service_chassis_lib.object_storage_dao import (
+from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
     ObjectAlreadyExistsError,
     ObjectIdValidationError,
     ObjectNotFoundError,
 )
-from ghga_service_chassis_lib.object_storage_dao import (
+from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
     ObjectStorageDao as IObjectStorage,
 )
-from ghga_service_chassis_lib.object_storage_dao import ObjectStorageDaoError
+from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
+    ObjectStorageDaoError,
+)

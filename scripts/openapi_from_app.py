@@ -26,7 +26,11 @@ import sys
 
 import yaml
 
-from ulc.adapters.inbound.rest import app
+from ulc.config import Config
+from ulc.main import get_rest_api
+
+config = Config()
+app = get_rest_api(config=config)
 
 # get openapi spec as dict:
 openapi_spec = app.openapi()

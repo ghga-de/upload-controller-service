@@ -118,7 +118,7 @@ def test_file_registered(
     # process the stage request:
     exec_with_timeout(
         func=lambda: event_subscriber.subscribe_file_registered(run_forever=False),
-        timeout_after=1000000,
+        timeout_after=2,
     )
 
     # now the file should be deleted:

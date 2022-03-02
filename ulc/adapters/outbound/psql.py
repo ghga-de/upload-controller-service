@@ -15,27 +15,26 @@
 
 """DAO implementation to manage File Info in a database."""
 
-from typing import Any
 import uuid
+from typing import Any
 
-from sqlalchemy.future import select
-from sqlalchemy import Column, DateTime, Enum, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.decl_api import DeclarativeMeta
 from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
 )
+from sqlalchemy import Column, DateTime, Enum, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.future import select
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from ulc.domain.models import UploadState
 from ulc.domain import models
 from ulc.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-
+from ulc.domain.models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 

@@ -19,18 +19,17 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import Depends, APIRouter, HTTPException, Response, status
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ulc.domain.models import FileInfoPatchState, UploadState
+from ulc.container import Container
 from ulc.domain.interfaces.inbound.upload import (
-    IUploadService,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
+    IUploadService,
 )
-from ulc.container import Container
-
+from ulc.domain.models import FileInfoPatchState, UploadState
 
 router = APIRouter()
 

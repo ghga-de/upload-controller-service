@@ -16,10 +16,8 @@
 """Implementation of object storage adapters."""
 
 # pylint: disable=unused-import
-from ghga_service_chassis_lib.s3 import (
-    ObjectStorageS3 as _S3ObjectStorage,
-    S3ConfigBase,
-)
+from ghga_service_chassis_lib.s3 import ObjectStorageS3 as _S3ObjectStorage
+from ghga_service_chassis_lib.s3 import S3ConfigBase
 
 
 class S3ObjectStorage(_S3ObjectStorage):
@@ -28,6 +26,7 @@ class S3ObjectStorage(_S3ObjectStorage):
     with S3 object storages.
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         s3_endpoint_url: str,
