@@ -69,9 +69,9 @@ class UploadService(IUploadService):
         """
 
         for file in study_files:
-            with self._file_info_dao as file_info:
+            with self._file_info_dao as fi_dao:
                 try:
-                    file_info.register_file(file)
+                    fi_dao.register(file)
                 except FileInfoAlreadyExistsError as error:
                     raise FileAlreadyRegisteredError(file_id=file.file_id) from error
 
@@ -93,11 +93,9 @@ class UploadService(IUploadService):
             except ObjectNotFoundError as error:
                 raise FileNotInInboxError(file_id=file_id) from error
 
-        with self._file_info_dao as file_info:
+        with self._file_info_dao as fi_dao:
             try:
-                file_info.update_file_state(
-                    file_id=file_id, state=UploadState.COMPLETED
-                )
+                fi_dao.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
             except FileInfoNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
@@ -111,9 +109,9 @@ class UploadService(IUploadService):
         """
 
         # Check if file is in db
-        with self._file_info_dao as file_info:
+        with self._file_info_dao as fi_dao:
             try:
-                file_info.get_file(file_id=file_id)
+                fi_dao.get(file_id=file_id)
 
             except FileInfoNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
@@ -132,7 +130,7 @@ class UploadService(IUploadService):
                 except ObjectAlreadyExistsError as error:
                     raise FileAlreadyInInboxError(file_id=file_id) from error
 
-            file_info.update_file_state(file_id=file_id, state=UploadState.PENDING)
+            fi_dao.update_file_state(file_id=file_id, state=UploadState.PENDING)
         return presigned_post
 
     def confirm_file_upload(
@@ -144,9 +142,9 @@ class UploadService(IUploadService):
         FileNotInInboxError if this is not the case.
         """
 
-        with self._file_info_dao as file_info:
+        with self._file_info_dao as fi_dao:
             try:
-                file = file_info.get_file(file_id=file_id)
+                file = fi_dao.get(file_id=file_id)
                 if file.state is not UploadState.PENDING:
                     raise FileNotReadyForConfirmUpload(file_id=file_id)
             except FileInfoNotFoundError as error:
@@ -159,6 +157,6 @@ class UploadService(IUploadService):
                 ):
                     raise FileNotInInboxError(file_id=file_id)
 
-            file_info.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
+            fi_dao.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
         self._event_publisher.publish_upload_received(file)

@@ -26,10 +26,9 @@ from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from ulc.domain import models
-from ulc.adapters.outbound.psql import orm_models
-from ulc.adapters.outbound.psql.daos import PostgresDatabase
+from ulc.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
 
-from . import state
+from . import state, get_cont_and_conf
 
 existing_file_infos: List[models.FileInfoInternal] = []
 non_existing_file_infos: List[models.FileInfoInternal] = []
@@ -46,7 +45,7 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
 
     # setup database and tables:
     engine = create_engine(db_url)
-    orm_models.Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
 
     # populate with test data:
     session_factor = sessionmaker(engine)
@@ -55,7 +54,7 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
             param_dict = {
                 **existing_file_info.dict(),
             }
-            orm_entry = orm_models.FileInfo(**param_dict)
+            orm_entry = FileInfo(**param_dict)
             session.add(orm_entry)
         session.commit()
 
@@ -65,7 +64,7 @@ class PsqlState:
     """Info yielded by the `psql_fixture` function"""
 
     config: PostgresqlConfigBase
-    database: PostgresDatabase
+    file_info_dao: PsqlFileInfoDAO
     existing_file_infos: List[models.FileInfoInternal]
     non_existing_file_infos: List[models.FileInfoInternal]
 
@@ -75,13 +74,16 @@ def psql_fixture() -> Generator[PsqlState, None, None]:
     """Pytest fixture for tests of the Prostgres DAO implementation."""
 
     with PostgresContainer() as postgres:
-        config = config_from_psql_container(postgres)
+        psq_config = config_from_psql_container(postgres)
+        container, config = get_cont_and_conf(sources=[psq_config])
+        file_info_dao = container.file_info_dao()
+
         populate_db(config.db_url, file_infos=existing_file_infos)
 
-        with PostgresDatabase(config) as database:
+        with file_info_dao as fi_dao:
             yield PsqlState(
                 config=config,
-                database=database,
+                file_info_dao=fi_dao,
                 existing_file_infos=existing_file_infos,
                 non_existing_file_infos=non_existing_file_infos,
             )

@@ -129,9 +129,7 @@ class PsqlFileInfoDAO(IFileInfoDAO):
     def __init__(self, *, db_url: str, db_print_logs: bool = False):
         """initialze DAO implementation"""
 
-        self._config = PostgresqlConfigBase()
-        self._db_url = db_url
-        self._db_print_logs = db_print_logs
+        self._config = PostgresqlConfigBase(db_url=db_url, db_print_logs=db_print_logs)
         self._postgresql_connector = SyncPostgresqlConnector(self._config)
 
         # will be defined on __enter__:
@@ -162,13 +160,13 @@ class PsqlFileInfoDAO(IFileInfoDAO):
 
         return orm_file
 
-    def get_file(self, file_id: str) -> models.FileInfoExternal:
+    def get(self, file_id: str) -> models.FileInfoExternal:
         """Get file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
         return models.FileInfoExternal.from_orm(orm_file)
 
-    def register_file(self, file: models.FileInfoInternal) -> None:
+    def register(self, file: models.FileInfoInternal) -> None:
         """Register a new file to the database."""
 
         # check for collisions in the database:
@@ -193,7 +191,7 @@ class PsqlFileInfoDAO(IFileInfoDAO):
         orm_file = self._get_orm_file(file_id=file_id)
         orm_file.state = state  # type: ignore
 
-    def unregister_file(self, file_id: str) -> None:
+    def unregister(self, file_id: str) -> None:
         """
         Unregister a file with the specified file ID from the database.
         """

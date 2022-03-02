@@ -32,6 +32,3 @@ class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase
     topic_file_registered: str = "file_internally_registered"
     topic_new_study: str = "new_study_created"
     topic_upload_received: str = "file_upload_received"
-
-
-CONFIG = Config()

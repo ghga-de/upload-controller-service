@@ -21,11 +21,11 @@ from ghga_service_chassis_lib.api import configure_app
 from ulc.config import Config
 from ulc.container import Container
 
-from ulc.adapters.inbound.fastapi_rest import router
+from ulc.adapters.inbound.fastapi_ import router
 from ulc.adapters.inbound.kafka_consume import KafkaEventConsumer
 
 
-def create_container(*, config: Config) -> Container:
+def setup_container(*, config: Config) -> Container:
     """Create and configure a DI container."""
 
     container = Container()
@@ -39,8 +39,8 @@ def get_rest_api(*, config: Config) -> FastAPI:
     """Creates a FastAPI app."""
 
     api = FastAPI()
-    api.container = create_container(config=config)
-    api.container.wire(modules=["ulc.adapters.inbound.fastapi_rest"])
+    api.container = setup_container(config=config)
+    api.container.wire(modules=["ulc.adapters.inbound.fastapi_"])
     api.include_router(router)
     configure_app(api, config=config)
 
@@ -49,5 +49,5 @@ def get_rest_api(*, config: Config) -> FastAPI:
 
 def get_event_consumer(*, config: Config) -> KafkaEventConsumer:
     """Create an instance of KafkaEventConsumer"""
-    container = create_container(config=config)
+    container = setup_container(config=config)
     return container.kafka_consumer()

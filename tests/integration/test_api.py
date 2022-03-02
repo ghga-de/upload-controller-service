@@ -134,7 +134,7 @@ def test_confirm_upload(
 
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
-        topic_name=config.topic_name_upload_received,
+        topic_name=config.topic_upload_received,
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
