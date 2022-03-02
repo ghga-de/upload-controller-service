@@ -23,7 +23,6 @@ from ghga_service_chassis_lib.utils import exec_with_timeout
 
 from ..fixtures import (  # noqa: F401
     amqp_fixture,
-    get_config,
     get_cont_and_conf,
     psql_fixture,
     s3_fixture,

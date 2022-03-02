@@ -29,7 +29,7 @@ HERE = Path(__file__).parent.resolve()
 
 
 class RabbitMQEventConsumer:
-    """Adapter that consumes events received from an Apache Kafka broker."""
+    """Adapter that consumes events received from an Apache RabbitMQ broker."""
 
     # pylint: disable=super-init-not-called
     def __init__(

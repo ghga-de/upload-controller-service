@@ -25,7 +25,7 @@ class IEventPublisher(Protocol):
 
     def publish_upload_received(
         self,
-        file: models.FileInfoExternal,
+        file_info: models.FileInfoExternal,
     ) -> None:
         """Publish event informing that a new upload was received."""
         ...

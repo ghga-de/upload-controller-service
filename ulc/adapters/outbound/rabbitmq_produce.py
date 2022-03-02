@@ -27,7 +27,7 @@ from ulc.domain.interfaces.outbound.event_pub import (
 
 
 class RabbitMQEventPublisher(IEventPublisher):
-    """A Kafka-based implementation of the IEventPublisher interface."""
+    """A RabbitMQ-based implementation of the IEventPublisher interface."""
 
     # pylint: disable=super-init-not-called
     def __init__(
@@ -49,20 +49,20 @@ class RabbitMQEventPublisher(IEventPublisher):
 
     def publish_upload_received(
         self,
-        file: models.FileInfoExternal,
+        file_info: models.FileInfoExternal,
     ) -> None:
         """
         Publishes a message to a specified topic
         """
 
         message = {
-            "file_id": file.file_id,
-            "grouping_label": file.grouping_label,
-            "md5_checksum": file.md5_checksum,
-            "format": file.format,
-            "creation_date": file.creation_date.isoformat(),
-            "update_date": file.update_date.isoformat(),
-            "size": file.size,
+            "file_id": file_info.file_id,
+            "grouping_label": file_info.grouping_label,
+            "md5_checksum": file_info.md5_checksum,
+            "format": file_info.format,
+            "creation_date": file_info.creation_date.isoformat(),
+            "update_date": file_info.update_date.isoformat(),
+            "size": file_info.size,
         }
 
         # create a topic object:

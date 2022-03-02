@@ -23,26 +23,19 @@ from ghga_service_chassis_lib.utils import exec_with_timeout
 
 from ..fixtures import (  # noqa: F401
     amqp_fixture,
-    get_config,
     get_cont_and_conf,
-    psql_fixture,
-    s3_fixture,
     state,
 )
 
 
 def test_publish_upload_received(
-    psql_fixture,  # noqa: F811
-    s3_fixture,  # noqa: F811
     amqp_fixture,  # noqa: F811
 ):  # noqa: F811
     """Test `subscribe_new_study` method"""
-    container, config = get_cont_and_conf(
-        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
-    )
+    container, config = get_cont_and_conf(sources=[amqp_fixture.config])
     event_publisher = container.event_publisher()
 
-    file_id = state.FILES["in_inbox"].file_info.file_id
+    file_info = state.FILES["in_inbox"].file_info
 
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
@@ -50,8 +43,8 @@ def test_publish_upload_received(
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
-    event_publisher.confirm_file_upload(file_id)
+    event_publisher.publish_upload_received(file_info)
 
     # receive the published message:
     downstream_message = downstream_subscriber.subscribe(timeout_after=2)
-    assert downstream_message["file_id"] == file_id
+    assert downstream_message["file_id"] == file_info.file_id
