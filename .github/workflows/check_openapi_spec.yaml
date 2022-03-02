@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install ".[all]"
+          pip install -e ".[all]"
 
       - name: Check if openapi.yaml is up to date
         run: |
