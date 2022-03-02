@@ -43,7 +43,7 @@ cli = typer.Typer()
 def run_api():
     """Run the HTTP REST API."""
 
-    run_server(app="upload_controller_service.__main__:api", config=CONFIG)
+    run_server(app="ulc.cli:api", config=CONFIG)
 
 
 @cli.command()

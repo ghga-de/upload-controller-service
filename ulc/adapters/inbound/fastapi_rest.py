@@ -47,14 +47,14 @@ class HttpFileNotFoundException(HTTPException):
 
 
 @router.get("/health", summary="health", status_code=status.HTTP_200_OK)
-async def health():
+def health():
     """Used to test if this service is alive"""
     return {"status": "OK"}
 
 
 @router.get("/presigned_post/{file_id}", summary="presigned_post")
 @inject
-async def get_presigned_post(
+def get_presigned_post(
     file_id: str,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
@@ -78,7 +78,7 @@ async def get_presigned_post(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 @inject
-async def patch_confirm_upload(
+def patch_confirm_upload(
     file_id: str,
     file_info_patch: FileInfoPatchState,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),

@@ -30,6 +30,7 @@ def create_container(*, config: Config) -> Container:
 
     container = Container()
     container.config.from_pydantic(config)
+    container.init_resources()
 
     return container
 
@@ -39,6 +40,7 @@ def get_rest_api(*, config: Config) -> FastAPI:
 
     api = FastAPI()
     api.container = create_container(config=config)
+    api.container.wire(modules=["ulc.adapters.inbound.fastapi_rest"])
     api.include_router(router)
     configure_app(api, config=config)
 
