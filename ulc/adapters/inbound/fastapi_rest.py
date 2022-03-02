@@ -95,7 +95,7 @@ def patch_confirm_upload(
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" can`t be set to "{file_info_patch.state}"'
+                f'The file with id "{file_id}" can`t be set to "{file_info_patch.state}"'
             ),
         )
 
@@ -106,7 +106,7 @@ def patch_confirm_upload(
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" is not ready to be set to "CONFIRMED"'
+                f'The file with id "{file_id}" is not ready to be set to "CONFIRMED"'
             ),
         ) from error
     except FileNotRegisteredError as error:
@@ -115,7 +115,7 @@ def patch_confirm_upload(
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" is registered for upload'
+                f'The file with id "{file_id}" is registered for upload'
                 + " but its content was not found in the inbox."
             ),
         ) from error
