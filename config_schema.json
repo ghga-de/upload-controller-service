@@ -8,7 +8,7 @@
       "description": "URL to the S3 API.",
       "example": "http://localhost:4566",
       "env_names": [
-        "upload_controller_service_s3_endpoint_url"
+        "ulc_s3_endpoint_url"
       ],
       "type": "string"
     },
@@ -17,7 +17,7 @@
       "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
       "example": "my-access-key-id",
       "env_names": [
-        "upload_controller_service_s3_access_key_id"
+        "ulc_s3_access_key_id"
       ],
       "type": "string"
     },
@@ -26,7 +26,7 @@
       "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
       "example": "my-secret-access-key",
       "env_names": [
-        "upload_controller_service_s3_secret_access_key"
+        "ulc_s3_secret_access_key"
       ],
       "type": "string"
     },
@@ -35,7 +35,7 @@
       "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
       "example": "my-session-token",
       "env_names": [
-        "upload_controller_service_s3_session_token"
+        "ulc_s3_session_token"
       ],
       "type": "string"
     },
@@ -44,7 +44,7 @@
       "description": "Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file",
       "example": "~/.aws/config",
       "env_names": [
-        "upload_controller_service_aws_config_ini"
+        "ulc_aws_config_ini"
       ],
       "type": "string",
       "format": "path"
@@ -54,7 +54,7 @@
       "description": "A URL to a PostgreSQL database.",
       "example": "postgresql://user:password@mydbserver/dbname",
       "env_names": [
-        "upload_controller_service_db_url"
+        "ulc_db_url"
       ],
       "type": "string"
     },
@@ -63,7 +63,7 @@
       "description": "Print DB/ORM logs.",
       "default": false,
       "env_names": [
-        "upload_controller_service_db_print_logs"
+        "ulc_db_print_logs"
       ],
       "type": "boolean"
     },
@@ -71,7 +71,7 @@
       "title": "Service Name",
       "default": "upload_controller_service",
       "env_names": [
-        "upload_controller_service_service_name"
+        "ulc_service_name"
       ],
       "type": "string"
     },
@@ -80,7 +80,7 @@
       "description": "Name or IP address of the host running the RabbitMQ broker.",
       "example": "rabbitmq",
       "env_names": [
-        "upload_controller_service_rabbitmq_host"
+        "ulc_rabbitmq_host"
       ],
       "type": "string"
     },
@@ -89,7 +89,7 @@
       "description": "Port of the RabbitMQ broker running on the specified host.",
       "default": 5672,
       "env_names": [
-        "upload_controller_service_rabbitmq_port"
+        "ulc_rabbitmq_port"
       ],
       "type": "integer"
     },
@@ -98,7 +98,7 @@
       "description": "IP of the host.",
       "default": "127.0.0.1",
       "env_names": [
-        "upload_controller_service_host"
+        "ulc_host"
       ],
       "type": "string"
     },
@@ -107,7 +107,7 @@
       "description": "Port to expose the server on the specified host",
       "default": 8080,
       "env_names": [
-        "upload_controller_service_port"
+        "ulc_port"
       ],
       "type": "integer"
     },
@@ -116,7 +116,7 @@
       "description": "Controls the verbosity of the log.",
       "default": "info",
       "env_names": [
-        "upload_controller_service_log_level"
+        "ulc_log_level"
       ],
       "enum": [
         "critical",
@@ -133,7 +133,7 @@
       "description": "A development feature. Set to `True` to automatically reload the server upon code changes",
       "default": false,
       "env_names": [
-        "upload_controller_service_auto_reload"
+        "ulc_auto_reload"
       ],
       "type": "boolean"
     },
@@ -142,7 +142,7 @@
       "description": "Number of workers processes to run.",
       "default": 1,
       "env_names": [
-        "upload_controller_service_workers"
+        "ulc_workers"
       ],
       "type": "integer"
     },
@@ -151,7 +151,7 @@
       "description": "Root path at which the API is reachable. This is relative to the specified host and port.",
       "default": "/",
       "env_names": [
-        "upload_controller_service_api_root_path"
+        "ulc_api_root_path"
       ],
       "type": "string"
     },
@@ -160,7 +160,7 @@
       "description": "Path to get the openapi specification in JSON format. This is relative to the specified host and port.",
       "default": "/openapi.json",
       "env_names": [
-        "upload_controller_service_openapi_url"
+        "ulc_openapi_url"
       ],
       "type": "string"
     },
@@ -169,7 +169,7 @@
       "description": "Path to host the swagger documentation. This is relative to the specified host and port.",
       "default": "/docs",
       "env_names": [
-        "upload_controller_service_docs_url"
+        "ulc_docs_url"
       ],
       "type": "string"
     },
@@ -181,7 +181,7 @@
         "https://www.example.org"
       ],
       "env_names": [
-        "upload_controller_service_cors_allowed_origins"
+        "ulc_cors_allowed_origins"
       ],
       "type": "array",
       "items": {
@@ -196,7 +196,7 @@
         "https://www.example.org"
       ],
       "env_names": [
-        "upload_controller_service_cors_allow_credentials"
+        "ulc_cors_allow_credentials"
       ],
       "type": "boolean"
     },
@@ -207,7 +207,7 @@
         "*"
       ],
       "env_names": [
-        "upload_controller_service_cors_allowed_methods"
+        "ulc_cors_allowed_methods"
       ],
       "type": "array",
       "items": {
@@ -219,7 +219,7 @@
       "description": "A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests.",
       "example": [],
       "env_names": [
-        "upload_controller_service_cors_allowed_headers"
+        "ulc_cors_allowed_headers"
       ],
       "type": "array",
       "items": {
@@ -230,23 +230,31 @@
       "title": "S3 Inbox Bucket Id",
       "default": "inbox",
       "env_names": [
-        "upload_controller_service_s3_inbox_bucket_id"
+        "ulc_s3_inbox_bucket_id"
       ],
       "type": "string"
     },
-    "topic_upload_received": {
-      "title": "Topic Name Upload Received",
-      "default": "file_upload_received",
+    "topic_file_registered": {
+      "title": "Topic File Registered",
+      "default": "file_internally_registered",
       "env_names": [
-        "upload_controller_service_topic_upload_received"
+        "ulc_topic_file_registered"
       ],
       "type": "string"
     },
     "topic_new_study": {
-      "title": "Topic Name New Study",
+      "title": "Topic New Study",
       "default": "new_study_created",
       "env_names": [
-        "upload_controller_service_topic_new_study"
+        "ulc_topic_new_study"
+      ],
+      "type": "string"
+    },
+    "topic_upload_received": {
+      "title": "Topic Upload Received",
+      "default": "file_upload_received",
+      "env_names": [
+        "ulc_topic_upload_received"
       ],
       "type": "string"
     }
