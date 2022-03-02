@@ -68,12 +68,14 @@ class UploadService(IUploadService):
         Put the information for files into the database
         """
 
-        for file in study_files:
+        for file_info in study_files:
             with self._file_info_dao as fi_dao:
                 try:
-                    fi_dao.register(file)
+                    fi_dao.register(file_info)
                 except FileInfoAlreadyExistsError as error:
-                    raise FileAlreadyRegisteredError(file_id=file.file_id) from error
+                    raise FileAlreadyRegisteredError(
+                        file_id=file_info.file_id
+                    ) from error
 
     def handle_file_registered(
         self,
@@ -144,8 +146,8 @@ class UploadService(IUploadService):
 
         with self._file_info_dao as fi_dao:
             try:
-                file = fi_dao.get(file_id=file_id)
-                if file.state is not UploadState.PENDING:
+                file_info = fi_dao.get(file_id=file_id)
+                if file_info.state is not UploadState.PENDING:
                     raise FileNotReadyForConfirmUpload(file_id=file_id)
             except FileInfoNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
@@ -159,4 +161,4 @@ class UploadService(IUploadService):
 
             fi_dao.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
-        self._event_publisher.publish_upload_received(file)
+        self._event_publisher.publish_upload_received(file_info)
