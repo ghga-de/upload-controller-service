@@ -22,7 +22,7 @@ from ulc.config import Config
 from ulc.container import Container
 
 from ulc.adapters.inbound.fastapi_ import router
-from ulc.adapters.inbound.kafka_consume import KafkaEventConsumer
+from ulc.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
 
 
 def setup_container(*, config: Config) -> Container:
@@ -47,7 +47,7 @@ def get_rest_api(*, config: Config) -> FastAPI:
     return api
 
 
-def get_event_consumer(*, config: Config) -> KafkaEventConsumer:
-    """Create an instance of KafkaEventConsumer"""
+def get_event_consumer(*, config: Config) -> RabbitMQEventConsumer:
+    """Create an instance of RabbitMQEventConsumer"""
     container = setup_container(config=config)
-    return container.kafka_consumer()
+    return container.event_subscriber()

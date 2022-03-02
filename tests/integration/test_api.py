@@ -32,8 +32,8 @@ from ..fixtures.utils import is_success_http_code
 
 def test_get_health():
     """Test the GET /health endpoint"""
-
-    client = ApiTestClient()
+    config = get_config()
+    client = ApiTestClient(config=config)
     response = client.get("/health")
 
     assert response.status_code == status.HTTP_200_OK

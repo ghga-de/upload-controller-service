@@ -28,7 +28,7 @@ from ulc.domain.models import FileInfoInternal
 HERE = Path(__file__).parent.resolve()
 
 
-class KafkaEventConsumer:
+class RabbitMQEventConsumer:
     """Adapter that consumes events received from an Apache Kafka broker."""
 
     # pylint: disable=super-init-not-called

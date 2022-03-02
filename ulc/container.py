@@ -19,9 +19,9 @@ from dependency_injector import containers, providers
 
 from ulc.adapters.outbound.psql import PsqlFileInfoDAO
 from ulc.adapters.outbound.s3 import S3ObjectStorage
-from ulc.adapters.outbound.kafka_produce import KafkaEventPublisher
+from ulc.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 
-from ulc.adapters.inbound.kafka_consume import KafkaEventConsumer
+from ulc.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
 
 from ulc.domain.upload import UploadService
 
@@ -47,7 +47,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     event_publisher = providers.Factory(
-        KafkaEventPublisher,
+        RabbitMQEventPublisher,
         service_name=config.service_name,
         rabbitmq_host=config.rabbitmq_host,
         rabbitmq_port=config.rabbitmq_port,
@@ -66,8 +66,8 @@ class Container(containers.DeclarativeContainer):
 
     # inbound adapters:
 
-    kafka_consumer = providers.Factory(
-        KafkaEventConsumer,
+    event_subscriber = providers.Factory(
+        RabbitMQEventConsumer,
         service_name=config.service_name,
         rabbitmq_host=config.rabbitmq_host,
         rabbitmq_port=config.rabbitmq_port,

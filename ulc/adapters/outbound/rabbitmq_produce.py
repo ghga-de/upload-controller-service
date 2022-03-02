@@ -26,7 +26,7 @@ from ulc.domain.interfaces.outbound.event_pub import (
 )
 
 
-class KafkaEventPublisher(IEventPublisher):
+class RabbitMQEventPublisher(IEventPublisher):
     """A Kafka-based implementation of the IEventPublisher interface."""
 
     # pylint: disable=super-init-not-called
