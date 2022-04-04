@@ -13,26 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test the core functionality"""
+"""Test the UploadService class"""
 
 from typing import Optional, Type
 
 import pytest
 
-from upload_controller_service.core.main import (
+from ulc.domain.interfaces.inbound.upload import (
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    confirm_file_upload,
-    get_upload_url,
-    handle_file_registered,
-    handle_new_study,
 )
 
-from ..fixtures import get_config, psql_fixture, s3_fixture, state  # noqa: F401
-from ..fixtures.utils import null_func
+from ..fixtures import (  # noqa: F401
+    amqp_fixture,
+    get_cont_and_conf,
+    psql_fixture,
+    s3_fixture,
+    state,
+)
 
 
 @pytest.mark.parametrize(
@@ -45,15 +46,16 @@ def test_handle_new_study(
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
 ):
-    """Test the `handle_new_study` function."""
-    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    """Test the `handle_new_study` method."""
+    container, _ = get_cont_and_conf(sources=[psql_fixture.config, s3_fixture.config])
+    upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: handle_new_study(study_files=[file_state.file_info], config=config)
+    run = lambda: upload_service.handle_new_study(study_files=[file_state.file_info])
     if expected_exception is None:
         run()
         # check if file exists in db:
-        psql_fixture.database.get_file(file_state.file_info.file_id)
+        psql_fixture.file_info_dao.get(file_state.file_info.file_id)
     else:
         with pytest.raises(expected_exception):
             run()
@@ -73,12 +75,15 @@ def test_handle_file_registered(
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
 ):
-    """Test the `handle_file_registered` function."""
-    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    """Test the `handle_file_registered` method."""
+    container, config = get_cont_and_conf(
+        sources=[psql_fixture.config, s3_fixture.config]
+    )
+    upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: handle_file_registered(
-        file_id=file_state.file_info.file_id, config=config
+    run = lambda: upload_service.handle_file_registered(
+        file_id=file_state.file_info.file_id
     )
     if expected_exception is None:
         run()
@@ -105,11 +110,12 @@ def test_get_upload_url(
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
 ):
-    """Test the `get_upload_url` function."""
-    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    """Test the `get_upload_url` method."""
+    container, _ = get_cont_and_conf(sources=[psql_fixture.config, s3_fixture.config])
+    upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: get_upload_url(file_state.file_info.file_id, config=config)
+    run = lambda: upload_service.get_upload_url(file_state.file_info.file_id)
     if expected_exception is None:
         run()
     else:
@@ -131,15 +137,17 @@ def test_confirm_file_upload(
     expected_exception: Optional[Type[BaseException]],
     psql_fixture,  # noqa: F811
     s3_fixture,  # noqa: F811
+    amqp_fixture,  # noqa: F811
 ):
-    """Test the `confirm_file_upload` function."""
-    config = get_config(sources=[psql_fixture.config, s3_fixture.config])
+    """Test the `confirm_file_upload` method."""
+    container, _ = get_cont_and_conf(
+        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
+    )
+    upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: confirm_file_upload(
+    run = lambda: upload_service.confirm_file_upload(
         file_state.file_info.file_id,
-        publish_upload_received=null_func,
-        config=config,
     )
     if expected_exception is None:
         run()

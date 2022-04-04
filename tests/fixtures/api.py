@@ -15,23 +15,19 @@
 
 """Fixtures and utilities for dealing with the API."""
 
-from typing import Optional
-
 import fastapi.testclient
 
-from upload_controller_service.api.deps import get_config
-from upload_controller_service.api.main import app
-from upload_controller_service.config import Config
+from ulc.config import Config
+from ulc.main import get_rest_api
 
 
 class ApiTestClient(fastapi.testclient.TestClient):
     """A test client to which you can inject a custom Config object."""
 
-    def __init__(self, config: Optional[Config] = None):
+    def __init__(self, config: Config):
         """Create the test client with a custom Config object."""
         # Overwrite the get_config dep if config is specified, otherwise restore the
         # default:
-        overwrite_func = get_config if config is None else lambda: config
-        app.dependency_overrides[get_config] = overwrite_func
+        api = get_rest_api(config=config)
 
-        super().__init__(app)
+        super().__init__(api)

@@ -14,8 +14,6 @@
 # limitations under the License.
 
 """
-Subpackage defining functions for publishing to or subscribing from
-asynchronous messaging topics.
+This sub-package contains the main business functionality of this service.
+It should not contain any service API-related code.
 """
-from .publish import publish_upload_received  # noqa: F401
-from .subscribe import subscribe_file_registered, subscribe_new_study  # noqa: F401

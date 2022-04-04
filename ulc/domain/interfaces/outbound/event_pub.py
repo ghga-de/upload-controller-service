@@ -13,10 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Fixtures that can be used in both unit and integration tests"""
+"""Interfaces for event publishing adapters and the exception they may throw."""
 
-from .api import ApiTestClient  # noqa: F401
-from .config import DEFAULT_CONFIG, get_config, get_cont_and_conf  # noqa: F401
-from .psql import psql_fixture  # noqa: F401
-from .pubsub import amqp_fixture  # noqa: F401
-from .s3 import s3_fixture  # noqa: F401
+from typing import Protocol
+
+from ulc.domain import models
+
+
+class IEventPublisher(Protocol):
+    """An interface for an adapter that publishes events happening to this service."""
+
+    def publish_upload_received(
+        self,
+        file_info: models.FileInfoExternal,
+    ) -> None:
+        """Publish event informing that a new upload was received."""
+        ...
