@@ -19,24 +19,19 @@ Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
-from fastapi import Depends, FastAPI, HTTPException, Response, status
-from ghga_service_chassis_lib.api import configure_app
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from upload_controller_service.models import FileInfoPatchState, UploadState
-
-from ..config import CONFIG, Config
-from ..core import (
+from ulc.container import Container
+from ulc.domain.interfaces.inbound.upload import (
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
-    confirm_file_upload,
-    get_upload_url,
+    IUploadService,
 )
-from ..pubsub import publish_upload_received
-from .deps import get_config
+from ulc.domain.models import FileInfoPatchState, UploadState
 
-app = FastAPI()
-configure_app(app, config=CONFIG)
+router = APIRouter()
 
 
 class HttpFileNotFoundException(HTTPException):
@@ -50,16 +45,17 @@ class HttpFileNotFoundException(HTTPException):
         )
 
 
-@app.get("/health", summary="health", status_code=status.HTTP_200_OK)
-async def health():
+@router.get("/health", summary="health", status_code=status.HTTP_200_OK)
+def health():
     """Used to test if this service is alive"""
     return {"status": "OK"}
 
 
-@app.get("/presigned_post/{file_id}", summary="presigned_post")
-async def get_presigned_post(
+@router.get("/presigned_post/{file_id}", summary="presigned_post")
+@inject
+def get_presigned_post(
     file_id: str,
-    config: Config = Depends(get_config),
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """
     Requesting a pre-signed post URL for a new file in the inbox
@@ -68,22 +64,23 @@ async def get_presigned_post(
 
     # call core functionality
     try:
-        url = get_upload_url(file_id=file_id, config=config)
+        url = upload_service.get_upload_url(file_id=file_id)
     except FileNotRegisteredError as error:
         raise HttpFileNotFoundException(file_id) from error
 
     return {"presigned_post": url}
 
 
-@app.patch(
+@router.patch(
     "/confirm_upload/{file_id}",
     summary="confirm_upload",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def patch_confirm_upload(
+@inject
+def patch_confirm_upload(
     file_id: str,
     file_info_patch: FileInfoPatchState,
-    config: Config = Depends(get_config),
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """
     Requesting a confirmation of the upload of a specific file using the file id.
@@ -97,22 +94,18 @@ async def patch_confirm_upload(
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" can`t be set to "{file_info_patch.state}"'
+                f'The file with id "{file_id}" can`t be set to "{file_info_patch.state}"'
             ),
         )
 
     # call core functionality
     try:
-        confirm_file_upload(
-            file_id=file_id,
-            publish_upload_received=publish_upload_received,
-            config=config,
-        )
+        upload_service.confirm_file_upload(file_id)
     except FileNotReadyForConfirmUpload as error:
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" is not ready to be set to "CONFIRMED"'
+                f'The file with id "{file_id}" is not ready to be set to "CONFIRMED"'
             ),
         ) from error
     except FileNotRegisteredError as error:
@@ -121,7 +114,7 @@ async def patch_confirm_upload(
         raise HTTPException(
             status_code=400,
             detail=(
-                'The file with id "{file_id}" is registered for upload'
+                f'The file with id "{file_id}" is registered for upload'
                 + " but its content was not found in the inbox."
             ),
         ) from error

@@ -32,8 +32,8 @@ from ..fixtures.utils import is_success_http_code
 
 def test_get_health():
     """Test the GET /health endpoint"""
-
-    client = ApiTestClient()
+    config = get_config()
+    client = ApiTestClient(config=config)
     response = client.get("/health")
 
     assert response.status_code == status.HTTP_200_OK
@@ -134,7 +134,7 @@ def test_confirm_upload(
 
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(
-        topic_name=config.topic_name_upload_received,
+        topic_name=config.topic_upload_received,
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
