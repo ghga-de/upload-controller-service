@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
-from upload_controller_service.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileInfoInternal, UploadState
 
 from .config import DEFAULT_CONFIG
 

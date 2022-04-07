@@ -26,7 +26,11 @@ import sys
 
 import yaml
 
-from upload_controller_service.api.main import app
+from ucs.config import Config
+from ucs.main import get_rest_api
+
+config = Config()
+app = get_rest_api(config=config)
 
 # get openapi spec as dict:
 openapi_spec = app.openapi()

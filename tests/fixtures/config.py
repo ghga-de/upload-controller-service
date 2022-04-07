@@ -16,11 +16,13 @@
 """Test config"""
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from pydantic.env_settings import BaseSettings
 
-from upload_controller_service.config import Config
+from ucs.config import Config
+from ucs.container import Container
+from ucs.main import setup_container
 
 from .utils import BASE_DIR
 
@@ -43,3 +45,15 @@ def get_config(
 
 
 DEFAULT_CONFIG = get_config()
+
+
+def get_cont_and_conf(
+    sources: Optional[List[BaseSettings]] = None,
+    default_config_yaml: Path = TEST_CONFIG_YAML,
+) -> Tuple[Container, Config]:
+    "Get DI container and config object"
+
+    config = get_config(sources=sources, default_config_yaml=default_config_yaml)
+    container = setup_container(config=config)
+
+    return container, config
