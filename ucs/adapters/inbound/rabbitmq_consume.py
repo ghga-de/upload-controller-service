@@ -22,8 +22,8 @@ from pathlib import Path
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ulc.domain.interfaces.inbound.upload import IUploadService
-from ulc.domain.models import FileInfoInternal
+from ucs.domain.interfaces.inbound.upload import IUploadService
+from ucs.domain.models import FileInfoInternal
 
 HERE = Path(__file__).parent.resolve()
 

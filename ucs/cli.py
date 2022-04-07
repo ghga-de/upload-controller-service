@@ -20,8 +20,8 @@ from enum import Enum
 import typer
 from ghga_service_chassis_lib.api import run_server
 
-from ulc.config import Config
-from ulc.main import get_event_consumer, get_rest_api
+from ucs.config import Config
+from ucs.main import get_event_consumer, get_rest_api
 
 
 class Topics(str, Enum):
@@ -41,7 +41,7 @@ cli = typer.Typer()
 def run_api():
     """Run the HTTP REST API."""
 
-    run_server(app="ulc.cli:api", config=config)
+    run_server(app="ucs.cli:api", config=config)
 
 
 @cli.command()

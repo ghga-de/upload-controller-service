@@ -20,8 +20,8 @@ Publish asynchronous topics
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ulc.domain import models
-from ulc.domain.interfaces.outbound.event_pub import IEventPublisher
+from ucs.domain import models
+from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
 
 
 class RabbitMQEventPublisher(IEventPublisher):

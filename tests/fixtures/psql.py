@@ -25,8 +25,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from ulc.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
-from ulc.domain import models
+from ucs.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
+from ucs.domain import models
 
 from . import get_cont_and_conf, state
 

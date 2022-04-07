@@ -28,13 +28,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from ulc.domain import models
-from ulc.domain.interfaces.outbound.file_info import (
+from ucs.domain import models
+from ucs.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-from ulc.domain.models import UploadState
+from ucs.domain.models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 

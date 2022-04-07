@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/ghga-de/upload-controller-service/branch/main/graph/badge.svg?token=GYH99Y71CK)](https://codecov.io/gh/ghga-de/upload-controller-service)
 # Upload-Controller-Service
 
-The Upload-Controller (ULC) service manages uploads to a S3 inbox bucket.
+The Upload-Controller Service (UCS) manages uploads to a S3 inbox bucket.
 
 ## Documentation:
 

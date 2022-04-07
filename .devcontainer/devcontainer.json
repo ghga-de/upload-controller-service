@@ -51,7 +51,7 @@
 					"name": "run-api",
 					"type": "python",
 					"request": "launch",
-					"module": "ulc",
+					"module": "ucs",
 					"args": [
 						"run-api"
 					],

@@ -18,7 +18,7 @@
 
 from typing import List, Protocol
 
-from ulc.domain.models import FileInfoInternal
+from ucs.domain.models import FileInfoInternal
 
 
 class FileAlreadyInInboxError(RuntimeError):

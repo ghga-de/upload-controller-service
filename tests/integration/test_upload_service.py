@@ -19,7 +19,7 @@ from typing import Optional, Type
 
 import pytest
 
-from ulc.domain.interfaces.inbound.upload import (
+from ucs.domain.interfaces.inbound.upload import (
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,

@@ -22,14 +22,14 @@ Additional endpoints might be structured in dedicated modules
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from ulc.container import Container
-from ulc.domain.interfaces.inbound.upload import (
+from ucs.container import Container
+from ucs.domain.interfaces.inbound.upload import (
     FileNotInInboxError,
     FileNotReadyForConfirmUpload,
     FileNotRegisteredError,
     IUploadService,
 )
-from ulc.domain.models import FileInfoPatchState, UploadState
+from ucs.domain.models import FileInfoPatchState, UploadState
 
 router = APIRouter()
 

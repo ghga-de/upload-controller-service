@@ -17,15 +17,15 @@
 
 from dependency_injector import containers, providers
 
-from ulc.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ulc.adapters.outbound.psql import PsqlFileInfoDAO
-from ulc.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
-from ulc.adapters.outbound.s3 import S3ObjectStorage
-from ulc.domain.interfaces.inbound.upload import IUploadService
-from ulc.domain.interfaces.outbound.event_pub import IEventPublisher
-from ulc.domain.interfaces.outbound.file_info import IFileInfoDAO
-from ulc.domain.interfaces.outbound.storage import IObjectStorage
-from ulc.domain.upload import UploadService
+from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.adapters.outbound.psql import PsqlFileInfoDAO
+from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ucs.adapters.outbound.s3 import S3ObjectStorage
+from ucs.domain.interfaces.inbound.upload import IUploadService
+from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
+from ucs.domain.interfaces.outbound.file_info import IFileInfoDAO
+from ucs.domain.interfaces.outbound.storage import IObjectStorage
+from ucs.domain.upload import UploadService
 
 
 class Container(containers.DeclarativeContainer):

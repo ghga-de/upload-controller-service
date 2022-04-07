@@ -20,9 +20,9 @@ from typing import Dict, List, Optional, Tuple
 
 from pydantic.env_settings import BaseSettings
 
-from ulc.config import Config
-from ulc.container import Container
-from ulc.main import setup_container
+from ucs.config import Config
+from ucs.container import Container
+from ucs.main import setup_container
 
 from .utils import BASE_DIR
 

@@ -17,8 +17,8 @@
 
 import fastapi.testclient
 
-from ulc.config import Config
-from ulc.main import get_rest_api
+from ucs.config import Config
+from ucs.main import get_rest_api
 
 
 class ApiTestClient(fastapi.testclient.TestClient):

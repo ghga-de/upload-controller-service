@@ -17,7 +17,7 @@
 
 import pytest
 
-from ulc.domain.interfaces.outbound.file_info import (
+from ucs.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
 )

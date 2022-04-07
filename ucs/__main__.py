@@ -13,19 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interfaces for event publishing adapters and the exception they may throw."""
+"""Entrypoint of the package"""
 
-from typing import Protocol
+from ucs.cli import cli
 
-from ulc.domain import models
-
-
-class IEventPublisher(Protocol):
-    """An interface for an adapter that publishes events happening to this service."""
-
-    def publish_upload_received(
-        self,
-        file_info: models.FileInfoExternal,
-    ) -> None:
-        """Publish event informing that a new upload was received."""
-        ...
+if __name__ == "__main__":
+    cli()

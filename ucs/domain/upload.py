@@ -18,7 +18,7 @@
 
 from typing import List
 
-from ulc.domain.interfaces.inbound.upload import (
+from ucs.domain.interfaces.inbound.upload import (
     FileAlreadyInInboxError,
     FileAlreadyRegisteredError,
     FileNotInInboxError,
@@ -26,18 +26,18 @@ from ulc.domain.interfaces.inbound.upload import (
     FileNotRegisteredError,
     IUploadService,
 )
-from ulc.domain.interfaces.outbound.event_pub import IEventPublisher
-from ulc.domain.interfaces.outbound.file_info import (
+from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
+from ucs.domain.interfaces.outbound.file_info import (
     FileInfoAlreadyExistsError,
     FileInfoNotFoundError,
     IFileInfoDAO,
 )
-from ulc.domain.interfaces.outbound.storage import (
+from ucs.domain.interfaces.outbound.storage import (
     IObjectStorage,
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ulc.domain.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileInfoInternal, UploadState
 
 
 class UploadService(IUploadService):
