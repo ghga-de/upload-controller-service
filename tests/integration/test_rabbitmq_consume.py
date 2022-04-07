@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test the messaging API (pubsub)"""
+"""Test the event consumption"""
 
 
 from datetime import datetime, timezone
@@ -21,16 +21,9 @@ from datetime import datetime, timezone
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
-from upload_controller_service.core.main import confirm_file_upload
-from upload_controller_service.pubsub import (
-    publish_upload_received,
-    subscribe_file_registered,
-    subscribe_new_study,
-)
-
 from ..fixtures import (  # noqa: F401
     amqp_fixture,
-    get_config,
+    get_cont_and_conf,
     psql_fixture,
     s3_fixture,
     state,
@@ -42,11 +35,12 @@ def test_subscribe_new_study(
     s3_fixture,  # noqa: F811
     amqp_fixture,  # noqa: F811
 ):  # noqa: F811
-    """Test `subscribe_new_study` function"""
+    """Test `subscribe_new_study` method"""
 
-    config = get_config(
+    container, config = get_cont_and_conf(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
+    event_subscriber = container.event_subscriber()
     file_info = state.FILES["unknown"].file_info
 
     # build the upstream message:
@@ -69,7 +63,7 @@ def test_subscribe_new_study(
 
     # initialize upstream test service that will publish to this service:
     upstream_publisher = amqp_fixture.get_test_publisher(
-        topic_name=config.topic_name_new_study,
+        topic_name=config.topic_new_study,
         message_schema=schemas.SCHEMAS["new_study_created"],
     )
 
@@ -78,12 +72,12 @@ def test_subscribe_new_study(
 
     # process the stage request:
     exec_with_timeout(
-        func=lambda: subscribe_new_study(config=config, run_forever=False),
-        timeout_after=1000,
+        func=lambda: event_subscriber.subscribe_new_study(run_forever=False),
+        timeout_after=2,
     )
 
     # check if file exists in db:
-    psql_fixture.database.get_file(file_info.file_id)
+    psql_fixture.file_info_dao.get(file_info.file_id)
 
 
 def test_file_registered(
@@ -91,11 +85,12 @@ def test_file_registered(
     s3_fixture,  # noqa: F811
     amqp_fixture,  # noqa: F811
 ):  # noqa: F811
-    """Test `file_registered` function"""
+    """Test `subscribe_file_registered` method"""
 
-    config = get_config(
+    container, config = get_cont_and_conf(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
+    event_subscriber = container.event_subscriber()
     file_info = state.FILES["in_inbox"].file_info
 
     # build the upstream message:
@@ -113,7 +108,7 @@ def test_file_registered(
 
     # initialize upstream test service that will publish to this service:
     upstream_publisher = amqp_fixture.get_test_publisher(
-        topic_name=config.topic_name_new_study,
+        topic_name=config.topic_file_registered,
         message_schema=schemas.SCHEMAS["file_internally_registered"],
     )
 
@@ -122,8 +117,8 @@ def test_file_registered(
 
     # process the stage request:
     exec_with_timeout(
-        func=lambda: subscribe_file_registered(config=config, run_forever=False),
-        timeout_after=1000,
+        func=lambda: event_subscriber.subscribe_file_registered(run_forever=False),
+        timeout_after=2,
     )
 
     # now the file should be deleted:
@@ -131,32 +126,3 @@ def test_file_registered(
     assert not s3_fixture.storage.does_object_exist(
         bucket_id=config.s3_inbox_bucket_id, object_id=file_info.file_id
     )
-
-
-def test_publish_upload_received(
-    psql_fixture,  # noqa: F811
-    s3_fixture,  # noqa: F811
-    amqp_fixture,  # noqa: F811
-):  # noqa: F811
-    """Test `subscribe_new_study` function"""
-    config = get_config(
-        sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
-    )
-
-    file_id = state.FILES["in_inbox"].file_info.file_id
-
-    # initialize downstream test service that will receive the message from this service:
-    downstream_subscriber = amqp_fixture.get_test_subscriber(
-        topic_name=config.topic_name_upload_received,
-        message_schema=schemas.SCHEMAS["file_upload_received"],
-    )
-
-    confirm_file_upload(
-        file_id,
-        publish_upload_received=publish_upload_received,
-        config=config,
-    )
-
-    # receive the published message:
-    downstream_message = downstream_subscriber.subscribe(timeout_after=2)
-    assert downstream_message["file_id"] == file_id

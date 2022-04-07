@@ -13,18 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Entrypoint of the package"""
+"""Interfaces for event publishing adapters and the exception they may throw."""
 
-from ghga_service_chassis_lib.api import run_server
+from typing import Protocol
 
-from .api.main import app  # noqa: F401 pylint: disable=unused-import
-from .config import CONFIG, Config
-
-
-def run(config: Config = CONFIG):
-    """Run the service"""
-    run_server(app="upload_controller_service.__main__:app", config=config)
+from ucs.domain import models
 
 
-if __name__ == "__main__":
-    run()
+class IEventPublisher(Protocol):
+    """An interface for an adapter that publishes events happening to this service."""
+
+    def publish_upload_received(
+        self,
+        file_info: models.FileInfoExternal,
+    ) -> None:
+        """Publish event informing that a new upload was received."""
+        ...

@@ -44,6 +44,20 @@
 		],
 		"licenser.license": "AL2",
 		"licenser.author": "Universität Tübingen, DKFZ and EMBL\nfor the German Human Genome-Phenome Archive (GHGA)",
+		"launch": {
+			"version": "0.2.0",
+			"configurations": [
+				{
+					"name": "run-api",
+					"type": "python",
+					"request": "launch",
+					"module": "ucs",
+					"args": [
+						"run-api"
+					],
+				}
+			]
+		}
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
@@ -78,5 +92,5 @@
 			"version": "latest",
 			"moby": true
 		}
-	}
+	},
 }

@@ -1,5 +1,2 @@
 #!/bin/bash
-
-# cd into .devcontainer dir so that the config yaml
-# is considered:
-upload-controller-service
+ucs
