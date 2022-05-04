@@ -24,7 +24,7 @@ def upgrade():
         )
         upload_status.create(connection)
     else:
-        upload_status = sa.Enum(
+        upload_status = sa.Enum(  # type: ignore
             "REGISTERED", "PENDING", "UPLOADED", "COMPLETED", name="uploadstate"
         )
 
