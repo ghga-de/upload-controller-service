@@ -1,6 +1,6 @@
 **\# please adapt the links of following badges:**
 ![tests](https://github.com/ghga-de/upload-controller-service/actions/workflows/unit_and_int_tests.yaml/badge.svg)
-[![codecov](https://codecov.io/gh/ghga-de/upload-controller-service/branch/main/graph/badge.svg?token=GYH99Y71CK)](https://codecov.io/gh/ghga-de/upload-controller-service)
+[![Coverage Status](https://coveralls.io/repos/github/ghga-de/upload-controller-service/badge.svg?branch=main)](https://coveralls.io/github/ghga-de/upload-controller-service?branch=main)
 # Upload-Controller-Service
 
 The Upload-Controller Service (UCS) manages uploads to a S3 inbox bucket.
