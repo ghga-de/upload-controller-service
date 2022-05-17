@@ -18,7 +18,7 @@
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app
 
-from ucs.adapters.inbound.fastapi_ import router
+from ucs.adapters.inbound.fastapi_.routes import router
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
 from ucs.config import Config
 from ucs.container import Container
