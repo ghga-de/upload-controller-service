@@ -27,17 +27,17 @@ from ucs.domain.interfaces.inbound.upload import (
     IUploadService,
 )
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
-    IFileInfoDAO,
+from ucs.domain.interfaces.outbound.file_metadata import (
+    FileMetadataAlreadyExistsError,
+    FileMetadataNotFoundError,
+    IFileMetadataDAO,
 )
 from ucs.domain.interfaces.outbound.storage import (
     IObjectStorage,
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ucs.domain.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileMetadataInternal, UploadStatus
 
 
 class UploadService(IUploadService):
@@ -48,7 +48,7 @@ class UploadService(IUploadService):
         self,
         *,
         s3_inbox_bucket_id: str,
-        file_info_dao: IFileInfoDAO,
+        file_info_dao: IFileMetadataDAO,
         object_storage_dao: IObjectStorage,
         event_publisher: IEventPublisher,
     ):
@@ -58,7 +58,7 @@ class UploadService(IUploadService):
         self._event_publisher = event_publisher
         self._s3_inbox_bucket_id = s3_inbox_bucket_id
 
-    def handle_new_study(self, study_files: List[FileInfoInternal]):
+    def handle_new_study(self, study_files: List[FileMetadataInternal]):
         """
         Put the information for files into the database
         """
@@ -67,7 +67,7 @@ class UploadService(IUploadService):
             with self._file_info_dao as fi_dao:
                 try:
                     fi_dao.register(file_info)
-                except FileInfoAlreadyExistsError as error:
+                except FileMetadataAlreadyExistsError as error:
                     raise FileAlreadyRegisteredError(
                         file_id=file_info.file_id
                     ) from error
@@ -92,8 +92,8 @@ class UploadService(IUploadService):
 
         with self._file_info_dao as fi_dao:
             try:
-                fi_dao.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
-            except FileInfoNotFoundError as error:
+                fi_dao.update_file_state(file_id=file_id, state=UploadStatus.COMPLETED)
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
     def get_upload_url(
@@ -110,7 +110,7 @@ class UploadService(IUploadService):
             try:
                 fi_dao.get(file_id=file_id)
 
-            except FileInfoNotFoundError as error:
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
             # Create presigned post for file_id
@@ -127,7 +127,7 @@ class UploadService(IUploadService):
                 except ObjectAlreadyExistsError as error:
                     raise FileAlreadyInInboxError(file_id=file_id) from error
 
-            fi_dao.update_file_state(file_id=file_id, state=UploadState.PENDING)
+            fi_dao.update_file_state(file_id=file_id, state=UploadStatus.PENDING)
         return presigned_post
 
     def confirm_file_upload(
@@ -142,9 +142,9 @@ class UploadService(IUploadService):
         with self._file_info_dao as fi_dao:
             try:
                 file_info = fi_dao.get(file_id=file_id)
-                if file_info.state is not UploadState.PENDING:
+                if file_info.state is not UploadStatus.PENDING:
                     raise FileNotReadyForConfirmUpload(file_id=file_id)
-            except FileInfoNotFoundError as error:
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
             with self._object_storage_dao as storage:
@@ -154,6 +154,6 @@ class UploadService(IUploadService):
                 ):
                     raise FileNotInInboxError(file_id=file_id)
 
-            fi_dao.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
+            fi_dao.update_file_state(file_id=file_id, state=UploadStatus.UPLOADED)
 
         self._event_publisher.publish_upload_received(file_info)

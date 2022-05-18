@@ -51,11 +51,13 @@ def test_handle_new_study(
     upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: upload_service.handle_new_study(study_files=[file_state.file_info])
+    run = lambda: upload_service.handle_new_study(
+        study_files=[file_state.file_metadata]
+    )
     if expected_exception is None:
         run()
         # check if file exists in db:
-        psql_fixture.file_info_dao.get(file_state.file_info.file_id)
+        psql_fixture.file_metadata_dao.get(file_state.file_metadata.file_id)
     else:
         with pytest.raises(expected_exception):
             run()
@@ -83,13 +85,14 @@ def test_handle_file_registered(
     file_state = state.FILES[file_state_name]
 
     run = lambda: upload_service.handle_file_registered(
-        file_id=file_state.file_info.file_id
+        file_id=file_state.file_metadata.file_id
     )
     if expected_exception is None:
         run()
         # check if file exists in db:
         assert not s3_fixture.storage.does_object_exist(
-            bucket_id=config.s3_inbox_bucket_id, object_id=file_state.file_info.file_id
+            bucket_id=config.s3_inbox_bucket_id,
+            object_id=file_state.file_metadata.file_id,
         )
     else:
         with pytest.raises(expected_exception):
@@ -115,7 +118,7 @@ def test_get_upload_url(
     upload_service = container.upload_service()
     file_state = state.FILES[file_state_name]
 
-    run = lambda: upload_service.get_upload_url(file_state.file_info.file_id)
+    run = lambda: upload_service.get_upload_url(file_state.file_metadata.file_id)
     if expected_exception is None:
         run()
     else:
@@ -147,7 +150,7 @@ def test_confirm_file_upload(
     file_state = state.FILES[file_state_name]
 
     run = lambda: upload_service.confirm_file_upload(
-        file_state.file_info.file_id,
+        file_state.file_metadata.file_id,
     )
     if expected_exception is None:
         run()

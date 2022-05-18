@@ -41,21 +41,21 @@ def test_subscribe_new_study(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
     event_subscriber = container.event_subscriber()
-    file_info = state.FILES["unknown"].file_info
+    file_metadata = state.FILES["unknown"].file_metadata
 
     # build the upstream message:
     now_isostring = datetime.now(timezone.utc).isoformat()
     upstream_message = {
-        "study": {"id": file_info.grouping_label},
+        "study": {"id": file_metadata.grouping_label},
         "associated_files": [
             {
-                "file_id": file_info.file_id,
-                "md5_checksum": file_info.md5_checksum,
-                "size": file_info.size,
-                "file_name": file_info.file_name,
-                "creation_date": file_info.creation_date.isoformat(),
-                "update_date": file_info.update_date.isoformat(),
-                "format": file_info.format,
+                "file_id": file_metadata.file_id,
+                "md5_checksum": file_metadata.md5_checksum,
+                "size": file_metadata.size,
+                "file_name": file_metadata.file_name,
+                "creation_date": file_metadata.creation_date.isoformat(),
+                "update_date": file_metadata.update_date.isoformat(),
+                "format": file_metadata.format,
             }
         ],
         "timestamp": now_isostring,
@@ -77,7 +77,7 @@ def test_subscribe_new_study(
     )
 
     # check if file exists in db:
-    psql_fixture.file_info_dao.get(file_info.file_id)
+    psql_fixture.file_metadata_dao.get(file_metadata.file_id)
 
 
 def test_file_registered(
@@ -91,19 +91,19 @@ def test_file_registered(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
     event_subscriber = container.event_subscriber()
-    file_info = state.FILES["in_inbox"].file_info
+    file_metadata = state.FILES["in_inbox"].file_metadata
 
     # build the upstream message:
     now_isostring = datetime.now(timezone.utc).isoformat()
     upstream_message = {
-        "file_id": file_info.file_id,
-        "md5_checksum": file_info.md5_checksum,
-        "size": file_info.size,
-        "creation_date": file_info.creation_date.isoformat(),
-        "update_date": file_info.update_date.isoformat(),
-        "format": file_info.format,
+        "file_id": file_metadata.file_id,
+        "md5_checksum": file_metadata.md5_checksum,
+        "size": file_metadata.size,
+        "creation_date": file_metadata.creation_date.isoformat(),
+        "update_date": file_metadata.update_date.isoformat(),
+        "format": file_metadata.format,
         "timestamp": now_isostring,
-        "grouping_label": file_info.grouping_label,
+        "grouping_label": file_metadata.grouping_label,
     }
 
     # initialize upstream test service that will publish to this service:
@@ -124,5 +124,5 @@ def test_file_registered(
     # now the file should be deleted:
     # with pytest.raises(ObjectNotFoundError):
     assert not s3_fixture.storage.does_object_exist(
-        bucket_id=config.s3_inbox_bucket_id, object_id=file_info.file_id
+        bucket_id=config.s3_inbox_bucket_id, object_id=file_metadata.file_id
     )

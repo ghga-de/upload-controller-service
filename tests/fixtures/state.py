@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
-from ucs.domain.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileMetadataInternal, UploadStatus
 
 from .config import DEFAULT_CONFIG
 
@@ -47,7 +47,7 @@ class FileState:
         in_inbox: bool,
         in_db: bool = True,
         message: Optional[dict] = None,
-        state: UploadState = UploadState.REGISTERED,
+        state: UploadStatus = UploadStatus.REGISTERED,
     ):
         """
         Initialize file state and create imputed attributes.
@@ -72,7 +72,7 @@ class FileState:
         self.md5 = calc_md5(self.content)
         filename, file_extension = os.path.splitext(self.file_path)
 
-        self.file_info = FileInfoInternal(
+        self.file_metadata = FileMetadataInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
             md5_checksum=self.md5,
@@ -101,21 +101,21 @@ FILES: Dict[str, FileState] = {
         grouping_label=get_grouping_label_example(0),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=False,
-        state=UploadState.REGISTERED,
+        state=UploadStatus.REGISTERED,
     ),
     "in_inbox": FileState(
         id=get_file_id_example(1),
         grouping_label=get_grouping_label_example(1),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=True,
-        state=UploadState.PENDING,
+        state=UploadStatus.PENDING,
     ),
     "uploaded_but_not_in_inbox": FileState(
         id=get_file_id_example(2),
         grouping_label=get_grouping_label_example(2),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=False,
-        state=UploadState.COMPLETED,
+        state=UploadStatus.COMPLETED,
     ),
     "db_inconsistency": FileState(
         id=get_file_id_example(3),
@@ -136,6 +136,6 @@ FILES: Dict[str, FileState] = {
         grouping_label=get_grouping_label_example(5),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=True,
-        state=UploadState.UPLOADED,
+        state=UploadStatus.UPLOADED,
     ),
 }

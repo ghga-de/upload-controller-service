@@ -18,7 +18,7 @@
 
 from typing import List, Protocol
 
-from ucs.domain.models import FileInfoInternal
+from ucs.domain.models import FileMetadataInternal
 
 
 class FileAlreadyInInboxError(RuntimeError):
@@ -67,7 +67,7 @@ class FileNotReadyForConfirmUpload(RuntimeError):
 class IUploadService(Protocol):
     """Interface for the main service class for handling uploads to the Inbox."""
 
-    def handle_new_study(self, study_files: List[FileInfoInternal]):
+    def handle_new_study(self, study_files: List[FileMetadataInternal]):
         """
         Put the information for files into the database
         """

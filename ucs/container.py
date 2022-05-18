@@ -18,12 +18,12 @@
 from dependency_injector import containers, providers
 
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.psql import PsqlFileInfoDAO
+from ucs.adapters.outbound.psql import PsqlFileMetadataDAO
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.domain.interfaces.inbound.upload import IUploadService
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_info import IFileInfoDAO
+from ucs.domain.interfaces.outbound.file_metadata import IFileMetadataDAO
 from ucs.domain.interfaces.outbound.storage import IObjectStorage
 from ucs.domain.upload import UploadService
 
@@ -35,8 +35,8 @@ class Container(containers.DeclarativeContainer):
 
     # outbound adapters:
 
-    file_info_dao = providers.Factory[IFileInfoDAO](
-        PsqlFileInfoDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
+    file_metadata_dao = providers.Factory[IFileMetadataDAO](
+        PsqlFileMetadataDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
     )
 
     object_storage_dao = providers.Factory[IObjectStorage](
@@ -61,7 +61,7 @@ class Container(containers.DeclarativeContainer):
     upload_service = providers.Factory[IUploadService](
         UploadService,
         s3_inbox_bucket_id=config.s3_inbox_bucket_id,
-        file_info_dao=file_info_dao,
+        file_metadata_dao=file_metadata_dao,
         object_storage_dao=object_storage_dao,
         event_publisher=event_publisher,
     )

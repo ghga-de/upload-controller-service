@@ -17,65 +17,69 @@
 
 import pytest
 
-from ucs.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
+from ucs.domain.interfaces.outbound.file_metadata import (
+    FileMetadataAlreadyExistsError,
+    FileMetadataNotFoundError,
 )
 
 from ..fixtures import psql_fixture  # noqa: F401
 
 
-def test_get_existing_file_info(psql_fixture):  # noqa: F811
+def test_get_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test getting exiting file info."""
-    existing_file_info = psql_fixture.existing_file_infos[0]
+    existing_file_metadata = psql_fixture.existing_file_metadatas[0]
 
-    returned_file_info = psql_fixture.file_info_dao.get(
-        existing_file_info.file_id,
+    returned_file_metadata = psql_fixture.file_metadata_dao.get(
+        existing_file_metadata.file_id,
     )
-    assert existing_file_info.md5_checksum == returned_file_info.md5_checksum
+    assert existing_file_metadata.md5_checksum == returned_file_metadata.md5_checksum
 
 
-def test_get_non_existing_file_info(psql_fixture):  # noqa: F811
+def test_get_non_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test getting not existing file info and expect corresponding error."""
-    non_existing_file_info = psql_fixture.non_existing_file_infos[0]
+    non_existing_file_metadata = psql_fixture.non_existing_file_metadatas[0]
 
-    with pytest.raises(FileInfoNotFoundError):
-        psql_fixture.file_info_dao.get(non_existing_file_info.file_id)
+    with pytest.raises(FileMetadataNotFoundError):
+        psql_fixture.file_metadata_dao.get(non_existing_file_metadata.file_id)
 
 
-def test_register_non_existing_file_info(psql_fixture):  # noqa: F811
+def test_register_non_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test registering not existing file info."""
-    non_existing_file_info = psql_fixture.non_existing_file_infos[0]
+    non_existing_file_metadata = psql_fixture.non_existing_file_metadatas[0]
 
-    psql_fixture.file_info_dao.register(non_existing_file_info)
-    returned_file_info = psql_fixture.file_info_dao.get(non_existing_file_info.file_id)
+    psql_fixture.file_metadata_dao.register(non_existing_file_metadata)
+    returned_file_metadata = psql_fixture.file_metadata_dao.get(
+        non_existing_file_metadata.file_id
+    )
 
-    assert non_existing_file_info.md5_checksum == returned_file_info.md5_checksum
+    assert (
+        non_existing_file_metadata.md5_checksum == returned_file_metadata.md5_checksum
+    )
 
 
-def test_register_existing_file_info(psql_fixture):  # noqa: F811
+def test_register_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test registering an already existing file info and expect corresponding
     error."""
-    existing_file_info = psql_fixture.existing_file_infos[0]
+    existing_file_metadata = psql_fixture.existing_file_metadatas[0]
 
-    with pytest.raises(FileInfoAlreadyExistsError):
-        psql_fixture.file_info_dao.register(existing_file_info)
+    with pytest.raises(FileMetadataAlreadyExistsError):
+        psql_fixture.file_metadata_dao.register(existing_file_metadata)
 
 
-def test_unregister_existing_file_info(psql_fixture):  # noqa: F811
+def test_unregister_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test unregistering an existing file info."""
-    existing_file_info = psql_fixture.existing_file_infos[0]
+    existing_file_metadata = psql_fixture.existing_file_metadatas[0]
 
-    psql_fixture.file_info_dao.unregister(existing_file_info.file_id)
+    psql_fixture.file_metadata_dao.unregister(existing_file_metadata.file_id)
 
     # check if file info can no longer be found:
-    with pytest.raises(FileInfoNotFoundError):
-        psql_fixture.file_info_dao.get(existing_file_info.file_id)
+    with pytest.raises(FileMetadataNotFoundError):
+        psql_fixture.file_metadata_dao.get(existing_file_metadata.file_id)
 
 
-def test_unregister_non_existing_file_info(psql_fixture):  # noqa: F811
+def test_unregister_non_existing_file_metadata(psql_fixture):  # noqa: F811
     """Test unregistering not existing file info and expect corresponding error."""
-    non_existing_file_info = psql_fixture.non_existing_file_infos[0]
+    non_existing_file_metadata = psql_fixture.non_existing_file_metadatas[0]
 
-    with pytest.raises(FileInfoNotFoundError):
-        psql_fixture.file_info_dao.unregister(non_existing_file_info.file_id)
+    with pytest.raises(FileMetadataNotFoundError):
+        psql_fixture.file_metadata_dao.unregister(non_existing_file_metadata.file_id)
