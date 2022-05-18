@@ -22,31 +22,36 @@ from pydantic import BaseModel
 
 
 # fmt: off
-class UploadState(Enum):
+class UploadStatus(Enum):
 
     """
-    The current upload state. Can be registered (no information),
-    pending (the user has requested an upload url),
-    uploaded (the user has confirmed the upload),
-    or registered (the file has been registered with the internal-file-registry).
+    The current upload state. Can be one of:
+        - PENDING (the user has requested an upload url)
+        - CANCELLED (the user has canceled the upload)
+        - UPLOADED (the user has confirmed the upload)
+        - FAILED (the upload has failed for a technical reason)
+        - ACCEPTED (the upload was accepted by a downstream service)
+        - REJECTED (the upload was rejected by a downstream service)
     """
 
-    REGISTERED = "registered"
     PENDING = "pending"
+    CANCELLED = "cancelled"
     UPLOADED = "uploaded"
-    COMPLETED = "completed"
+    FAILED = "failed"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 # fmt: on
 
 
-class FileInfoPatchState(BaseModel):
+class FileMetadataPatchState(BaseModel):
     """
     A model containing all the metadata needed to perform a patch on an orm field
     """
 
-    state: UploadState = UploadState.REGISTERED
+    state: UploadStatus = UploadStatus.REGISTERED
 
 
-class FileInfoExternal(FileInfoPatchState):
+class FileMetadataExternal(FileMetadataPatchState):
     """
     A model containing all the metadata needed to pass it on to other microservices
     """
@@ -65,7 +70,7 @@ class FileInfoExternal(FileInfoPatchState):
         orm_mode = True
 
 
-class FileInfoInternal(FileInfoExternal):
+class FileMetadataInternal(FileMetadataExternal):
     """
     A model containing all the metadata submitted for one file from the metadata service
     with the new_study_created topic.

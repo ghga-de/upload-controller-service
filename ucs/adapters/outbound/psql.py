@@ -22,29 +22,31 @@ from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
 )
-from sqlalchemy import Column, DateTime, Enum, Integer, String
+from sqlalchemy import Column, DateTime, Enum, Integer, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.future import select
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
-    IFileInfoDAO,
+from ucs.domain.interfaces.outbound.file_metadata import (
+    FileMetadataAlreadyExistsError,
+    FileMetadataNotFoundError,
+    IFileMetadataDAO,
 )
-from ucs.domain.models import UploadState
+from ucs.domain.models import UploadStatus
 
 Base: DeclarativeMeta = declarative_base()
 
 
-class FileInfo(Base):
+class FileMetadata(Base):
     """
-    GHGA Files announced by an uploader.
+    ORM base class for containing general metadata on files that were registed for
+    upload.
     """
 
-    __tablename__ = "files"
+    __tablename__ = "file_metadata"
     id = Column(
         UUID(
             as_uuid=True,
@@ -53,7 +55,7 @@ class FileInfo(Base):
         primary_key=True,
         doc="Service-internal file ID.",
     )
-    file_id = Column(
+    external_id = Column(
         String,
         nullable=False,
         unique=True,
@@ -104,24 +106,62 @@ class FileInfo(Base):
         unique=False,
         doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
     )
-    state = Column(
-        Enum(UploadState),
-        default=UploadState.REGISTERED,
+
+    uploads = relationship("Upload", back_populates="file_metadata")
+
+
+class Upload(Base):
+    """
+    ORM base class containing information on multi-part upload attemps.
+    Each upload attempt is linked to a specific `FileMetadata` entry.
+    """
+
+    __tablename__ = "uploads"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+        doc=(
+            "Auto-incrementing ID used for sorting records by insertion order."
+            + " This is not share with the user."
+        ),
+    )
+    external_id = Column(
+        String,
+        nullable=False,
+        unique=True,
+        doc=(
+            "ID for the upload assign by the object storage implementation."
+            + " This ID shared with the user."
+        ),
+    )
+    file_metadata_id = Column(
+        String,
+        ForeignKey("file_metadata.id"),
+        nullable=False,
+        unique=True,
+        doc="ID of the file metadata record coresponding to this upload attempt.",
+    )
+    status = Column(
+        Enum(UploadStatus),
+        default=UploadStatus.PENDING,
         nullable=False,
         unique=False,
         doc=(
-            "The current upload state. Can be registered (no upload requested yet), "
-            + "pending (upload link has been requested) "
-            + "uploaded (the user has confirmed the upload) "
-            + "or completed (the file has been registered in the downstream "
-            + "system and deleted from inbox)."
+            "The status of the upload state."
+            + " Please note more that one upload per file_id may have a state that is"
+            + " set to `pending` , `uploaded`, or `accepted`. Moreover, within the list"
+            + " of states from uploads corresponding to one file, these `pending` ,"
+            + " `uploaded`, and `accepted` are mutually exclusive."
         ),
     )
+    file_metadata = relationship("FileMetadata", back_populates="uploads")
 
 
-class PsqlFileInfoDAO(IFileInfoDAO):
+class PsqlFileMetadataDAO(IFileMetadataDAO):
     """
-    An implementation of the IFileInfoDAO interface using a PostgreSQL backend.
+    An implementation of the IFileMetadataDAO interface using a PostgreSQL backend.
     """
 
     # pylint: disable=super-init-not-called
@@ -147,44 +187,44 @@ class PsqlFileInfoDAO(IFileInfoDAO):
         # pylint: disable=no-member
         self._session_cm.__exit__(error_type, error_value, error_traceback)
 
-    def _get_orm_file(self, file_id: str) -> FileInfo:
+    def _get_orm_file(self, file_id: str) -> FileMetadata:
         """Internal method to get the ORM representation of a file by specifying
         its file ID"""
 
-        statement = select(FileInfo).filter_by(file_id=file_id)
+        statement = select(FileMetadata).filter_by(file_id=file_id)
         orm_file = self._session.execute(statement).scalars().one_or_none()
 
         if orm_file is None:
-            raise FileInfoNotFoundError(file_id=file_id)
+            raise FileMetadataNotFoundError(file_id=file_id)
 
         return orm_file
 
-    def get(self, file_id: str) -> models.FileInfoExternal:
+    def get(self, file_id: str) -> models.FileMetadataExternal:
         """Get file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
-        return models.FileInfoExternal.from_orm(orm_file)
+        return models.FileMetadataExternal.from_orm(orm_file)
 
-    def register(self, file: models.FileInfoInternal) -> None:
+    def register(self, file: models.FileMetadataInternal) -> None:
         """Register a new file to the database."""
 
         # check for collisions in the database:
         try:
             self._get_orm_file(file_id=file.file_id)
-        except FileInfoNotFoundError:
+        except FileMetadataNotFoundError:
             # this is expected
             pass
         else:
             # this is a problem
-            raise FileInfoAlreadyExistsError(file_id=file.file_id)
+            raise FileMetadataAlreadyExistsError(file_id=file.file_id)
 
         file_dict = {
             **file.dict(),
         }
-        orm_file = FileInfo(**file_dict)
+        orm_file = FileMetadata(**file_dict)
         self._session.add(orm_file)
 
-    def update_file_state(self, file_id: str, state: UploadState) -> None:
+    def update_file_state(self, file_id: str, state: UploadStatus) -> None:
         """Update the file state of a file in the database."""
 
         orm_file = self._get_orm_file(file_id=file_id)
