@@ -46,6 +46,37 @@ def health():
     return {"status": "OK"}
 
 
+@router.get(
+    "/files/{file_id}",
+    summary="Get file metadata including the current upload attempt.",
+    operation_id="getFileMetadata",
+    status_code=status.HTTP_200_OK,
+    response_model=FileMetadata,
+    response_description="File metadata including the current upload attempt",
+    responses={
+        status.HTTP_403_FORBIDDEN: {
+            "description": (
+                "The user is not registered as a Data Submitter for the corresponding file."
+            )
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": (
+                "The file with the given ID has not (yet) been registered for upload."
+            )
+        },
+    },
+)
+def get_file_metadata(
+    file_id: str,
+):
+    """Get file metadata including the current upload attempt."""
+
+    print(file_id)
+    ...
+
+    return ...
+
+
 @router.post(
     "uploads",
     summary="Initiate a new multi-part upload.",
@@ -80,34 +111,30 @@ def create_upload(upload_creation: UploadCreation):
 
 
 @router.get(
-    "/files/{file_id}",
-    summary="Get file metadata including the current upload attempt.",
-    operation_id="getFileMetadata",
-    response_model=FileMetadata,
+    "/uploads/{upload_id}",
+    summary="Get details on a specific upload.",
+    operation_id="getUploadDetails",
     status_code=status.HTTP_200_OK,
-    response_description="File metadata including the current upload attempt",
+    response_model=UploadDetails,
+    response_description="Details on a specific upload.",
     responses={
         status.HTTP_403_FORBIDDEN: {
             "description": (
-                "The user is not registered as a Data Submitter for the corresponding file."
+                "The user is not registered as a Data Submitter for the file"
+                + " corresponding to this multi-part upload."
             )
         },
         status.HTTP_404_NOT_FOUND: {
-            "description": (
-                "The file with the given ID has not (yet) been registered for upload."
-            )
+            "description": "The multi-part upload with the given ID does not exist."
         },
     },
 )
-def get_file_metadata(
-    file_id: str,
-) -> FileMetadata:
-    """Get file metadata including the current upload attempt."""
-
-    print(file_id)
+def get_upload_details(upload_id: str):
+    """
+    Get details on a specific upload.
+    """
+    print(upload_id)
     ...
-
-    return ...
 
 
 @router.patch(
@@ -117,6 +144,9 @@ def get_file_metadata(
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Multi-part upload successfully updated.",
     responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "The provided status value was invalid."
+        },
         status.HTTP_403_FORBIDDEN: {
             "description": (
                 "The user is not registered as a Data Submitter for the file"
@@ -138,9 +168,9 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
 
 
 @router.post(
-    "/uploads/{upload_id}/parts/{part_no}/signed_posts",
-    summary="Update the status of an existing multi-part upload.",
-    operation_id="createPreSignedPost",
+    "/uploads/{upload_id}/parts/{part_no}/signed_url",
+    summary="Create new pre-signed URL for a specific part.",
+    operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
     response_model=dict,
     response_description="The newly create pre-signed POST.",
@@ -166,9 +196,9 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
         },
     },
 )
-def create_presigned_post(upload_id: str, part_no: int = Path(..., ge=1, le=10000)):
+def create_presigned_url(upload_id: str, part_no: int = Path(..., ge=1, le=10000)):
     """
-    Create a pre-signed post for the specified part number of the specified multi-part
+    Create a pre-signed URL for the specified part number of the specified multi-part
     upload.
     """
 
