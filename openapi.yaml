@@ -262,7 +262,7 @@ paths:
               schema:
                 description: To be defined in further detail.
                 type: object
-          description: The newly create pre-signed POST.
+          description: The newly created pre-signed POST.
         '403':
           description: The user is not registered as a Data Submitter for the file
             corresponding to this multi-part upload.
