@@ -56,9 +56,24 @@ components:
           type: array
       title: HTTPValidationError
       type: object
+    UploadCreation:
+      description: Properties required to create a new upload.
+      properties:
+        file_id:
+          description: The ID of the file corresponding to this upload.
+          title: File Id
+          type: integer
+      required:
+      - file_id
+      title: Properties required to create a new upload
+      type: object
     UploadDetails:
       description: Details returned upon creation of a new multipart upload.
       properties:
+        file_id:
+          description: The ID of the file corresponding to this upload.
+          title: File Id
+          type: integer
         part_size:
           description: Part size to be used for upload. Specified in bytes.
           title: Part Size
@@ -67,6 +82,7 @@ components:
           title: Upload Id
           type: string
       required:
+      - file_id
       - upload_id
       - part_size
       title: Multi-Part Upload Details
@@ -139,51 +155,6 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get file metadata including the current upload attempt.
-  /files/{file_id}/uploads:
-    post:
-      description: Initiate a new mutli-part upload for the given file.
-      operationId: createUpload
-      parameters:
-      - in: path
-        name: file_id
-        required: true
-        schema:
-          title: File Id
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UploadDetails'
-          description: Details on the newly created upload.
-        '403':
-          description: '
-
-            Either the user is not registered as a Data Submitter for the corresponding
-            file.
-
-            Or it is currently not possible to create a new upload for the file with
-            the specified
-
-            ID because:
-
-            - a previous upload for that file was already accepted
-
-            - another upload for that file is currently in progress or is waiting
-            for acceptance
-
-            '
-        '404':
-          description: The file with the given ID has not (yet) been registered for
-            upload.
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-      summary: Initiate a new mutli-part upload.
   /health:
     get:
       description: Used to test if this service is alive
@@ -272,3 +243,35 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Update the status of an existing multi-part upload.
+  uploads:
+    post:
+      description: Initiate a new mutli-part upload for the given file.
+      operationId: createUpload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadCreation'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadDetails'
+          description: Details on the newly created upload.
+        '400':
+          description:
+          - It is currently not possible to create a new upload for the file with
+            the specified ID because another upload for that file is already active
+            or has been accepted (its status is not "failed" "cancelled", or "rejected").
+        '403':
+          description: The user is not registered as a Data Submitter for the corresponding
+            file.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Initiate a new multi-part upload.

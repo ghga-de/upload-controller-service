@@ -40,7 +40,20 @@ class FileMetadata(BaseModel):
     )
 
 
-class UploadDetails(BaseModel):
+class UploadCreation(BaseModel):
+    """Properties required to create a new upload."""
+
+    file_id: int = Field(
+        ..., description="The ID of the file corresponding to this upload."
+    )
+
+    class Config:
+        """Additional Model Config."""
+
+        title = "Properties required to create a new upload"
+
+
+class UploadDetails(UploadCreation):
     """Details returned upon creation of a new multipart upload."""
 
     upload_id: str

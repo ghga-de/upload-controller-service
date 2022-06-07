@@ -21,6 +21,7 @@ from fastapi import APIRouter, HTTPException, Path, status
 
 from ucs.adapters.inbound.fastapi_.models import (
     FileMetadata,
+    UploadCreation,
     UploadDetails,
     UploadUpdate,
 )
@@ -46,33 +47,33 @@ def health():
 
 
 @router.post(
-    "/files/{file_id}/uploads",
-    summary="Initiate a new mutli-part upload.",
+    "uploads",
+    summary="Initiate a new multi-part upload.",
     operation_id="createUpload",
     response_model=UploadDetails,
     status_code=status.HTTP_200_OK,
     response_description="Details on the newly created upload.",
     responses={
-        status.HTTP_403_FORBIDDEN: {
-            "description": """
-Either the user is not registered as a Data Submitter for the corresponding file.
-Or it is currently not possible to create a new upload for the file with the specified
-ID because:
-- a previous upload for that file was already accepted
-- another upload for that file is currently in progress or is waiting for acceptance
-"""
-        },
-        status.HTTP_404_NOT_FOUND: {
+        status.HTTP_400_BAD_REQUEST: {
             "description": (
-                "The file with the given ID has not (yet) been registered for upload."
+                "It is currently not possible to create a new upload for the file with"
+                + " the specified ID because another upload for that file is already"
+                + ' active or has been accepted (its status is not "failed"'
+                + ' "cancelled", or "rejected").',
+            )
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": (
+                "The user is not registered as a Data Submitter for the corresponding"
+                + " file."
             )
         },
     },
 )
-def create_upload(file_id: str):
+def create_upload(upload_creation: UploadCreation):
     """Initiate a new mutli-part upload for the given file."""
 
-    print(file_id)
+    print(upload_creation)
     ...
 
     return ...
