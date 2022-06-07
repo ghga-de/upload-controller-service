@@ -15,10 +15,11 @@
 
 """Defines dataclasses for holding business-logic data"""
 
+from typing import Optional
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 
 # fmt: off
@@ -43,15 +44,34 @@ class UploadStatus(Enum):
 # fmt: on
 
 
-class FileMetadataPatchState(BaseModel):
+class CurrentUploadAttempt(BaseModel):
     """
-    A model containing all the metadata needed to perform a patch on an orm field
+    A model containing details on the most recent upload attempt for a specific File.
+    Please note this should only be used within the `FileMetadata` model.
     """
 
-    state: UploadStatus = UploadStatus.REGISTERED
+    external_id: str
+    status: UploadStatus
 
 
-class FileMetadataExternal(FileMetadataPatchState):
+class FileMetadata(BaseModel):
+    """
+    A model containing all the metadata needed to pass it on to other microservices
+    """
+
+    id: UUID4
+    external_id: str
+    grouping_label: str
+    md5_checksum: str
+    size: int
+    creation_date: datetime
+    update_date: datetime
+    format: str
+    file_name: str
+    current_upload_attempt: Optional[CurrentUploadAttempt]
+
+
+class FileMetadataExternal(BaseModel):
     """
     A model containing all the metadata needed to pass it on to other microservices
     """
@@ -64,16 +84,10 @@ class FileMetadataExternal(FileMetadataPatchState):
     update_date: datetime
     format: str
 
-    class Config:
-        """Additional pydantic configs."""
 
-        orm_mode = True
-
-
-class FileMetadataInternal(FileMetadataExternal):
+class FileMetadataCreation(FileMetadataExternal):
     """
-    A model containing all the metadata submitted for one file from the metadata service
-    with the new_study_created topic.
+    A model containing all the metadata needed to register a new file to the database.
     """
 
     file_name: str

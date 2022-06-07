@@ -107,16 +107,16 @@ class FileMetadata(Base):
         doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
     )
 
-    uploads = relationship("Upload", back_populates="file_metadata")
+    upload_attempts = relationship("UploadAttempt", back_populates="file_metadata")
 
 
-class Upload(Base):
+class UploadAttempt(Base):
     """
     ORM base class containing information on multi-part upload attemps.
     Each upload attempt is linked to a specific `FileMetadata` entry.
     """
 
-    __tablename__ = "uploads"
+    __tablename__ = "upload_attempts"
 
     id = Column(
         Integer,
@@ -136,7 +136,7 @@ class Upload(Base):
             + " This ID shared with the user."
         ),
     )
-    file_metadata_id = Column(
+    file_id = Column(
         String,
         ForeignKey("file_metadata.id"),
         nullable=False,
@@ -200,12 +200,12 @@ class PsqlFileMetadataDAO(IFileMetadataDAO):
         return orm_file
 
     def get(self, file_id: str) -> models.FileMetadataExternal:
-        """Get file from the database"""
+        """Get Metadata on a single file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
         return models.FileMetadataExternal.from_orm(orm_file)
 
-    def register(self, file: models.FileMetadataInternal) -> None:
+    def add(self, file: models.FileMetadataInternal) -> None:
         """Register a new file to the database."""
 
         # check for collisions in the database:
