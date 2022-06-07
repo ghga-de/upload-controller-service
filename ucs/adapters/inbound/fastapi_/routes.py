@@ -145,7 +145,10 @@ def get_upload_details(upload_id: str):
     response_description="Multi-part upload successfully updated.",
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "description": "The provided status value was invalid."
+            "description": (
+                "The provided status value was invalid or the status of this multi-part"
+                + " upload currently or permanently can't be changed."
+            )
         },
         status.HTTP_403_FORBIDDEN: {
             "description": (
@@ -168,7 +171,7 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
 
 
 @router.post(
-    "/uploads/{upload_id}/parts/{part_no}/signed_url",
+    "/uploads/{upload_id}/parts/{part_no}/signed_urls",
     summary="Create new pre-signed URL for a specific part.",
     operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
