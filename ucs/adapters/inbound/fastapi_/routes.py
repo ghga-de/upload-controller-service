@@ -176,7 +176,7 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
     operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
     response_model=dict,
-    response_description="The newly create pre-signed POST.",
+    response_description="The newly created pre-signed POST.",
     responses={
         status.HTTP_200_OK: {
             "content": {
