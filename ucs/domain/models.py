@@ -15,11 +15,11 @@
 
 """Defines dataclasses for holding business-logic data"""
 
-from typing import Optional
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
-from pydantic import BaseModel, UUID4
+from pydantic import UUID4, BaseModel
 
 
 # fmt: off
@@ -54,7 +54,7 @@ class CurrentUploadAttempt(BaseModel):
     status: UploadStatus
 
 
-class FileMetadata(BaseModel):
+class FileMetadataInternal(BaseModel):
     """
     A model containing all the metadata needed to pass it on to other microservices
     """

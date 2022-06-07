@@ -17,11 +17,13 @@
 Module containing the main FastAPI router and all route functions.
 """
 
-from typing import Literal
+from fastapi import APIRouter, HTTPException, Path, status
 
-from fastapi import APIRouter, HTTPException, Path, Query, status
-
-from ucs.adapters.inbound.fastapi_.models import UploadDetails, UploadUpdate
+from ucs.adapters.inbound.fastapi_.models import (
+    FileMetadata,
+    UploadDetails,
+    UploadUpdate,
+)
 
 router = APIRouter()
 
@@ -77,15 +79,12 @@ def create_upload(file_id: str):
 
 
 @router.get(
-    "/files/{file_id}/uploads",
-    summary="Get all pending uploads for a given file.",
-    operation_id="getPendingUploads",
-    response_model=list[UploadDetails],
+    "/files/{file_id}",
+    summary="Get file metadata including the current upload attempt.",
+    operation_id="getFileMetadata",
+    response_model=FileMetadata,
     status_code=status.HTTP_200_OK,
-    response_description=(
-        "List of pending multi-part uploads and their details."
-        + " Please note, the list may either contain 1 or 0 elements."
-    ),
+    response_description="File metadata including the current upload attempt",
     responses={
         status.HTTP_403_FORBIDDEN: {
             "description": (
@@ -99,24 +98,12 @@ def create_upload(file_id: str):
         },
     },
 )
-def get_pending_uploads(
+def get_file_metadata(
     file_id: str,
-    status_: Literal["pending"] = Query(
-        "pending",
-        alias="status",
-        description=(
-            "The status of the multi-part upload, only 'pending' is allowed as the"
-            + " single option."
-        ),
-    ),
-):
-    """
-    Get all multi-part uploads (can only be 1 or none) which are currently pending.
-    E.g. this endpoint is useful if the client has lost the ID of the currently ongoing
-    upload.
-    """
+) -> FileMetadata:
+    """Get file metadata including the current upload attempt."""
 
-    print(file_id, status_)
+    print(file_id)
     ...
 
     return ...
