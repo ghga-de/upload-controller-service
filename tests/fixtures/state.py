@@ -16,6 +16,7 @@
 """Test data"""
 
 import os
+from uuid import uuid4
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -47,7 +48,7 @@ class FileState:
         in_inbox: bool,
         in_db: bool = True,
         message: Optional[dict] = None,
-        state: UploadStatus = UploadStatus.REGISTERED,
+        state: UploadStatus = UploadStatus.PENDING,
     ):
         """
         Initialize file state and create imputed attributes.
@@ -73,7 +74,8 @@ class FileState:
         filename, file_extension = os.path.splitext(self.file_path)
 
         self.file_metadata = FileMetadataInternal(
-            file_id=self.id,
+            id=uuid4(),
+            external_id=self.id,
             grouping_label=self.grouping_label,
             md5_checksum=self.md5,
             size=len(self.content),
@@ -101,7 +103,7 @@ FILES: Dict[str, FileState] = {
         grouping_label=get_grouping_label_example(0),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=False,
-        state=UploadStatus.REGISTERED,
+        state=UploadStatus.PENDING,
     ),
     "in_inbox": FileState(
         id=get_file_id_example(1),
@@ -115,7 +117,7 @@ FILES: Dict[str, FileState] = {
         grouping_label=get_grouping_label_example(2),
         file_path=TEST_FILE_PATHS[0],
         in_inbox=False,
-        state=UploadStatus.COMPLETED,
+        state=UploadStatus.ACCEPTED,
     ),
     "db_inconsistency": FileState(
         id=get_file_id_example(3),

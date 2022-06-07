@@ -92,7 +92,7 @@ class UploadService(IUploadService):
 
         with self._file_info_dao as fi_dao:
             try:
-                fi_dao.update_file_state(file_id=file_id, state=UploadStatus.COMPLETED)
+                fi_dao.update_file_state(file_id=file_id, state=UploadStatus.ACCEPTED)
             except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
