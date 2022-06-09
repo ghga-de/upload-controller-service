@@ -43,7 +43,7 @@ class FileMetadata(BaseModel):
 class UploadCreation(BaseModel):
     """Properties required to create a new upload."""
 
-    file_id: int = Field(
+    file_id: str = Field(
         ..., description="The ID of the file corresponding to this upload."
     )
 
