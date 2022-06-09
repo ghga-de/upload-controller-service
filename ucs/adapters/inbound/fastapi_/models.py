@@ -76,3 +76,15 @@ class UploadUpdate(BaseModel):
         """Additional Model Config."""
 
         title = "Multi-Part Upload Update"
+
+
+class AccessURL(BaseModel):
+    """Contains a pre-signed for uploading the bytes of one file part."""
+
+    url: str = Field(
+        ...,
+        description=(
+            "A fully resolvable URL that can be used to upload the actual"
+            + " object bytes for one upload part."
+        ),
+    )

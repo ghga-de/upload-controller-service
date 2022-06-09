@@ -20,6 +20,7 @@ Module containing the main FastAPI router and all route functions.
 from fastapi import APIRouter, HTTPException, Path, status
 
 from ucs.adapters.inbound.fastapi_.models import (
+    AccessURL,
     FileMetadata,
     UploadCreation,
     UploadDetails,
@@ -175,19 +176,9 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
     summary="Create new pre-signed URL for a specific part.",
     operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
-    response_model=dict,
-    response_description="The newly created pre-signed POST.",
+    response_model=AccessURL,
+    response_description="The newly created pre-signed URL.",
     responses={
-        status.HTTP_200_OK: {
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "title": None,
-                        "description": "To be defined in further detail.",
-                    }
-                }
-            }
-        },
         status.HTTP_403_FORBIDDEN: {
             "description": (
                 "The user is not registered as a Data Submitter for the file"
