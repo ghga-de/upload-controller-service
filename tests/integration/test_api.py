@@ -56,7 +56,7 @@ def test_get_presigned_post(
 ):
     """Test the GET /presigned_post/{file_id} endpoint"""
     config = get_config(sources=[psql_fixture.config, s3_fixture.config])
-    file_id = state.FILES[file_state_name].file_info.file_id
+    file_id = state.FILES[file_state_name].file_metadata.file_id
 
     client = ApiTestClient(config=config)
     response = client.get(f"/presigned_post/{file_id}")
@@ -132,7 +132,7 @@ def test_confirm_upload(
     config = get_config(
         sources=[psql_fixture.config, s3_fixture.config, amqp_fixture.config]
     )
-    file_id = state.FILES[file_state_name].file_info.file_id
+    file_id = state.FILES[file_state_name].file_metadata.file_id
 
     # initialize downstream test service that will receive the message from this service:
     downstream_subscriber = amqp_fixture.get_test_subscriber(

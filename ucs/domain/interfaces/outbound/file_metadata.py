@@ -23,15 +23,15 @@ from ucs.domain import models
 # Since this is just a DAO stub without implementation, following pylint error are
 # expected:
 # pylint: disable=unused-argument,no-self-use
-class IFileInfoDAO(Protocol):
+class IFileMetadataDAO(Protocol):
     """
     A DAO interface for managing file info in the database.
     It might throw following exception to communicate selected error events:
-        - FileInfoNotFoundError
-        - FileInfoAlreadyExistsError
+        - FileMetadataNotFoundError
+        - FileMetadataAlreadyExistsError
     """
 
-    def __enter__(self) -> "IFileInfoDAO":
+    def __enter__(self) -> "IFileMetadataDAO":
         """Setup logic. (Maybe create transaction manager.)"""
         ...
 
@@ -39,11 +39,11 @@ class IFileInfoDAO(Protocol):
         """Teardown logic. (Maybe close transaction manager.)"""
         ...
 
-    def get(self, file_id: str) -> models.FileInfoExternal:
+    def get(self, file_id: str) -> models.FileMetadataExternal:
         """Get file from the database"""
         ...
 
-    def register(self, file: models.FileInfoInternal) -> None:
+    def register(self, file: models.FileMetadataInternal) -> None:
         """Register a new file to the database."""
         ...
 
@@ -58,13 +58,13 @@ class IFileInfoDAO(Protocol):
         ...
 
 
-class FileInfoDaoError(RuntimeError):
-    "Base class for all error thrown by the an implementation of the IFileInfoDAO."
+class FileMetadataDaoError(RuntimeError):
+    "Base class for all error thrown by the an implementation of the IFileMetadataDAO."
 
     pass  # pylint: disable=unnecessary-pass
 
 
-class FileInfoNotFoundError(FileInfoDaoError):
+class FileMetadataNotFoundError(FileMetadataDaoError):
     """Thrown when trying to access a file with a file ID that doesn't
     exist in the database."""
 
@@ -77,7 +77,7 @@ class FileInfoNotFoundError(FileInfoDaoError):
         super().__init__(message)
 
 
-class FileInfoAlreadyExistsError(FileInfoDaoError):
+class FileMetadataAlreadyExistsError(FileMetadataDaoError):
     """Thrown when trying to add a file with an file ID that already
     exist in the database."""
 

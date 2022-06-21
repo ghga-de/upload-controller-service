@@ -38,7 +38,7 @@ class UploadState(Enum):
 # fmt: on
 
 
-class FileInfoPatchState(BaseModel):
+class FileMetadataPatchState(BaseModel):
     """
     A model containing all the metadata needed to perform a patch on an orm field
     """
@@ -46,7 +46,7 @@ class FileInfoPatchState(BaseModel):
     state: UploadState = UploadState.REGISTERED
 
 
-class FileInfoExternal(FileInfoPatchState):
+class FileMetadataExternal(FileMetadataPatchState):
     """
     A model containing all the metadata needed to pass it on to other microservices
     """
@@ -65,7 +65,7 @@ class FileInfoExternal(FileInfoPatchState):
         orm_mode = True
 
 
-class FileInfoInternal(FileInfoExternal):
+class FileMetadataInternal(FileMetadataExternal):
     """
     A model containing all the metadata submitted for one file from the metadata service
     with the new_study_created topic.

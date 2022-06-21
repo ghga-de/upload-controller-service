@@ -27,17 +27,17 @@ from ucs.domain.interfaces.inbound.upload import (
     IUploadService,
 )
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
-    IFileInfoDAO,
+from ucs.domain.interfaces.outbound.file_metadata import (
+    FileMetadataAlreadyExistsError,
+    FileMetadataNotFoundError,
+    IFileMetadataDAO,
 )
 from ucs.domain.interfaces.outbound.storage import (
     IObjectStorage,
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ucs.domain.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileMetadataInternal, UploadState
 
 
 class UploadService(IUploadService):
@@ -48,28 +48,28 @@ class UploadService(IUploadService):
         self,
         *,
         s3_inbox_bucket_id: str,
-        file_info_dao: IFileInfoDAO,
+        file_metadata_dao: IFileMetadataDAO,
         object_storage_dao: IObjectStorage,
         event_publisher: IEventPublisher,
     ):
         """Ininitalize class instance with configs and outbound adapter objects."""
-        self._file_info_dao = file_info_dao
+        self._file_metadata_dao = file_metadata_dao
         self._object_storage_dao = object_storage_dao
         self._event_publisher = event_publisher
         self._s3_inbox_bucket_id = s3_inbox_bucket_id
 
-    def handle_new_study(self, study_files: List[FileInfoInternal]):
+    def handle_new_study(self, study_files: List[FileMetadataInternal]):
         """
         Put the information for files into the database
         """
 
-        for file_info in study_files:
-            with self._file_info_dao as fi_dao:
+        for file_metadata in study_files:
+            with self._file_metadata_dao as fi_dao:
                 try:
-                    fi_dao.register(file_info)
-                except FileInfoAlreadyExistsError as error:
+                    fi_dao.register(file_metadata)
+                except FileMetadataAlreadyExistsError as error:
                     raise FileAlreadyRegisteredError(
-                        file_id=file_info.file_id
+                        file_id=file_metadata.file_id
                     ) from error
 
     def handle_file_registered(
@@ -90,10 +90,10 @@ class UploadService(IUploadService):
             except ObjectNotFoundError as error:
                 raise FileNotInInboxError(file_id=file_id) from error
 
-        with self._file_info_dao as fi_dao:
+        with self._file_metadata_dao as fi_dao:
             try:
                 fi_dao.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
-            except FileInfoNotFoundError as error:
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
     def get_upload_url(
@@ -106,11 +106,11 @@ class UploadService(IUploadService):
         """
 
         # Check if file is in db
-        with self._file_info_dao as fi_dao:
+        with self._file_metadata_dao as fi_dao:
             try:
                 fi_dao.get(file_id=file_id)
 
-            except FileInfoNotFoundError as error:
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
             # Create presigned post for file_id
@@ -139,12 +139,12 @@ class UploadService(IUploadService):
         FileNotInInboxError if this is not the case.
         """
 
-        with self._file_info_dao as fi_dao:
+        with self._file_metadata_dao as fi_dao:
             try:
-                file_info = fi_dao.get(file_id=file_id)
-                if file_info.state is not UploadState.PENDING:
+                file_metadata = fi_dao.get(file_id=file_id)
+                if file_metadata.state is not UploadState.PENDING:
                     raise FileNotReadyForConfirmUpload(file_id=file_id)
-            except FileInfoNotFoundError as error:
+            except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
             with self._object_storage_dao as storage:
@@ -156,4 +156,4 @@ class UploadService(IUploadService):
 
             fi_dao.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
 
-        self._event_publisher.publish_upload_received(file_info)
+        self._event_publisher.publish_upload_received(file_metadata)

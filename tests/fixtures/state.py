@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture, calc_md5
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
-from ucs.domain.models import FileInfoInternal, UploadState
+from ucs.domain.models import FileMetadataInternal, UploadState
 
 from .config import DEFAULT_CONFIG
 
@@ -72,7 +72,7 @@ class FileState:
         self.md5 = calc_md5(self.content)
         filename, file_extension = os.path.splitext(self.file_path)
 
-        self.file_info = FileInfoInternal(
+        self.file_metadata = FileMetadataInternal(
             file_id=self.id,
             grouping_label=self.grouping_label,
             md5_checksum=self.md5,

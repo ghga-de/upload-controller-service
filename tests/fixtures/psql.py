@@ -25,22 +25,22 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-from ucs.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
+from ucs.adapters.outbound.psql import Base, FileMetadata, PsqlFileMetadataDAO
 from ucs.domain import models
 
 from . import get_cont_and_conf, state
 
-existing_file_infos: List[models.FileInfoInternal] = []
-non_existing_file_infos: List[models.FileInfoInternal] = []
+existing_file_metadatas: List[models.FileMetadataInternal] = []
+non_existing_file_metadatas: List[models.FileMetadataInternal] = []
 
 for file in state.FILES.values():
     if file.in_db:
-        existing_file_infos.append(file.file_info)
+        existing_file_metadatas.append(file.file_metadata)
     else:
-        non_existing_file_infos.append(file.file_info)
+        non_existing_file_metadatas.append(file.file_metadata)
 
 
-def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
+def populate_db(db_url: str, file_metadatas: List[models.FileMetadataInternal]):
     """Create and populates the DB"""
 
     # setup database and tables:
@@ -50,11 +50,11 @@ def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
     # populate with test data:
     session_factor = sessionmaker(engine)
     with session_factor() as session:
-        for existing_file_info in file_infos:
+        for existing_file_metadata in file_metadatas:
             param_dict = {
-                **existing_file_info.dict(),
+                **existing_file_metadata.dict(),
             }
-            orm_entry = FileInfo(**param_dict)
+            orm_entry = FileMetadata(**param_dict)
             session.add(orm_entry)
         session.commit()
 
@@ -64,9 +64,9 @@ class PsqlState:
     """Info yielded by the `psql_fixture` function"""
 
     config: PostgresqlConfigBase
-    file_info_dao: PsqlFileInfoDAO
-    existing_file_infos: List[models.FileInfoInternal]
-    non_existing_file_infos: List[models.FileInfoInternal]
+    file_metadata_dao: PsqlFileMetadataDAO
+    existing_file_metadatas: List[models.FileMetadataInternal]
+    non_existing_file_metadatas: List[models.FileMetadataInternal]
 
 
 @pytest.fixture
@@ -76,14 +76,14 @@ def psql_fixture() -> Generator[PsqlState, None, None]:
     with PostgresContainer() as postgres:
         psq_config = config_from_psql_container(postgres)
         container, config = get_cont_and_conf(sources=[psq_config])
-        file_info_dao = container.file_info_dao()
+        file_metadata_dao = container.file_metadata_dao()
 
-        populate_db(config.db_url, file_infos=existing_file_infos)
+        populate_db(config.db_url, file_metadatas=existing_file_metadatas)
 
-        with file_info_dao as fi_dao:
+        with file_metadata_dao as fi_dao:
             yield PsqlState(
                 config=config,
-                file_info_dao=fi_dao,  # type: ignore
-                existing_file_infos=existing_file_infos,
-                non_existing_file_infos=non_existing_file_infos,
+                file_metadata_dao=fi_dao,  # type: ignore
+                existing_file_metadatas=existing_file_metadatas,
+                non_existing_file_metadatas=non_existing_file_metadatas,
             )

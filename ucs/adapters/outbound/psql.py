@@ -29,17 +29,17 @@ from sqlalchemy.future import select
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_info import (
-    FileInfoAlreadyExistsError,
-    FileInfoNotFoundError,
-    IFileInfoDAO,
+from ucs.domain.interfaces.outbound.file_metadata import (
+    FileMetadataAlreadyExistsError,
+    FileMetadataNotFoundError,
+    IFileMetadataDAO,
 )
 from ucs.domain.models import UploadState
 
 Base: DeclarativeMeta = declarative_base()
 
 
-class FileInfo(Base):
+class FileMetadata(Base):
     """
     GHGA Files announced by an uploader.
     """
@@ -119,9 +119,9 @@ class FileInfo(Base):
     )
 
 
-class PsqlFileInfoDAO(IFileInfoDAO):
+class PsqlFileMetadataDAO(IFileMetadataDAO):
     """
-    An implementation of the IFileInfoDAO interface using a PostgreSQL backend.
+    An implementation of the IFileMetadataDAO interface using a PostgreSQL backend.
     """
 
     # pylint: disable=super-init-not-called
@@ -147,41 +147,41 @@ class PsqlFileInfoDAO(IFileInfoDAO):
         # pylint: disable=no-member
         self._session_cm.__exit__(error_type, error_value, error_traceback)
 
-    def _get_orm_file(self, file_id: str) -> FileInfo:
+    def _get_orm_file(self, file_id: str) -> FileMetadata:
         """Internal method to get the ORM representation of a file by specifying
         its file ID"""
 
-        statement = select(FileInfo).filter_by(file_id=file_id)
+        statement = select(FileMetadata).filter_by(file_id=file_id)
         orm_file = self._session.execute(statement).scalars().one_or_none()
 
         if orm_file is None:
-            raise FileInfoNotFoundError(file_id=file_id)
+            raise FileMetadataNotFoundError(file_id=file_id)
 
         return orm_file
 
-    def get(self, file_id: str) -> models.FileInfoExternal:
+    def get(self, file_id: str) -> models.FileMetadataExternal:
         """Get file from the database"""
 
         orm_file = self._get_orm_file(file_id=file_id)
-        return models.FileInfoExternal.from_orm(orm_file)
+        return models.FileMetadataExternal.from_orm(orm_file)
 
-    def register(self, file: models.FileInfoInternal) -> None:
+    def register(self, file: models.FileMetadataInternal) -> None:
         """Register a new file to the database."""
 
         # check for collisions in the database:
         try:
             self._get_orm_file(file_id=file.file_id)
-        except FileInfoNotFoundError:
+        except FileMetadataNotFoundError:
             # this is expected
             pass
         else:
             # this is a problem
-            raise FileInfoAlreadyExistsError(file_id=file.file_id)
+            raise FileMetadataAlreadyExistsError(file_id=file.file_id)
 
         file_dict = {
             **file.dict(),
         }
-        orm_file = FileInfo(**file_dict)
+        orm_file = FileMetadata(**file_dict)
         self._session.add(orm_file)
 
     def update_file_state(self, file_id: str, state: UploadState) -> None:
