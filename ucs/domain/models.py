@@ -17,44 +17,43 @@
 
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # fmt: off
-class UploadState(Enum):
+class UploadStatus(Enum):
 
     """
-    The current upload state. Can be registered (no information),
-    pending (the user has requested an upload url),
-    uploaded (the user has confirmed the upload),
-    or registered (the file has been registered with the internal-file-registry).
+    The current upload state. Can be one of:
+        - PENDING (the user has requested an upload url)
+        - CANCELLED (the user has canceled the upload)
+        - UPLOADED (the user has confirmed the upload)
+        - FAILED (the upload has failed for a technical reason)
+        - ACCEPTED (the upload was accepted by a downstream service)
+        - REJECTED (the upload was rejected by a downstream service)
     """
 
-    REGISTERED = "registered"
     PENDING = "pending"
+    CANCELLED = "cancelled"
     UPLOADED = "uploaded"
-    COMPLETED = "completed"
+    FAILED = "failed"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 # fmt: on
 
 
-class FileMetadataPatchState(BaseModel):
+class FileMetadata(BaseModel):
     """
-    A model containing all the metadata needed to perform a patch on an orm field
-    """
-
-    state: UploadState = UploadState.REGISTERED
-
-
-class FileMetadataExternal(FileMetadataPatchState):
-    """
-    A model containing all the metadata needed to pass it on to other microservices
+    A model containing basic metadata on a file.
     """
 
-    grouping_label: str
     file_id: str
+    file_name: str
     md5_checksum: str
     size: int
+    grouping_label: str
     creation_date: datetime
     update_date: datetime
     format: str
@@ -65,10 +64,13 @@ class FileMetadataExternal(FileMetadataPatchState):
         orm_mode = True
 
 
-class FileMetadataInternal(FileMetadataExternal):
+class FileMetadataWithUpload(FileMetadata):
     """
-    A model containing all the metadata submitted for one file from the metadata service
-    with the new_study_created topic.
+    A model containing basic metadata on a file plus information on the current
+    upload.
     """
 
-    file_name: str
+    current_upload_id: Optional[str] = Field(
+        None,
+        description="ID of the current upload. `Null` if no update has been initiated, yet.",
+    )

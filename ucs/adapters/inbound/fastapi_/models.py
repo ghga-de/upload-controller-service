@@ -15,29 +15,9 @@
 
 """REST API-specific data models (not used by core package)"""
 
-from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
-
-
-class FileMetadata(BaseModel):
-    """
-    A model containing all the metadata needed to pass it on to other microservices
-    """
-
-    file_id: str
-    file_name: str
-    md5_checksum: str
-    size: int
-    grouping_label: str
-    creation_date: datetime
-    update_date: datetime
-    format: str
-    current_upload_id: Optional[str] = Field(
-        None,
-        description="ID of the current upload. `Null` if no update has been initiated, yet.",
-    )
 
 
 class UploadCreation(BaseModel):

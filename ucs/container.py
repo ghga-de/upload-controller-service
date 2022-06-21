@@ -18,7 +18,7 @@
 from dependency_injector import containers, providers
 
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.psql import PsqlFileMetadataDAO
+from ucs.adapters.outbound.psql.adapters import PsqlFileMetadataDAO
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.domain.interfaces.inbound.upload import IUploadService

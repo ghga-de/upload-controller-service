@@ -28,7 +28,6 @@ class IFileMetadataDAO(Protocol):
     A DAO interface for managing file info in the database.
     It might throw following exception to communicate selected error events:
         - FileMetadataNotFoundError
-        - FileMetadataAlreadyExistsError
     """
 
     def __enter__(self) -> "IFileMetadataDAO":
@@ -39,22 +38,12 @@ class IFileMetadataDAO(Protocol):
         """Teardown logic. (Maybe close transaction manager.)"""
         ...
 
-    def get(self, file_id: str) -> models.FileMetadataExternal:
+    def get(self, file_id: str) -> models.FileMetadata:
         """Get file from the database"""
         ...
 
-    def register(self, file: models.FileMetadataInternal) -> None:
-        """Register a new file to the database."""
-        ...
-
-    def update_file_state(self, file_id: str, state: models.UploadState) -> None:
-        """Update the file state of a file in the database."""
-        ...
-
-    def unregister(self, file_id: str) -> None:
-        """
-        Unregister a new file with the specified file ID from the database.
-        """
+    def upsert(self, file: models.FileMetadata) -> None:
+        """Register or update a file."""
         ...
 
 
@@ -69,22 +58,5 @@ class FileMetadataNotFoundError(FileMetadataDaoError):
     exist in the database."""
 
     def __init__(self, file_id: Optional[str]):
-        message = (
-            "The file"
-            + (f" with file ID '{file_id}' " if file_id else "")
-            + " does not exist in the database."
-        )
-        super().__init__(message)
-
-
-class FileMetadataAlreadyExistsError(FileMetadataDaoError):
-    """Thrown when trying to add a file with an file ID that already
-    exist in the database."""
-
-    def __init__(self, file_id: Optional[str]):
-        message = (
-            "The file"
-            + (f" with file ID '{file_id}' " if file_id else "")
-            + " already exist in the database."
-        )
+        message = f"The file with file ID '{file_id}' does not exist in the database."
         super().__init__(message)

@@ -28,7 +28,6 @@ from ucs.domain.interfaces.inbound.upload import (
 )
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
 from ucs.domain.interfaces.outbound.file_metadata import (
-    FileMetadataAlreadyExistsError,
     FileMetadataNotFoundError,
     IFileMetadataDAO,
 )
@@ -37,7 +36,7 @@ from ucs.domain.interfaces.outbound.storage import (
     ObjectAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ucs.domain.models import FileMetadataInternal, UploadState
+from ucs.domain.models import FileMetadata, UploadStatus
 
 
 class UploadService(IUploadService):
@@ -58,7 +57,7 @@ class UploadService(IUploadService):
         self._event_publisher = event_publisher
         self._s3_inbox_bucket_id = s3_inbox_bucket_id
 
-    def handle_new_study(self, study_files: List[FileMetadataInternal]):
+    def handle_new_study(self, study_files: List[FileMetadata]):
         """
         Put the information for files into the database
         """
@@ -92,7 +91,7 @@ class UploadService(IUploadService):
 
         with self._file_metadata_dao as fi_dao:
             try:
-                fi_dao.update_file_state(file_id=file_id, state=UploadState.COMPLETED)
+                fi_dao.update_file_state(file_id=file_id, state=UploadStatus.COMPLETED)
             except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
 
@@ -127,7 +126,7 @@ class UploadService(IUploadService):
                 except ObjectAlreadyExistsError as error:
                     raise FileAlreadyInInboxError(file_id=file_id) from error
 
-            fi_dao.update_file_state(file_id=file_id, state=UploadState.PENDING)
+            fi_dao.update_file_state(file_id=file_id, state=UploadStatus.PENDING)
         return presigned_post
 
     def confirm_file_upload(
@@ -142,7 +141,7 @@ class UploadService(IUploadService):
         with self._file_metadata_dao as fi_dao:
             try:
                 file_metadata = fi_dao.get(file_id=file_id)
-                if file_metadata.state is not UploadState.PENDING:
+                if file_metadata.state is not UploadStatus.PENDING:
                     raise FileNotReadyForConfirmUpload(file_id=file_id)
             except FileMetadataNotFoundError as error:
                 raise FileNotRegisteredError(file_id=file_id) from error
@@ -154,6 +153,6 @@ class UploadService(IUploadService):
                 ):
                     raise FileNotInInboxError(file_id=file_id)
 
-            fi_dao.update_file_state(file_id=file_id, state=UploadState.UPLOADED)
+            fi_dao.update_file_state(file_id=file_id, state=UploadStatus.UPLOADED)
 
         self._event_publisher.publish_upload_received(file_metadata)

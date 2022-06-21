@@ -23,7 +23,7 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
 from ucs.domain.interfaces.inbound.upload import IUploadService
-from ucs.domain.models import FileMetadataInternal
+from ucs.domain.models import FileMetadata
 
 HERE = Path(__file__).parent.resolve()
 
@@ -72,7 +72,7 @@ class RabbitMQEventConsumer:
         grouping_label = message["study"]["id"]
 
         study_files = [
-            FileMetadataInternal(
+            FileMetadata(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
                 md5_checksum=file["md5_checksum"],

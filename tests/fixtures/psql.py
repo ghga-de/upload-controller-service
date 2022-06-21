@@ -15,75 +15,64 @@
 
 """Fixtures for testing the PostgreSQL functionalities"""
 
-from dataclasses import dataclass
-from typing import Generator, List
+from typing import Generator
 
 import pytest
 from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
 from ghga_service_chassis_lib.postgresql_testing import config_from_psql_container
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from testcontainers.postgres import PostgresContainer
 
-from ucs.adapters.outbound.psql import Base, FileMetadata, PsqlFileMetadataDAO
+from ucs.adapters.outbound.psql import orm_models
 from ucs.domain import models
 
-from . import get_cont_and_conf, state
-
-existing_file_metadatas: List[models.FileMetadataInternal] = []
-non_existing_file_metadatas: List[models.FileMetadataInternal] = []
-
-for file in state.FILES.values():
-    if file.in_db:
-        existing_file_metadatas.append(file.file_metadata)
-    else:
-        non_existing_file_metadatas.append(file.file_metadata)
+from .config import get_cont_and_conf
 
 
-def populate_db(db_url: str, file_metadatas: List[models.FileMetadataInternal]):
-    """Create and populates the DB"""
+class PsqlFixture:
+    """Returned by the psql fixture."""
 
-    # setup database and tables:
-    engine = create_engine(db_url)
-    Base.metadata.create_all(engine)
+    def __init__(
+        self,
+        *,
+        config: PostgresqlConfigBase,
+        session_factory: sessionmaker,
+    ):
+        """Initialize with config."""
 
-    # populate with test data:
-    session_factor = sessionmaker(engine)
-    with session_factor() as session:
-        for existing_file_metadata in file_metadatas:
-            param_dict = {
-                **existing_file_metadata.dict(),
-            }
-            orm_entry = FileMetadata(**param_dict)
-            session.add(orm_entry)
-        session.commit()
+        self.session_factory = session_factory
+        self.config = config
 
+    def populate(self, orm_objects: list[object]):
+        """Add a file entry to the database."""
 
-@dataclass
-class PsqlState:
-    """Info yielded by the `psql_fixture` function"""
+        with self.session_factory() as session:
+            for orm_object in orm_objects:
+                session.add(orm_object)
+            session.commit()
 
-    config: PostgresqlConfigBase
-    file_metadata_dao: PsqlFileMetadataDAO
-    existing_file_metadatas: List[models.FileMetadataInternal]
-    non_existing_file_metadatas: List[models.FileMetadataInternal]
+    def populate_file_metadata(self, files: list[models.FileMetadata]):
+        """Add a file entry to the database."""
+
+        orm_files = [orm_models.FileMetadata(**file.dict()) for file in files]
+        self.populate(orm_files)
 
 
 @pytest.fixture
-def psql_fixture() -> Generator[PsqlState, None, None]:
+def psql_fixture(
+    base: DeclarativeMeta = orm_models.Base,
+) -> Generator[PsqlFixture, None, None]:
     """Pytest fixture for tests of the Prostgres DAO implementation."""
 
     with PostgresContainer() as postgres:
         psq_config = config_from_psql_container(postgres)
-        container, config = get_cont_and_conf(sources=[psq_config])
-        file_metadata_dao = container.file_metadata_dao()
+        _, config = get_cont_and_conf(sources=[psq_config])
 
-        populate_db(config.db_url, file_metadatas=existing_file_metadatas)
+        # setup database and tables:
+        engine = create_engine(config.db_url)
+        base.metadata.create_all(engine)
+        session_factory = sessionmaker(engine)
 
-        with file_metadata_dao as fi_dao:
-            yield PsqlState(
-                config=config,
-                file_metadata_dao=fi_dao,  # type: ignore
-                existing_file_metadatas=existing_file_metadatas,
-                non_existing_file_metadatas=non_existing_file_metadatas,
-            )
+        yield PsqlFixture(config=config, session_factory=session_factory)

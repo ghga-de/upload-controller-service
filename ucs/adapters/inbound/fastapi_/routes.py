@@ -21,11 +21,11 @@ from fastapi import APIRouter, HTTPException, Path, status
 
 from ucs.adapters.inbound.fastapi_.models import (
     AccessURL,
-    FileMetadata,
     UploadCreation,
     UploadDetails,
     UploadUpdate,
 )
+from ucs.domain.models import FileMetadataWithUpload
 
 router = APIRouter()
 
@@ -66,7 +66,7 @@ def health():
     summary="Get file metadata including the current upload attempt.",
     operation_id="getFileMetadata",
     status_code=status.HTTP_200_OK,
-    response_model=FileMetadata,
+    response_model=FileMetadataWithUpload,
     response_description="File metadata including the current upload attempt",
     responses={
         status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},

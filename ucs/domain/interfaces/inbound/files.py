@@ -18,13 +18,13 @@
 
 from typing import List, Protocol
 
-from ucs.domain.models import FileMetadataInternal
+from ucs.domain.models import FileMetadata
 
 
 class IUploadService(Protocol):
     """Interface for the main service class for handling uploads to the Inbox."""
 
-    def handle_new_study(self, study_files: List[FileMetadataInternal]):
+    def handle_new_study(self, study_files: List[FileMetadata]):
         """
         Put the information for files into the database
         """
