@@ -17,22 +17,28 @@
 
 from typing import Any
 
-from sqlalchemy.future import select
 from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
 )
+from sqlalchemy.future import select
+from sqlalchemy.orm.decl_api import DeclarativeMeta
+
+from ucs.adapters.outbound.psql import orm_models
 from ucs.domain import models
 from ucs.domain.interfaces.outbound.file_metadata import (
     FileMetadataNotFoundError,
     IFileMetadataDAO,
 )
-from ucs.adapters.outbound.psql import orm_models
+from ucs.domain.interfaces.outbound.upload_attempts import (
+    IUploadAttemptDAO,
+    UploadAttemptNotFoundError,
+)
 
 
-class PsqlFileMetadataDAO(IFileMetadataDAO):
+class PsqlDaoBase:
     """
-    An implementation of the IFileMetadataDAO interface using a PostgreSQL backend.
+    A base for DAOs with PostgreSQL backend.
     """
 
     # pylint: disable=super-init-not-called
@@ -70,42 +76,101 @@ class PsqlFileMetadataDAO(IFileMetadataDAO):
 
         return orm_file
 
-    def _register(self, file: models.FileMetadata) -> None:
+    def _create(
+        self, *, obj: models.BaseModelORM, orm_model: type[DeclarativeMeta]
+    ) -> None:
         """Register a new file."""
 
-        file_dict = {
-            **file.dict(),
-        }
-        orm_file = orm_models.FileMetadata(**file_dict)
-        self._session.add(orm_file)
+        orm_obj = orm_model(**obj.dict())
+        self._session.add(orm_obj)
 
-    def _update(
-        self, file: models.FileMetadata, orm_file: orm_models.FileMetadata
-    ) -> None:
+    def _update(self, *, obj: models.BaseModelORM, orm_obj: DeclarativeMeta) -> None:
         """Update an existing file."""
 
-        for key, value in file.dict().items():
-            if key == "file_id":
+        for key, value in obj.dict().items():
+            if "_id" in key:
+                # omit the id
                 continue
-            setattr(orm_file, key, value)
+            setattr(orm_obj, key, value)
 
         self._session.commit()
+
+
+class PsqlFileMetadataDAO(PsqlDaoBase, IFileMetadataDAO):
+    """
+    An implementation of the IFileMetadataDAO interface using a PostgreSQL backend.
+
+    Raises:
+        - FileMetadataNotFoundError
+    """
 
     def get(self, file_id: str) -> models.FileMetadata:
         """Get file from the database"""
 
-        orm_file = self._get_orm_file(file_id=file_id)
+        orm_file = self._get_orm_file(file_id)
         return models.FileMetadata.from_orm(orm_file)
 
     def upsert(self, file: models.FileMetadata) -> None:
         """Register or update a file."""
 
-        # check for collisions in the database:
         try:
-            orm_file = self._get_orm_file(file_id=file.file_id)
+            orm_file = self._get_orm_file(file.file_id)
         except FileMetadataNotFoundError:
             # file does not exist yet, will be created:
-            self._register(file)
+            self._create(obj=file, orm_model=orm_models.FileMetadata)
         else:
             # file already exists, will be updated:
-            self._update(file=file, orm_file=orm_file)
+            self._update(obj=file, orm_obj=orm_file)
+
+
+class PsqlUploadAttemptDAO(PsqlDaoBase, IUploadAttemptDAO):
+    """
+    An implementation of the IUploadAttemptDAO interface using a PostgreSQL backend.
+
+    Raises:
+        - FileMetadataNotFoundError
+        - UploadAttemptNotFoundError
+    """
+
+    def _get_orm_upload(self, upload_id: str) -> orm_models.FileMetadata:
+        """Internal method to get the ORM representation of an upload attempt by
+        specifying its upload ID"""
+
+        statement = select(orm_models.UploadAttempt).filter_by(upload_id=upload_id)
+        orm_upload = self._session.execute(statement).scalars().one_or_none()
+
+        if orm_upload is None:
+            raise UploadAttemptNotFoundError(upload_id=upload_id)
+
+        return orm_upload
+
+    def get(self, upload_id: str) -> models.UploadAttempt:
+        """Get upload attempt from the database"""
+
+        orm_upload = self._get_orm_upload(upload_id)
+        return models.UploadAttempt.from_orm(orm_upload)
+
+    def get_all_by_file(self, file_id: str) -> list[models.UploadAttempt]:
+        """Get all upload attempts for a specific file from the database"""
+
+        orm_file = self._get_orm_file(file_id)
+        return [
+            models.UploadAttempt.from_orm(orm_upload)
+            for orm_upload in orm_file.upload_attempts
+        ]
+
+    def upsert(self, upload: models.UploadAttempt) -> None:
+        """Create or update an upload attempt."""
+
+        # check if corresponding file exists, will raise a FileMetadataNotFoundError
+        # otherwise:
+        _ = self._get_orm_file(upload.file_id)
+
+        try:
+            orm_upload = self._get_orm_upload(upload.upload_id)
+        except UploadAttemptNotFoundError:
+            # upload does not exist yet, will be created:
+            self._create(obj=upload, orm_model=orm_models.UploadAttempt)
+        else:
+            # upload already exists, will be updated:
+            self._update(obj=upload, orm_obj=orm_upload)

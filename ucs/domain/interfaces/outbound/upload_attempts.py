@@ -13,25 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interfaces for File Info DAO adapters and the exception they may throw."""
+"""Interface for Upload Attempts DAO adapters and the exception they may throw."""
 
 from typing import Optional, Protocol
 
 from ucs.domain import models
+from ucs.domain.interfaces.outbound.file_metadata import FileMetadataNotFoundError
 
 
 # Since this is just a DAO stub without implementation, following pylint error are
 # expected:
 # pylint: disable=unused-argument,no-self-use
-class IFileMetadataDAO(Protocol):
+class IUploadAttemptDAO(Protocol):
     """
-    A DAO interface for managing file info in the database.
+    A DAO interface for managing upload attempts in the database.
 
     Raises:
         - FileMetadataNotFoundError
+        - UploadAttemptNotFoundError
     """
 
-    def __enter__(self) -> "IFileMetadataDAO":
+    def __enter__(self) -> "IUploadAttemptDAO":
         """Setup logic. (Maybe create transaction manager.)"""
         ...
 
@@ -39,19 +41,25 @@ class IFileMetadataDAO(Protocol):
         """Teardown logic. (Maybe close transaction manager.)"""
         ...
 
-    def get(self, file_id: str) -> models.FileMetadata:
-        """Get file from the database"""
+    def get(self, upload_id: str) -> models.UploadAttempt:
+        """Get upload attempt from the database"""
         ...
 
-    def upsert(self, file: models.FileMetadata) -> None:
-        """Register or update a file."""
+    def get_all_by_file(self, file_id: str) -> list[models.UploadAttempt]:
+        """Get all upload attempts for a specific file from the database"""
+        ...
+
+    def upsert(self, upload: models.UploadAttempt) -> None:
+        """Create or update an upload attempt."""
         ...
 
 
-class FileMetadataNotFoundError(RuntimeError):
-    """Thrown when trying to access a file with a file ID that doesn't
+class UploadAttemptNotFoundError(RuntimeError):
+    """Thrown when trying to access an upload attempt with an ID that doesn't
     exist in the database."""
 
-    def __init__(self, file_id: Optional[str]):
-        message = f"The file with file ID '{file_id}' does not exist in the database."
+    def __init__(self, upload_id: Optional[str]):
+        message = (
+            f"The upload attempt with ID '{upload_id}' does not exist in the database."
+        )
         super().__init__(message)

@@ -59,6 +59,12 @@ class PsqlFixture:
         orm_files = [orm_models.FileMetadata(**file.dict()) for file in files]
         self.populate(orm_files)
 
+    def populate_upload_attempts(self, uploads: list[models.UploadAttempt]):
+        """Add a file entry to the database."""
+
+        orm_uploads = [orm_models.UploadAttempt(**upload.dict()) for upload in uploads]
+        self.populate(orm_uploads)
+
 
 @pytest.fixture
 def psql_fixture(

@@ -44,7 +44,26 @@ class UploadStatus(Enum):
 # fmt: on
 
 
-class FileMetadata(BaseModel):
+class BaseModelORM(BaseModel):
+    """Pydantic base model with orm mode enabled."""
+
+    class Config:
+        """Additional pydantic configs."""
+
+        orm_mode = True
+
+
+class UploadAttempt(BaseModelORM):
+    """
+    A model containing details on an upload attempt for a specific File.
+    """
+
+    upload_id: str
+    file_id: str
+    status: UploadStatus
+
+
+class FileMetadata(BaseModelORM):
     """
     A model containing basic metadata on a file.
     """
@@ -57,11 +76,6 @@ class FileMetadata(BaseModel):
     creation_date: datetime
     update_date: datetime
     format: str
-
-    class Config:
-        """Additional pydantic configs."""
-
-        orm_mode = True
 
 
 class FileMetadataWithUpload(FileMetadata):
