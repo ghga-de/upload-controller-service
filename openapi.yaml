@@ -155,11 +155,15 @@ paths:
                 $ref: '#/components/schemas/FileMetadata'
           description: File metadata including the current upload attempt
         '403':
-          description: The user is not registered as a Data Submitter for the corresponding
-            file.
+          description: 'Exceptions by ID:
+
+            - noFileAccess: The user is not registered as a Data Submitter for the
+            corresponding file.'
         '404':
-          description: The file with the given ID has not (yet) been registered for
-            upload.
+          description: 'Exceptions by ID:
+
+            - fileNotRegistered: The file with the given ID has not (yet) been registered
+            for upload.'
         '422':
           content:
             application/json:
@@ -197,10 +201,14 @@ paths:
                 $ref: '#/components/schemas/UploadDetails'
           description: Details on a specific upload.
         '403':
-          description: The user is not registered as a Data Submitter for the file
-            corresponding to this multi-part upload.
+          description: 'Exceptions by ID:
+
+            - noFileAccess: The user is not registered as a Data Submitter for the
+            corresponding file.'
         '404':
-          description: The multi-part upload with the given ID does not exist.
+          description: 'Exceptions by ID:
+
+            - noSuchUpload: The multi-part upload with the given ID does not exist.'
         '422':
           content:
             application/json:
@@ -231,13 +239,36 @@ paths:
         '204':
           description: Multi-part upload successfully updated.
         '400':
-          description: The provided status value was invalid or the status of this
-            multi-part upload currently or permanently can't be changed.
+          description: 'Exceptions by ID:
+
+            - pendingInvalidChange: Cannot change status from pending to accepted
+            or rejected
+
+            - uploadedInvalidChange: Cannot change status from uploaded to cancelled
+            or pending
+
+            - invalidChangeFromCancelled: Cannot change status from cancelled for
+            this upload attempt. If you want to restart, initiate a new multi-part
+            upload instead.
+
+            - invalidChangeFromFailed: Cannot change status from failed for this upload
+            attempt. If you want to restart, initiate a new multi-part upload instead.
+
+            - invalidChangeFromAccepted: Upload has already been accepted, a  status
+            change or new upload attempt is no longer possible.
+
+            - invalidChangeFromRejected: Cannot change status from rejected for this
+            upload attempt. If you want to restart, initiate a new multi-part upload
+            instead.'
         '403':
-          description: The user is not registered as a Data Submitter for the file
-            corresponding to this multi-part upload.
+          description: 'Exceptions by ID:
+
+            - noFileAccess: The user is not registered as a Data Submitter for the
+            corresponding file.'
         '404':
-          description: The multi-part upload with the given ID does not exist.
+          description: 'Exceptions by ID:
+
+            - noSuchUpload: The multi-part upload with the given ID does not exist.'
         '422':
           content:
             application/json:
@@ -275,10 +306,14 @@ paths:
                 $ref: '#/components/schemas/AccessURL'
           description: The newly created pre-signed URL.
         '403':
-          description: The user is not registered as a Data Submitter for the file
-            corresponding to this multi-part upload.
+          description: 'Exceptions by ID:
+
+            - noFileAccess: The user is not registered as a Data Submitter for the
+            corresponding file.'
         '404':
-          description: The multi-part upload with the given ID does not exist.
+          description: 'Exceptions by ID:
+
+            - noSuchUpload: The multi-part upload with the given ID does not exist.'
         '422':
           content:
             application/json:
@@ -304,13 +339,24 @@ paths:
                 $ref: '#/components/schemas/UploadDetails'
           description: Details on the newly created upload.
         '400':
-          description:
-          - It is currently not possible to create a new upload for the file with
-            the specified ID because another upload for that file is already active
-            or has been accepted (its status is not "failed" "cancelled", or "rejected").
+          description: 'Exceptions by ID:
+
+            - uploadAttemptPresentPending: Imposible to create a new upload for the
+            file with the specific ID. Another upload in pending status already exists
+            for this file.
+
+            - uploadAttemptPresentUploaded: Imposible to create a new upload for the
+            file with the specific ID. Another upload in uploaded status already exists
+            for this file.
+
+            - uploadAttemptPresentAccepted: Imposible to create a new upload for the
+            file with the specific ID. Another upload in accepted status already exists
+            for this file.'
         '403':
-          description: The user is not registered as a Data Submitter for the corresponding
-            file.
+          description: 'Exceptions by ID:
+
+            - noFileAccess: The user is not registered as a Data Submitter for the
+            corresponding file.'
         '422':
           content:
             application/json:

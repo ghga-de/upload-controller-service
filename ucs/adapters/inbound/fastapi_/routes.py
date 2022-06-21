@@ -30,6 +30,20 @@ from ucs.adapters.inbound.fastapi_.models import (
 router = APIRouter()
 
 
+ERROR_DESCRIPTIONS = {
+    403: (
+        "Exceptions by ID:"
+        + "\n- noFileAccess: The user is not registered as a Data Submitter for the"
+        + " corresponding file."
+        ""
+    ),
+    404: (
+        "Exceptions by ID:"
+        + "\n- noSuchUpload: The multi-part upload with the given ID does not exist."
+    ),
+}
+
+
 class HttpFileNotFoundException(HTTPException):
     """Thrown when a file with given ID could not be found."""
 
@@ -55,14 +69,12 @@ def health():
     response_model=FileMetadata,
     response_description="File metadata including the current upload attempt",
     responses={
-        status.HTTP_403_FORBIDDEN: {
-            "description": (
-                "The user is not registered as a Data Submitter for the corresponding file."
-            )
-        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
         status.HTTP_404_NOT_FOUND: {
             "description": (
-                "The file with the given ID has not (yet) been registered for upload."
+                "Exceptions by ID:"
+                + "\n- fileNotRegistered: The file with the given ID has not (yet) been"
+                + " registered for upload."
             )
         },
     },
@@ -88,18 +100,19 @@ def get_file_metadata(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "description": (
-                "It is currently not possible to create a new upload for the file with"
-                + " the specified ID because another upload for that file is already"
-                + ' active or has been accepted (its status is not "failed"'
-                + ' "cancelled", or "rejected").',
+                "Exceptions by ID:"
+                + "\n- uploadAttemptPresentPending: Imposible to create a new upload"
+                + " for the file with the specific ID. Another upload in pending status"
+                + " already exists for this file."
+                + "\n- uploadAttemptPresentUploaded: Imposible to create a new upload"
+                + " for the file with the specific ID. Another upload in uploaded"
+                + " status already exists for this file."
+                + "\n- uploadAttemptPresentAccepted: Imposible to create a new upload"
+                + " for the file with the specific ID. Another upload in accepted"
+                + " status already exists for this file."
             )
         },
-        status.HTTP_403_FORBIDDEN: {
-            "description": (
-                "The user is not registered as a Data Submitter for the corresponding"
-                + " file."
-            )
-        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
     },
 )
 def create_upload(upload_creation: UploadCreation):
@@ -119,15 +132,8 @@ def create_upload(upload_creation: UploadCreation):
     response_model=UploadDetails,
     response_description="Details on a specific upload.",
     responses={
-        status.HTTP_403_FORBIDDEN: {
-            "description": (
-                "The user is not registered as a Data Submitter for the file"
-                + " corresponding to this multi-part upload."
-            )
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "The multi-part upload with the given ID does not exist."
-        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
     },
 )
 def get_upload_details(upload_id: str):
@@ -147,19 +153,26 @@ def get_upload_details(upload_id: str):
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "description": (
-                "The provided status value was invalid or the status of this multi-part"
-                + " upload currently or permanently can't be changed."
+                "Exceptions by ID:"
+                + "\n- pendingInvalidChange: Cannot change status from pending to"
+                + " accepted or rejected"
+                + "\n- uploadedInvalidChange: Cannot change status from uploaded to"
+                + " cancelled or pending"
+                + "\n- invalidChangeFromCancelled: Cannot change status from cancelled"
+                + " for this upload attempt. If you want to restart, initiate a new"
+                + " multi-part upload instead."
+                + "\n- invalidChangeFromFailed: Cannot change status from failed for"
+                + " this upload attempt. If you want to restart, initiate a new"
+                + " multi-part upload instead."
+                + "\n- invalidChangeFromAccepted: Upload has already been accepted, a "
+                + " status change or new upload attempt is no longer possible."
+                + "\n- invalidChangeFromRejected: Cannot change status from rejected"
+                + " for this upload attempt. If you want to restart, initiate a new"
+                + " multi-part upload instead."
             )
         },
-        status.HTTP_403_FORBIDDEN: {
-            "description": (
-                "The user is not registered as a Data Submitter for the file"
-                + " corresponding to this multi-part upload."
-            )
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "The multi-part upload with the given ID does not exist."
-        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
     },
 )
 def update_upload_status(upload_id: str, update: UploadUpdate):
@@ -179,15 +192,8 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
     response_model=AccessURL,
     response_description="The newly created pre-signed URL.",
     responses={
-        status.HTTP_403_FORBIDDEN: {
-            "description": (
-                "The user is not registered as a Data Submitter for the file"
-                + " corresponding to this multi-part upload."
-            )
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "The multi-part upload with the given ID does not exist."
-        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
     },
 )
 def create_presigned_url(upload_id: str, part_no: int = Path(..., ge=1, le=10000)):
