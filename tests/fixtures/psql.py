@@ -15,7 +15,7 @@
 
 """Fixtures for testing the PostgreSQL functionalities"""
 
-from typing import Generator
+from typing import Any, Generator, Sequence
 
 import pytest
 from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
@@ -45,7 +45,7 @@ class PsqlFixture:
         self.session_factory = session_factory
         self.config = config
 
-    def populate(self, orm_objects: list[object]):
+    def populate(self, orm_objects: Sequence[Any]):
         """Add a file entry to the database."""
 
         with self.session_factory() as session:
@@ -59,7 +59,7 @@ class PsqlFixture:
         orm_files = [orm_models.FileMetadata(**file.dict()) for file in files]
         self.populate(orm_files)
 
-    def populate_upload_attempts(self, uploads: list[models.UploadAttempt]):
+    def populate_upload_attempts(self, uploads: Sequence[models.UploadAttempt]):
         """Add a file entry to the database."""
 
         orm_uploads = [orm_models.UploadAttempt(**upload.dict()) for upload in uploads]

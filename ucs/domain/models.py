@@ -84,7 +84,7 @@ class FileMetadataWithUpload(FileMetadata):
     upload.
     """
 
-    current_upload_id: Optional[str] = Field(
+    latest_upload_id: Optional[str] = Field(
         None,
         description="ID of the current upload. `Null` if no update has been initiated, yet.",
     )

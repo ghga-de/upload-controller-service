@@ -17,11 +17,11 @@
 
 import uuid
 
-from sqlalchemy import Column, DateTime, Enum, Integer, String, ForeignKey
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from ucs.domain.models import UploadStatus
 

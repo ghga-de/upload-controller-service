@@ -22,7 +22,7 @@ from pathlib import Path
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ucs.domain.interfaces.inbound.upload import IUploadService
+from ucs.domain.interfaces.inbound.upload_service import IUploadService
 from ucs.domain.models import FileMetadata
 
 HERE = Path(__file__).parent.resolve()

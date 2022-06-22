@@ -18,7 +18,11 @@
 from typing import Optional, Protocol
 
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_metadata import FileMetadataNotFoundError
+
+# pylint: disable=unused-import
+from ucs.domain.interfaces.outbound.file_metadata import (  # noqa: F401
+    FileMetadataNotFoundError,
+)
 
 
 # Since this is just a DAO stub without implementation, following pylint error are
@@ -47,6 +51,10 @@ class IUploadAttemptDAO(Protocol):
 
     def get_all_by_file(self, file_id: str) -> list[models.UploadAttempt]:
         """Get all upload attempts for a specific file from the database"""
+        ...
+
+    def get_latest_by_file(self, file_id: str) -> Optional[models.UploadAttempt]:
+        """Get the latest upload attempts for a specific file from the database"""
         ...
 
     def upsert(self, upload: models.UploadAttempt) -> None:

@@ -15,12 +15,13 @@
 
 """DAO implementation to manage File Info in a database."""
 
-from typing import Any
+from typing import Any, Optional
 
 from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
 )
+from sqlalchemy import desc
 from sqlalchemy.future import select
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
@@ -158,6 +159,25 @@ class PsqlUploadAttemptDAO(PsqlDaoBase, IUploadAttemptDAO):
             models.UploadAttempt.from_orm(orm_upload)
             for orm_upload in orm_file.upload_attempts
         ]
+
+    def get_latest_by_file(self, file_id: str) -> Optional[models.UploadAttempt]:
+        """Get the latest upload attempts for a specific file from the database"""
+
+        # check if corresponding file exists, will raise a FileMetadataNotFoundError
+        # otherwise:
+        _ = self._get_orm_file(file_id)
+
+        statement = (
+            select(orm_models.UploadAttempt)
+            .filter_by(file_id=file_id)
+            .order_by(desc(orm_models.UploadAttempt.id))
+        )
+        orm_upload = self._session.execute(statement).scalars().first()
+
+        if orm_upload is None:
+            return None
+
+        return models.UploadAttempt.from_orm(orm_upload)
 
     def upsert(self, upload: models.UploadAttempt) -> None:
         """Create or update an upload attempt."""

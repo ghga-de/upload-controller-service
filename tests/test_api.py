@@ -13,4 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Package containing integration tests"""
+"""Test the api module"""
+
+from fastapi import status
+
+from tests.fixtures.api import ApiTestClient
+from tests.fixtures.config import get_config
+
+
+def test_get_health():
+    """Test the GET /health endpoint"""
+    config = get_config()
+    client = ApiTestClient(config=config)
+    response = client.get("/health")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"status": "OK"}

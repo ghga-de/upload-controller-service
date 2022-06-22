@@ -21,11 +21,11 @@ from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
 from ucs.adapters.outbound.psql.adapters import PsqlFileMetadataDAO
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
-from ucs.domain.interfaces.inbound.upload import IUploadService
+from ucs.domain.file_service import FileMetadataServive
+from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
 from ucs.domain.interfaces.outbound.file_metadata import IFileMetadataDAO
 from ucs.domain.interfaces.outbound.storage import IObjectStorage
-from ucs.domain.upload import UploadService
 
 
 class Container(containers.DeclarativeContainer):
@@ -58,11 +58,10 @@ class Container(containers.DeclarativeContainer):
 
     # domain:
 
-    upload_service = providers.Factory[IUploadService](
-        UploadService,
+    file_metadata_service = providers.Factory[IFileMetadataService](
+        FileMetadataServive,
         s3_inbox_bucket_id=config.s3_inbox_bucket_id,
         file_metadata_dao=file_metadata_dao,
-        object_storage_dao=object_storage_dao,
         event_publisher=event_publisher,
     )
 
@@ -75,5 +74,4 @@ class Container(containers.DeclarativeContainer):
         rabbitmq_port=config.rabbitmq_port,
         topic_new_study=config.topic_new_study,
         topic_file_registered=config.topic_file_registered,
-        upload_service=upload_service,
     )
