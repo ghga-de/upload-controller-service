@@ -15,12 +15,13 @@
 
 """Join the functionality of all fixtures for API-level integration testing."""
 
-__all__ = ["psql_fixture", "joint_fixture", "JointFixture"]
+__all__ = ["joint_fixture", "JointFixture", "psql_fixture", "amqp_fixture"]
 
 from dataclasses import dataclass
 
 import pytest
 
+from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
 from tests.fixtures.psql import PsqlFixture, psql_fixture
 from tests.fixtures.rest import RestTestClient
@@ -36,15 +37,16 @@ class JointFixture:
     config: Config
     container: Container
     psql: PsqlFixture
+    amqp: AmqpFixture
     rest_client: RestTestClient
 
 
 @pytest.fixture
-def joint_fixture(psql_fixture: PsqlFixture) -> JointFixture:
+def joint_fixture(psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture) -> JointFixture:
     """A fixture that embeds all other fixtures for API-level integration testing"""
 
     # merge configs from different sources with the default one:
-    config = get_config(sources=[psql_fixture.config])
+    config = get_config(sources=[psql_fixture.config, amqp_fixture.config])
 
     # create a DI container instance:
     container = setup_container(config=config)
@@ -56,5 +58,6 @@ def joint_fixture(psql_fixture: PsqlFixture) -> JointFixture:
         config=config,
         container=container,
         psql=psql_fixture,
+        amqp=amqp_fixture,
         rest_client=rest_client,
     )

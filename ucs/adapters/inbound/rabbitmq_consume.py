@@ -22,8 +22,8 @@ from pathlib import Path
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ucs.domain.interfaces.inbound.upload_service import IUploadService
-from ucs.domain.models import FileMetadata
+from ucs.domain import models
+from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
 
 HERE = Path(__file__).parent.resolve()
 
@@ -40,10 +40,10 @@ class RabbitMQEventConsumer:
         rabbitmq_port: str,
         topic_new_study: str,
         topic_file_registered: str,
-        upload_service: IUploadService,
+        file_metadata_service: IFileMetadataService,
     ):
         """Ininitalize class instance with config and inbound adapter objects."""
-        self._upload_service = upload_service
+        self._file_metadata_service = file_metadata_service
         self._config = PubSubConfigBase(
             service_name=service_name,
             rabbitmq_host=rabbitmq_host,
@@ -52,27 +52,16 @@ class RabbitMQEventConsumer:
         self._topic_new_study = topic_new_study
         self._topic_file_registered = topic_file_registered
 
-    def _process_file_registered_message(self, message: dict):
-        """
-        Processes the message by checking if the file really is in the outbox,
-        otherwise throwing an error
-        """
-
-        file_id = message["file_id"]
-
-        self._upload_service.handle_file_registered(file_id)
-
     def _process_new_study_message(self, message: dict):
         """
         Processes the message by checking if the file really is in the outbox,
         otherwise throwing an error
         """
-
-        files = message["associated_files"]
+        study_files = message["associated_files"]
         grouping_label = message["study"]["id"]
 
-        study_files = [
-            FileMetadata(
+        files = [
+            models.FileMetadata(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
                 md5_checksum=file["md5_checksum"],
@@ -82,14 +71,14 @@ class RabbitMQEventConsumer:
                 update_date=file["update_date"],
                 format=file["format"],
             )
-            for file in files
+            for file in study_files
         ]
 
-        self._upload_service.handle_new_study(study_files)
+        self._file_metadata_service.upsert_multiple(files)
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """
-        Runs a subscribing process for the "new_study_created" topic
+        Subscribes to the "new_study_created" topic
         """
 
         # create a topic object:
@@ -102,23 +91,5 @@ class RabbitMQEventConsumer:
         # subscribe:
         topic.subscribe(
             exec_on_message=self._process_new_study_message,
-            run_forever=run_forever,
-        )
-
-    def subscribe_file_registered(self, run_forever: bool = True) -> None:
-        """
-        Runs a subscribing process for the "new_study_created" topic
-        """
-
-        # create a topic object:
-        topic = AmqpTopic(
-            config=self._config,
-            topic_name=self._topic_file_registered,
-            json_schema=schemas.SCHEMAS["file_internally_registered"],
-        )
-
-        # subscribe:
-        topic.subscribe(
-            exec_on_message=self._process_file_registered_message,
             run_forever=run_forever,
         )

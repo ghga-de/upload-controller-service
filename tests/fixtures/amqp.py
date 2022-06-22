@@ -15,6 +15,7 @@
 
 """Pub sub fixtures"""
 
+from ghga_service_chassis_lib.pubsub_testing import AmqpFixture  # noqa: F401 - shortcut
 from ghga_service_chassis_lib.pubsub_testing import amqp_fixture_factory
 
 from tests.fixtures.config import DEFAULT_CONFIG

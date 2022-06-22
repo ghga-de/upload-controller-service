@@ -81,4 +81,5 @@ class Container(containers.DeclarativeContainer):
         rabbitmq_port=config.rabbitmq_port,
         topic_new_study=config.topic_new_study,
         topic_file_registered=config.topic_file_registered,
+        file_metadata_service=file_metadata_service,
     )
