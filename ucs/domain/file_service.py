@@ -23,11 +23,11 @@ from ucs.domain.interfaces.inbound.file_service import (
     FileUnkownError,
     IFileMetadataService,
 )
-from ucs.domain.interfaces.outbound.file_metadata import (
+from ucs.domain.interfaces.outbound.file_dao import (
     FileMetadataNotFoundError,
     IFileMetadataDAO,
 )
-from ucs.domain.interfaces.outbound.upload_attempts import IUploadAttemptDAO
+from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
 
 
 class FileMetadataServive(IFileMetadataService):
@@ -51,8 +51,9 @@ class FileMetadataServive(IFileMetadataService):
         """
         Registeres new files or updates existing ones.
         """
-        for file in files:
-            self._file_metadata_dao.upsert(file)
+        with self._file_metadata_dao as fm_dao:
+            for file in files:
+                fm_dao.upsert(file)
 
     def get(
         self,
@@ -63,13 +64,15 @@ class FileMetadataServive(IFileMetadataService):
         """
 
         # get basic file metadata:
-        try:
-            file_metadata = self._file_metadata_dao.get(file_id)
-        except FileMetadataNotFoundError as error:
-            raise FileUnkownError(file_id=file_id) from error
+        with self._file_metadata_dao as fm_dao:
+            try:
+                file_metadata = fm_dao.get(file_id)
+            except FileMetadataNotFoundError as error:
+                raise FileUnkownError(file_id=file_id) from error
 
         # get the latest upload attempt
-        latest_upload = self._upload_attempt_dao.get_latest_by_file(file_id)
+        with self._upload_attempt_dao as ua_dao:
+            latest_upload = ua_dao.get_latest_by_file(file_id)
         latest_upload_id = None if latest_upload is None else latest_upload.upload_id
 
         # assemble information:

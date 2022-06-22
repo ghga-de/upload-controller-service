@@ -69,40 +69,35 @@ EXAMPLE_UPLOADS = (
 def test_happy(psql_fixture: PsqlFixture):  # noqa: F811
     """Tests the basic happy path of using the FileMetadataService"""
 
-    with PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url) as upload_attempt_dao:
-        with PsqlFileMetadataDAO(
-            db_url=psql_fixture.config.db_url
-        ) as file_metadata_dao:
+    # construct service and dependencies:
+    upload_attempt_dao = PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url)
+    file_metadata_dao = PsqlFileMetadataDAO(db_url=psql_fixture.config.db_url)
+    file_metadata_service = FileMetadataServive(
+        file_metadata_dao=file_metadata_dao,
+        upload_attempt_dao=upload_attempt_dao,
+    )
 
-            file_metadata_service = FileMetadataServive(
-                file_metadata_dao=file_metadata_dao,
-                upload_attempt_dao=upload_attempt_dao,
-            )
+    # create file metadata:
+    file_metadata_service.upsert_multiple(EXAMPLE_FILES)
 
-            # create file metadata:
-            file_metadata_service.upsert_multiple(EXAMPLE_FILES)
+    # check that the newly created file metadata is available:
+    for expected_file in EXAMPLE_FILES:
+        obtained_file = file_metadata_service.get(file_id=expected_file.file_id)
 
-        # close and reopen transactional scope (to flush changes):
-        with file_metadata_dao:
+        # compare the parameters that are part of the expected_file:
+        expected_file_data = expected_file.dict()
+        assert expected_file_data == obtained_file.dict(
+            include=expected_file_data.keys()
+        )
 
-            # check that the newly created file metadata is available:
-            for expected_file in EXAMPLE_FILES:
-                obtained_file = file_metadata_service.get(file_id=expected_file.file_id)
+        # no upload is expected to exist, yet:
+        assert obtained_file.latest_upload_id is None
 
-                # compare the parameters that are part of the expected_file:
-                expected_file_data = expected_file.dict()
-                assert expected_file_data == obtained_file.dict(
-                    include=expected_file_data.keys()
-                )
+    # side-load upload attempts to the first file example:
+    psql_fixture.populate_upload_attempts(EXAMPLE_UPLOADS)
+    expected_upload_id = EXAMPLE_UPLOADS[-1].upload_id
+    corresponding_file_id = EXAMPLE_FILES[0].file_id
 
-                # no upload is expected to exist, yet:
-                assert obtained_file.latest_upload_id is None
-
-            # side-load upload attempts to the first file example:
-            psql_fixture.populate_upload_attempts(EXAMPLE_UPLOADS)
-            expected_upload_id = EXAMPLE_UPLOADS[-1].upload_id
-            corresponding_file_id = EXAMPLE_FILES[0].file_id
-
-            # check the latest upload attempt using the service again:
-            obtained_file = file_metadata_service.get(file_id=corresponding_file_id)
-            assert obtained_file.latest_upload_id == expected_upload_id
+    # check the latest upload attempt using the service again:
+    obtained_file = file_metadata_service.get(file_id=corresponding_file_id)
+    assert obtained_file.latest_upload_id == expected_upload_id

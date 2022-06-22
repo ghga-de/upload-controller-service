@@ -27,11 +27,11 @@ from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from ucs.adapters.outbound.psql import orm_models
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_metadata import (
+from ucs.domain.interfaces.outbound.file_dao import (
     FileMetadataNotFoundError,
     IFileMetadataDAO,
 )
-from ucs.domain.interfaces.outbound.upload_attempts import (
+from ucs.domain.interfaces.outbound.upload_dao import (
     IUploadAttemptDAO,
     UploadAttemptNotFoundError,
 )

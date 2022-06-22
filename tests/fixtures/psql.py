@@ -28,8 +28,6 @@ from testcontainers.postgres import PostgresContainer
 from ucs.adapters.outbound.psql import orm_models
 from ucs.domain import models
 
-from .config import get_cont_and_conf
-
 
 class PsqlFixture:
     """Returned by the psql fixture."""
@@ -73,8 +71,7 @@ def psql_fixture(
     """Pytest fixture for tests of the Prostgres DAO implementation."""
 
     with PostgresContainer() as postgres:
-        psq_config = config_from_psql_container(postgres)
-        _, config = get_cont_and_conf(sources=[psq_config])
+        config = config_from_psql_container(postgres)
 
         # setup database and tables:
         engine = create_engine(config.db_url)

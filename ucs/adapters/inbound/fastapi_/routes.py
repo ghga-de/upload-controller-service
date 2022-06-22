@@ -17,13 +17,20 @@
 Module containing the main FastAPI router and all route functions.
 """
 
-from fastapi import APIRouter, HTTPException, Path, status
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends, Path, status
+from httpyexpect.server import HTTPException
 
 from ucs.adapters.inbound.fastapi_.models import (
     AccessURL,
     UploadCreation,
     UploadDetails,
     UploadUpdate,
+)
+from ucs.container import Container
+from ucs.domain.interfaces.inbound.file_service import (
+    FileUnkownError,
+    IFileMetadataService,
 )
 from ucs.domain.models import FileMetadataWithUpload
 
@@ -51,7 +58,11 @@ class HttpFileNotFoundException(HTTPException):
         """Construct message and init the exception."""
         super().__init__(
             status_code=404,
-            detail=f'The file with the file_id "{file_id}" does not exist.',
+            exception_id="fileNotRegistered",
+            description=(
+                f"The file with ID {file_id} has not (yet) been registered for upload."
+            ),
+            data={"file_id": file_id},
         )
 
 
@@ -79,15 +90,18 @@ def health():
         },
     },
 )
+@inject
 def get_file_metadata(
     file_id: str,
+    file_metadata_service: IFileMetadataService = Depends(
+        Provide[Container.file_metadata_service]
+    ),
 ):
     """Get file metadata including the current upload attempt."""
-
-    print(file_id)
-    ...
-
-    return ...
+    try:
+        return file_metadata_service.get(file_id)
+    except FileUnkownError as error:
+        raise HttpFileNotFoundException(file_id=file_id) from error
 
 
 @router.post(

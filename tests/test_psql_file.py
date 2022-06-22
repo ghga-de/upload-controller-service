@@ -22,7 +22,7 @@ import pytest
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
 from ucs.adapters.outbound.psql.adapters import PsqlFileMetadataDAO
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_metadata import FileMetadataNotFoundError
+from ucs.domain.interfaces.outbound.file_dao import FileMetadataNotFoundError
 
 EXAMPLE_FILE = models.FileMetadata(
     file_id="testFile001",

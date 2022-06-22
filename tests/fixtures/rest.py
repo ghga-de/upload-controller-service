@@ -13,19 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test the api module"""
+"""Fixtures and utilities for dealing with the API."""
 
-from fastapi import status
+import fastapi.testclient
 
-from tests.fixtures.api import ApiTestClient
-from tests.fixtures.config import get_config
+from ucs.config import Config
+from ucs.main import get_rest_api
 
 
-def test_get_health():
-    """Test the GET /health endpoint"""
-    config = get_config()
-    client = ApiTestClient(config=config)
-    response = client.get("/health")
+class RestTestClient(fastapi.testclient.TestClient):
+    """A test client to which you can inject a custom Config object."""
 
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"status": "OK"}
+    def __init__(self, config: Config):
+        """Create the test client with a custom Config object."""
+        # Overwrite the get_config dep if config is specified, otherwise restore the
+        # default:
+        api = get_rest_api(config=config)
+
+        super().__init__(api)

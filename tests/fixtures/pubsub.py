@@ -17,6 +17,6 @@
 
 from ghga_service_chassis_lib.pubsub_testing import amqp_fixture_factory
 
-from .config import DEFAULT_CONFIG
+from tests.fixtures.config import DEFAULT_CONFIG
 
 amqp_fixture = amqp_fixture_factory(service_name=DEFAULT_CONFIG.service_name)

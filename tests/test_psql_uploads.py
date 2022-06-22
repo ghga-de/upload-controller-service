@@ -21,7 +21,7 @@ from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
 from tests.test_psql_file import EXAMPLE_FILE
 from ucs.adapters.outbound.psql.adapters import PsqlUploadAttemptDAO
 from ucs.domain import models
-from ucs.domain.interfaces.outbound.upload_attempts import (
+from ucs.domain.interfaces.outbound.upload_dao import (
     FileMetadataNotFoundError,
     UploadAttemptNotFoundError,
 )

@@ -20,7 +20,7 @@ from typing import Optional, Protocol
 from ucs.domain import models
 
 # pylint: disable=unused-import
-from ucs.domain.interfaces.outbound.file_metadata import (  # noqa: F401
+from ucs.domain.interfaces.outbound.file_dao import (  # noqa: F401
     FileMetadataNotFoundError,
 )
 
