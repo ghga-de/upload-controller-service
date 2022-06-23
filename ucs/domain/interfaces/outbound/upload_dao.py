@@ -25,6 +25,29 @@ from ucs.domain.interfaces.outbound.file_dao import (  # noqa: F401
 )
 
 
+class UploadAttemptNotFoundError(RuntimeError):
+    """Thrown when trying to access an upload attempt with an ID that doesn't exist in
+    the database."""
+
+    def __init__(self, upload_id: Optional[str]):
+        message = (
+            f"The upload attempt with ID '{upload_id}' does not exist in the database."
+        )
+        super().__init__(message)
+
+
+class UploadAttemptAlreadExistsError(RuntimeError):
+    """Thrown when trying create a new upload attempt with an ID that already exist in
+    the database."""
+
+    def __init__(self, upload_id: Optional[str]):
+        message = (
+            f"An upload attempt with ID '{upload_id}' does already exist in the"
+            + " database."
+        )
+        super().__init__(message)
+
+
 # Since this is just a DAO stub without implementation, following pylint error are
 # expected:
 # pylint: disable=unused-argument,no-self-use
@@ -35,6 +58,7 @@ class IUploadAttemptDAO(Protocol):
     Raises:
         - FileMetadataNotFoundError
         - UploadAttemptNotFoundError
+        - UploadAttemptAlreadExistsError
     """
 
     def __enter__(self) -> "IUploadAttemptDAO":
@@ -57,17 +81,10 @@ class IUploadAttemptDAO(Protocol):
         """Get the latest upload attempts for a specific file from the database"""
         ...
 
-    def upsert(self, upload: models.UploadAttempt) -> None:
-        """Create or update an upload attempt."""
+    def create(self, upload: models.UploadAttempt) -> None:
+        """Create a new upload attempt."""
         ...
 
-
-class UploadAttemptNotFoundError(RuntimeError):
-    """Thrown when trying to access an upload attempt with an ID that doesn't
-    exist in the database."""
-
-    def __init__(self, upload_id: Optional[str]):
-        message = (
-            f"The upload attempt with ID '{upload_id}' does not exist in the database."
-        )
-        super().__init__(message)
+    def update(self, upload: models.UploadAttempt) -> None:
+        """Update an existing upload attempt."""
+        ...

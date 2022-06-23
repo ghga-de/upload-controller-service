@@ -30,7 +30,7 @@ from ucs.domain import models
 
 
 class PsqlFixture:
-    """Returned by the psql fixture."""
+    """Yielded by the psql fixture."""
 
     def __init__(
         self,

@@ -130,6 +130,12 @@ class UploadAttempt(Base):
         unique=False,
         doc="ID of the file metadata record coresponding to this upload attempt.",
     )
+    part_size = Column(
+        Integer,
+        nullable=False,
+        unique=False,
+        doc="Part size to be used for upload. Specified in bytes.",
+    )
     status = Column(
         Enum(UploadStatus),
         default=UploadStatus.PENDING,

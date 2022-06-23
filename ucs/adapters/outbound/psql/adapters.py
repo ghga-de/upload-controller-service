@@ -33,6 +33,7 @@ from ucs.domain.interfaces.outbound.file_dao import (
 )
 from ucs.domain.interfaces.outbound.upload_dao import (
     IUploadAttemptDAO,
+    UploadAttemptAlreadExistsError,
     UploadAttemptNotFoundError,
 )
 
@@ -131,6 +132,7 @@ class PsqlUploadAttemptDAO(PsqlDaoBase, IUploadAttemptDAO):
     Raises:
         - FileMetadataNotFoundError
         - UploadAttemptNotFoundError
+        - UploadAttemptAlreadExistsError
     """
 
     def _get_orm_upload(self, upload_id: str) -> orm_models.FileMetadata:
@@ -179,18 +181,36 @@ class PsqlUploadAttemptDAO(PsqlDaoBase, IUploadAttemptDAO):
 
         return models.UploadAttempt.from_orm(orm_upload)
 
-    def upsert(self, upload: models.UploadAttempt) -> None:
-        """Create or update an upload attempt."""
+    def create(self, upload: models.UploadAttempt) -> None:
+        """Create a new upload attempt."""
 
-        # check if corresponding file exists, will raise a FileMetadataNotFoundError
-        # otherwise:
+        # check if corresponding file exists:
+        # (will raise a FileMetadataNotFoundError otherwise)
         _ = self._get_orm_file(upload.file_id)
 
+        # make sure that an upload with the given ID does not yet exist:
         try:
-            orm_upload = self._get_orm_upload(upload.upload_id)
+            _ = self._get_orm_upload(upload.upload_id)
         except UploadAttemptNotFoundError:
-            # upload does not exist yet, will be created:
-            self._create(obj=upload, orm_model=orm_models.UploadAttempt)
+            # this is expected:
+            pass
         else:
-            # upload already exists, will be updated:
-            self._update(obj=upload, orm_obj=orm_upload)
+            # this is a problem:
+            raise UploadAttemptAlreadExistsError(upload.upload_id)
+
+        # create new upload:
+        self._create(obj=upload, orm_model=orm_models.UploadAttempt)
+
+    def update(self, upload: models.UploadAttempt) -> None:
+        """Update an existing upload attempt."""
+
+        # check if corresponding file exists:
+        # (will raise a FileMetadataNotFoundError otherwise)
+        _ = self._get_orm_file(upload.file_id)
+
+        # make sure that the upload with the given ID exists:
+        # (will raise a UploadAttemptNotFoundError otherwise)
+        orm_upload = self._get_orm_upload(upload.upload_id)
+
+        # update the existing upload:
+        self._update(obj=upload, orm_obj=orm_upload)

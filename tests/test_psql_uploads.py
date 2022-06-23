@@ -23,11 +23,15 @@ from ucs.adapters.outbound.psql.adapters import PsqlUploadAttemptDAO
 from ucs.domain import models
 from ucs.domain.interfaces.outbound.upload_dao import (
     FileMetadataNotFoundError,
+    UploadAttemptAlreadExistsError,
     UploadAttemptNotFoundError,
 )
 
 EXAMPLE_UPLOAD = models.UploadAttempt(
-    upload_id="testUpload001", file_id="testFile001", status=models.UploadStatus.PENDING
+    upload_id="testUpload001",
+    file_id="testFile001",
+    status=models.UploadStatus.PENDING,
+    part_size=1234,
 )
 
 
@@ -62,10 +66,23 @@ def test_create(psql_fixture: PsqlFixture):  # noqa: F811
     psql_fixture.populate_file_metadata([corresponding_file])
 
     with PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url) as upload_attempt_dao:
-        upload_attempt_dao.upsert(expected_upload)
+        upload_attempt_dao.create(expected_upload)
         obtained_upload = upload_attempt_dao.get(expected_upload.upload_id)
 
     assert expected_upload == obtained_upload
+
+
+def test_create_already_exist(psql_fixture: PsqlFixture):  # noqa: F811
+    """Test creating already existing upload attempt."""
+    existing_upload = EXAMPLE_UPLOAD
+    corresponding_file = EXAMPLE_FILE
+
+    psql_fixture.populate_file_metadata([corresponding_file])
+    psql_fixture.populate_upload_attempts([existing_upload])
+
+    with PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url) as upload_attempt_dao:
+        with pytest.raises(UploadAttemptAlreadExistsError):
+            upload_attempt_dao.create(existing_upload)
 
 
 def test_update(psql_fixture: PsqlFixture):  # noqa: F811
@@ -80,10 +97,22 @@ def test_update(psql_fixture: PsqlFixture):  # noqa: F811
     psql_fixture.populate_upload_attempts([original_upload])
 
     with PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url) as upload_attempt_dao:
-        upload_attempt_dao.upsert(expected_upload)
+        upload_attempt_dao.update(expected_upload)
         obtained_upload = upload_attempt_dao.get(original_upload.upload_id)
 
     assert expected_upload == obtained_upload
+
+
+def test_update_not_exist(psql_fixture: PsqlFixture):  # noqa: F811
+    """Test updating a non exiting upload attempt."""
+    non_existing_upload = EXAMPLE_UPLOAD
+    corresponding_file = EXAMPLE_FILE
+
+    psql_fixture.populate_file_metadata([corresponding_file])
+
+    with PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url) as upload_attempt_dao:
+        with pytest.raises(UploadAttemptNotFoundError):
+            upload_attempt_dao.update(non_existing_upload)
 
 
 def test_get_all(psql_fixture: PsqlFixture):  # noqa: F811
@@ -149,7 +178,7 @@ def test_file_missing(psql_fixture: PsqlFixture):  # noqa: F811
         # Test all methods that should raise FileMetadataNotFoundError:
 
         with pytest.raises(FileMetadataNotFoundError):
-            upload_attempt_dao.upsert(expected_upload)
+            upload_attempt_dao.create(expected_upload)
 
         with pytest.raises(FileMetadataNotFoundError):
             upload_attempt_dao.get_all_by_file(expected_upload.file_id)

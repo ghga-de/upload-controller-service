@@ -15,7 +15,13 @@
 
 """Join the functionality of all fixtures for API-level integration testing."""
 
-__all__ = ["joint_fixture", "JointFixture", "psql_fixture", "amqp_fixture"]
+__all__ = [
+    "joint_fixture",
+    "JointFixture",
+    "psql_fixture",
+    "amqp_fixture",
+    "s3_fixture",
+]
 
 from dataclasses import dataclass
 
@@ -25,6 +31,7 @@ from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
 from tests.fixtures.psql import PsqlFixture, psql_fixture
 from tests.fixtures.rest import RestTestClient
+from tests.fixtures.s3 import S3Fixture, s3_fixture
 from ucs.config import Config
 from ucs.container import Container
 from ucs.main import setup_container
@@ -39,14 +46,19 @@ class JointFixture:
     psql: PsqlFixture
     amqp: AmqpFixture
     rest_client: RestTestClient
+    s3: S3Fixture
 
 
 @pytest.fixture
-def joint_fixture(psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture) -> JointFixture:
+def joint_fixture(
+    psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
+) -> JointFixture:
     """A fixture that embeds all other fixtures for API-level integration testing"""
 
     # merge configs from different sources with the default one:
-    config = get_config(sources=[psql_fixture.config, amqp_fixture.config])
+    config = get_config(
+        sources=[psql_fixture.config, amqp_fixture.config, s3_fixture.config]
+    )
 
     # create a DI container instance:
     container = setup_container(config=config)
@@ -60,4 +72,5 @@ def joint_fixture(psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture) -> Joint
         psql=psql_fixture,
         amqp=amqp_fixture,
         rest_client=rest_client,
+        s3=s3_fixture,
     )

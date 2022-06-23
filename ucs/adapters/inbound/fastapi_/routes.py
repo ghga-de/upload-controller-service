@@ -21,18 +21,12 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Path, status
 from httpyexpect.server import HTTPException
 
-from ucs.adapters.inbound.fastapi_.models import (
-    AccessURL,
-    UploadCreation,
-    UploadDetails,
-    UploadUpdate,
-)
+from ucs.adapters.inbound.fastapi_ import rest_models
 from ucs.container import Container
 from ucs.domain.interfaces.inbound.file_service import (
     FileUnkownError,
     IFileMetadataService,
 )
-from ucs.domain.models import FileMetadataWithUpload
 
 router = APIRouter()
 
@@ -77,7 +71,7 @@ def health():
     summary="Get file metadata including the current upload attempt.",
     operation_id="getFileMetadata",
     status_code=status.HTTP_200_OK,
-    response_model=FileMetadataWithUpload,
+    response_model=rest_models.FileMetadataWithUpload,
     response_description="File metadata including the current upload attempt",
     responses={
         status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
@@ -105,10 +99,10 @@ def get_file_metadata(
 
 
 @router.post(
-    "uploads",
+    "/uploads",
     summary="Initiate a new multi-part upload.",
     operation_id="createUpload",
-    response_model=UploadDetails,
+    response_model=rest_models.UploadAttempt,
     status_code=status.HTTP_200_OK,
     response_description="Details on the newly created upload.",
     responses={
@@ -129,7 +123,7 @@ def get_file_metadata(
         status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
     },
 )
-def create_upload(upload_creation: UploadCreation):
+def create_upload(upload_creation: rest_models.UploadAttemptCreation):
     """Initiate a new mutli-part upload for the given file."""
 
     print(upload_creation)
@@ -143,7 +137,7 @@ def create_upload(upload_creation: UploadCreation):
     summary="Get details on a specific upload.",
     operation_id="getUploadDetails",
     status_code=status.HTTP_200_OK,
-    response_model=UploadDetails,
+    response_model=rest_models.UploadAttempt,
     response_description="Details on a specific upload.",
     responses={
         status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
@@ -189,7 +183,7 @@ def get_upload_details(upload_id: str):
         status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
     },
 )
-def update_upload_status(upload_id: str, update: UploadUpdate):
+def update_upload_status(upload_id: str, update: rest_models.UploadAttemptUpdate):
     """
     Declare a multi-part upload as complete by setting its status to "uploaded".
     Or cancel a multi-part upload by setting its status to "cancelled".
@@ -203,7 +197,7 @@ def update_upload_status(upload_id: str, update: UploadUpdate):
     summary="Create new pre-signed URL for a specific part.",
     operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
-    response_model=AccessURL,
+    response_model=rest_models.AccessURL,
     response_description="The newly created pre-signed URL.",
     responses={
         status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},

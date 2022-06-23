@@ -30,7 +30,7 @@ class FileUnkownError(RuntimeError):
 
 
 class IFileMetadataService(Protocol):
-    """Interface of a service for handling file metata.
+    """Interface of a service handling file metata.
 
     Raises:
         - FileUnkownError

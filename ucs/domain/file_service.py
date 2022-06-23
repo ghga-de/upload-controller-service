@@ -31,7 +31,7 @@ from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
 
 
 class FileMetadataServive(IFileMetadataService):
-    """Interface of a service for handling file metata.
+    """Implementation of a service handling file metata.
 
     Raises:
         - FileUnkownError

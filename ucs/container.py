@@ -26,10 +26,12 @@ from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.domain.file_service import FileMetadataServive
 from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
+from ucs.domain.interfaces.inbound.upload_service import IUploadService
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
 from ucs.domain.interfaces.outbound.file_dao import IFileMetadataDAO
 from ucs.domain.interfaces.outbound.storage import IObjectStorage
 from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
+from ucs.domain.upload_service import UploadService
 
 
 class Container(containers.DeclarativeContainer):
@@ -47,7 +49,7 @@ class Container(containers.DeclarativeContainer):
         PsqlUploadAttemptDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
     )
 
-    object_storage_dao = providers.Factory[IObjectStorage](
+    object_storage = providers.Factory[IObjectStorage](
         S3ObjectStorage,
         s3_endpoint_url=config.s3_endpoint_url,
         s3_access_key_id=config.s3_access_key_id,
@@ -70,6 +72,14 @@ class Container(containers.DeclarativeContainer):
         FileMetadataServive,
         file_metadata_dao=file_metadata_dao,
         upload_attempt_dao=upload_attempt_dao,
+    )
+
+    upload_service = providers.Factory[IUploadService](
+        UploadService,
+        s3_inbox_bucket_id=config.s3_inbox_bucket_id,
+        file_metadata_dao=file_metadata_dao,
+        upload_attempt_dao=upload_attempt_dao,
+        object_storage=object_storage,
     )
 
     # inbound adapters:

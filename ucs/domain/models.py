@@ -53,17 +53,28 @@ class BaseModelORM(BaseModel):
         orm_mode = True
 
 
-class UploadAttempt(BaseModelORM):
+class UploadAttempt(BaseModel):
     """
     A model containing details on an upload attempt for a specific File.
     """
 
     upload_id: str
-    file_id: str
+    file_id: str = Field(
+        ..., description="The ID of the file corresponding to this upload."
+    )
     status: UploadStatus
+    part_size: int = Field(
+        ..., description="Part size to be used for upload. Specified in bytes."
+    )
+
+    class Config:
+        """Additional Model Config."""
+
+        orm_mode = True
+        title = "Multi-Part Upload Details"
 
 
-class FileMetadata(BaseModelORM):
+class FileMetadata(BaseModel):
     """
     A model containing basic metadata on a file.
     """
@@ -77,8 +88,14 @@ class FileMetadata(BaseModelORM):
     update_date: datetime
     format: str
 
+    class Config:
+        """Additional Model Config."""
 
-class FileMetadataWithUpload(FileMetadata):
+        orm_mode = True
+        title = "Basic File Metadata"
+
+
+class FileMetadataWithUpload(BaseModel):
     """
     A model containing basic metadata on a file plus information on the current
     upload.
@@ -88,3 +105,8 @@ class FileMetadataWithUpload(FileMetadata):
         None,
         description="ID of the current upload. `Null` if no update has been initiated, yet.",
     )
+
+    class Config:
+        """Additional Model Config."""
+
+        title = "File Metadata"
