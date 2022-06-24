@@ -19,45 +19,46 @@ Module containing the main FastAPI router and all route functions.
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Path, status
-from httpyexpect.server import HTTPException
 
-from ucs.adapters.inbound.fastapi_ import rest_models
+from ucs.adapters.inbound.fastapi_ import http_exceptions, rest_models
 from ucs.container import Container
 from ucs.domain.interfaces.inbound.file_service import (
     FileUnkownError,
     IFileMetadataService,
+)
+from ucs.domain.interfaces.inbound.upload_service import (
+    ExistingActiveUploadError,
+    FileAlreadyInInboxError,
+    FileNotInInboxError,
+    FileUnkownError,
+    IUploadService,
+    StorageAndDatabaseOutOfSyncError,
+    UploadCancelError,
+    UploadCompletionError,
+    UploadNotPendingError,
+    UploadUnkownError,
 )
 
 router = APIRouter()
 
 
 ERROR_DESCRIPTIONS = {
-    403: (
+    "noFileAccess": (
         "Exceptions by ID:"
         + "\n- noFileAccess: The user is not registered as a Data Submitter for the"
         + " corresponding file."
         ""
     ),
-    404: (
+    "noSuchUpload": (
         "Exceptions by ID:"
         + "\n- noSuchUpload: The multi-part upload with the given ID does not exist."
     ),
+    "fileNotRegistered": (
+        "Exceptions by ID:"
+        + "\n- fileNotRegistered: The file with the given ID has not (yet) been"
+        + " registered for upload."
+    ),
 }
-
-
-class HttpFileNotFoundException(HTTPException):
-    """Thrown when a file with given ID could not be found."""
-
-    def __init__(self, file_id: str):
-        """Construct message and init the exception."""
-        super().__init__(
-            status_code=404,
-            exception_id="fileNotRegistered",
-            description=(
-                f"The file with ID {file_id} has not (yet) been registered for upload."
-            ),
-            data={"file_id": file_id},
-        )
 
 
 @router.get("/health", summary="health", status_code=status.HTTP_200_OK)
@@ -74,13 +75,9 @@ def health():
     response_model=rest_models.FileMetadataWithUpload,
     response_description="File metadata including the current upload attempt",
     responses={
-        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS["noFileAccess"]},
         status.HTTP_404_NOT_FOUND: {
-            "description": (
-                "Exceptions by ID:"
-                + "\n- fileNotRegistered: The file with the given ID has not (yet) been"
-                + " registered for upload."
-            )
+            "description": ERROR_DESCRIPTIONS["fileNotRegistered"]
         },
     },
 )
@@ -92,10 +89,11 @@ def get_file_metadata(
     ),
 ):
     """Get file metadata including the current upload attempt."""
+
     try:
         return file_metadata_service.get(file_id)
     except FileUnkownError as error:
-        raise HttpFileNotFoundException(file_id=file_id) from error
+        raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
 
 
 @router.post(
@@ -120,16 +118,30 @@ def get_file_metadata(
                 + " status already exists for this file."
             )
         },
-        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
+        status.HTTP_404_NOT_FOUND: {
+            "description": ERROR_DESCRIPTIONS["fileNotRegistered"]
+        },
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS["noFileAccess"]},
     },
 )
-def create_upload(upload_creation: rest_models.UploadAttemptCreation):
+@inject
+def create_upload(
+    upload_creation: rest_models.UploadAttemptCreation,
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+):
     """Initiate a new mutli-part upload for the given file."""
 
-    print(upload_creation)
-    ...
-
-    return ...
+    try:
+        return upload_service.initiate_new(file_id=upload_creation.file_id)
+    except ExistingActiveUploadError as error:
+        raise http_exceptions.HttpUploadPresentError(
+            file_id=upload_creation.file_id,
+            status=error.active_upload.status,
+        ) from error
+    except FileUnkownError as error:
+        raise http_exceptions.HttpFileNotFoundError(
+            file_id=upload_creation.file_id
+        ) from error
 
 
 @router.get(
@@ -140,16 +152,23 @@ def create_upload(upload_creation: rest_models.UploadAttemptCreation):
     response_model=rest_models.UploadAttempt,
     response_description="Details on a specific upload.",
     responses={
-        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
-        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS["noFileAccess"]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS["noSuchUpload"]},
     },
 )
-def get_upload_details(upload_id: str):
+@inject
+def get_upload_details(
+    upload_id: str,
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+):
     """
     Get details on a specific upload.
     """
-    print(upload_id)
-    ...
+
+    try:
+        return upload_service.get_details(upload_id=upload_id)
+    except UploadUnkownError as error:
+        raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
 @router.patch(
@@ -162,34 +181,47 @@ def get_upload_details(upload_id: str):
         status.HTTP_400_BAD_REQUEST: {
             "description": (
                 "Exceptions by ID:"
-                + "\n- pendingInvalidChange: Cannot change status from pending to"
-                + " accepted or rejected"
-                + "\n- uploadedInvalidChange: Cannot change status from uploaded to"
-                + " cancelled or pending"
-                + "\n- invalidChangeFromCancelled: Cannot change status from cancelled"
-                + " for this upload attempt. If you want to restart, initiate a new"
-                + " multi-part upload instead."
+                + "\n- invalidChangeFromCancelled: Cannot update an upload with status"
+                + " cancelled."
+                + " If you want to restart, initiate a new multi-part upload instead."
                 + "\n- invalidChangeFromFailed: Cannot change status from failed for"
-                + " this upload attempt. If you want to restart, initiate a new"
-                + " multi-part upload instead."
-                + "\n- invalidChangeFromAccepted: Upload has already been accepted, a "
-                + " status change or new upload attempt is no longer possible."
-                + "\n- invalidChangeFromRejected: Cannot change status from rejected"
-                + " for this upload attempt. If you want to restart, initiate a new"
-                + " multi-part upload instead."
+                + " this upload attempt."
+                + " If you want to restart, initiate a new multi-part upload instead."
+                + "\n- invalidChangeFromUploaded: Cannot update an upload with status"
+                + " uploaded."
+                "\n- invalidChangeFromAccepted: Cannot update an upload with status"
+                + " accepted."
+                "\n- invalidChangeFromRejected: Cannot update an upload with status"
+                + " cancelled."
+                + " If you want to restart, initiate a new multi-part upload instead."
             )
         },
-        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
-        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS["noFileAccess"]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS["noSuchUpload"]},
     },
 )
-def update_upload_status(upload_id: str, update: rest_models.UploadAttemptUpdate):
+@inject
+def update_upload_status(
+    upload_id: str,
+    update: rest_models.UploadAttemptUpdate,
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+):
     """
     Declare a multi-part upload as complete by setting its status to "uploaded".
     Or cancel a multi-part upload by setting its status to "cancelled".
     """
-    print(upload_id, update)
-    ...
+
+    try:
+        if update.status == "uploaded":
+            upload_service.complete(upload_id=upload_id)
+        else:
+            upload_service.cancel(upload_id=upload_id)
+    except UploadNotPendingError as error:
+        raise http_exceptions.HttpInvalidUploadChange(
+            upload_id=upload_id, current_status=error.current_status
+        ) from error
+    except UploadUnkownError as error:
+        raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
 @router.post(
@@ -197,18 +229,29 @@ def update_upload_status(upload_id: str, update: rest_models.UploadAttemptUpdate
     summary="Create new pre-signed URL for a specific part.",
     operation_id="createPreSignedURL",
     status_code=status.HTTP_200_OK,
-    response_model=rest_models.AccessURL,
+    response_model=rest_models.PartUploadDetails,
     response_description="The newly created pre-signed URL.",
     responses={
-        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS[403]},
-        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS[404]},
+        status.HTTP_403_FORBIDDEN: {"description": ERROR_DESCRIPTIONS["noFileAccess"]},
+        status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTIONS["noSuchUpload"]},
     },
 )
-def create_presigned_url(upload_id: str, part_no: int = Path(..., ge=1, le=10000)):
+@inject
+def create_presigned_url(
+    upload_id: str,
+    part_no: int = Path(..., ge=1, le=10000),
+    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+):
     """
     Create a pre-signed URL for the specified part number of the specified multi-part
     upload.
     """
 
-    print(upload_id, part_no)
-    ...
+    try:
+        presigned_url = upload_service.create_part_url(
+            upload_id=upload_id, part_no=part_no
+        )
+    except UploadUnkownError as error:
+        raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
+
+    return rest_models.PartUploadDetails(url=presigned_url)

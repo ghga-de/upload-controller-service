@@ -95,7 +95,7 @@ class FileMetadata(BaseModel):
         title = "Basic File Metadata"
 
 
-class FileMetadataWithUpload(BaseModel):
+class FileMetadataWithUpload(FileMetadata):
     """
     A model containing basic metadata on a file plus information on the current
     upload.

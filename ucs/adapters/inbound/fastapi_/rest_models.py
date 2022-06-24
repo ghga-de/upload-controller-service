@@ -48,8 +48,8 @@ class UploadAttemptUpdate(BaseModel):
         title = "Multi-Part Upload Update"
 
 
-class AccessURL(BaseModel):
-    """Contains a pre-signed for uploading the bytes of one file part."""
+class PartUploadDetails(BaseModel):
+    """Contains details for uploading the bytes of one file part."""
 
     url: str = Field(
         ...,
