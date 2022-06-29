@@ -16,7 +16,7 @@
 """Interfaces for the main upload handling logic of this service."""
 
 
-from typing import Optional, Protocol
+from typing import Protocol
 
 from ucs.domain import models
 
@@ -25,26 +25,11 @@ from ucs.domain import models
 from ucs.domain.interfaces.inbound.file_service import FileUnkownError  # noqa: F401
 
 
-class FileAlreadyInInboxError(RuntimeError):
-    """Thrown when a file is unexpectedly already in the inbox."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with ID {file_id} is already in the inbox."
-        super().__init__(message)
-
-
-class FileNotInInboxError(RuntimeError):
-    """Thrown when a file is declared to be uploaded but was not found in the inbox."""
-
-    def __init__(self, file_id: str):
-        message = f"The file with ID {file_id} not in the inbox."
-        super().__init__(message)
-
-
 class UploadUnkownError(RuntimeError):
     """Thrown when an upload attempt with the given ID is not known."""
 
     def __init__(self, upload_id: str):
+        self.upload_id = upload_id
         message = f"The upload attempt with ID {upload_id} is unkown."
         super().__init__(message)
 
@@ -54,6 +39,7 @@ class UploadNotPendingError(RuntimeError):
 
     def __init__(self, upload_id: str, *, current_status: models.UploadStatus):
         self.current_status = current_status
+        self.upload_id = upload_id
         message = (
             f"The upload with ID {upload_id} must be in 'pending' state to perform"
             + f" the requested action, however, its current state is: {current_status}"
@@ -79,11 +65,13 @@ class ExistingActiveUploadError(RuntimeError):
 class UploadCompletionError(RuntimeError):
     """Thrown when the confirmation of an upload attempt failed."""
 
-    def __init__(self, upload_id: str, reason: Optional[str]):
+    def __init__(self, upload_id: str, reason: str):
+        self.reason = reason
+        self.upload_id = upload_id
         message = (
             f"The confirmation of the upload attempt with ID {upload_id} failed."
-            + " The upload attempt was aborted and cannot be resumed."
-            + ("" if reason is None else f" The reason was: {reason}")
+            + " The upload attempt was aborted and cannot be resumed. The reason was:"
+            + reason
         )
         super().__init__(message)
 
@@ -92,10 +80,14 @@ class UploadCancelError(RuntimeError):
     """Thrown when the cancelling of an upload attempt failed."""
 
     def __init__(self, upload_id: str):
+        self.upload_id = upload_id
+        self.possible_reason = (
+            "An ongoing part upload might be a reason. Please complete all part upload"
+            + " and try to cancel again."
+        )
         message = (
-            f"Failed to cancel the multi-part upload {upload_id}. An ongoing part upload"
-            + " might be a reason. Please complete all part upload and try to cancel"
-            + " again."
+            f"Failed to cancel the multi-part upload {upload_id}."
+            + self.possible_reason
         )
         super().__init__(message)
 
@@ -105,8 +97,27 @@ class StorageAndDatabaseOutOfSyncError(RuntimeError):
     sync."""
 
     def __init__(self, *, problem: str):
+        self.problem = problem
         message = f"The object storage and the database are out of sync: {problem}"
         super().__init__(message)
+
+
+class FileAlreadyInInboxError(StorageAndDatabaseOutOfSyncError):
+    """Thrown when a file is unexpectedly already in the inbox."""
+
+    def __init__(self, file_id: str):
+        self.file_id = file_id
+        problem = f"The file with ID {file_id} is already in the inbox."
+        super().__init__(problem=problem)
+
+
+class FileNotInInboxError(StorageAndDatabaseOutOfSyncError):
+    """Thrown when a file is declared to be uploaded but was not found in the inbox."""
+
+    def __init__(self, file_id: str):
+        self.file_id = file_id
+        problem = f"The file with ID {file_id} not in the inbox."
+        super().__init__(problem=problem)
 
 
 class IUploadService(Protocol):

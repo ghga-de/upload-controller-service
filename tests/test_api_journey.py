@@ -24,9 +24,7 @@ from fastapi import status
 
 from tests.fixtures.joint import *  # noqa: 403
 from tests.fixtures.s3 import upload_part_via_url
-
 from ucs.domain import models
-from ucs.domain.part_calc import DEFAULT_PART_SIZE
 
 # Examples:
 # - there are two files

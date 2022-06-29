@@ -15,31 +15,49 @@
 
 """A collextion of http exceptions."""
 
-from typing import cast
-
-from httpyexpect.server import HTTPException
+from httpyexpect.server import HttpCustomExceptionBase
+from pydantic import BaseModel
 
 from ucs.domain import models
 
 
-def _format_upload_status(status: models.UploadStatus):
-    """Format upload status to be using in exception IDs"""
+class HttpNoFileAccessError(HttpCustomExceptionBase):
+    """Thrown when the client has not sufficient priviledges to access the specified
+    file."""
 
-    status_value = cast(str, status.value)
-    capitalized_first_letter = status_value[0].upper()
-    rest = status_value[1 : len(status_value)]
+    exception_id = "noFileAccess"
 
-    return f"{capitalized_first_letter}{rest}"
+    class DataModel(BaseModel):
+        """Model for exception data"""
 
+        file_id: str
 
-class HttpFileNotFoundError(HTTPException):
-    """Thrown when a file with given ID could not be found."""
-
-    def __init__(self, *, file_id: str):
+    def __init__(self, *, file_id: str, status_code: int = 403):
         """Construct message and init the exception."""
         super().__init__(
-            status_code=404,
-            exception_id="fileNotRegistered",
+            status_code=status_code,
+            description=(
+                "The user is not registered as a Data Submitter for the file with"
+                + f" id {file_id}."
+            ),
+            data={"file_id": file_id},
+        )
+
+
+class HttpFileNotFoundError(HttpCustomExceptionBase):
+    """Thrown when a file with given ID could not be found."""
+
+    exception_id = "fileNotRegistered"
+
+    class DataModel(BaseModel):
+        """Model for exception data"""
+
+        file_id: str
+
+    def __init__(self, *, file_id: str, status_code: int = 404):
+        """Construct message and init the exception."""
+        super().__init__(
+            status_code=status_code,
             description=(
                 f"The file with ID {file_id} has not (yet) been registered for upload."
             ),
@@ -47,43 +65,78 @@ class HttpFileNotFoundError(HTTPException):
         )
 
 
-class HttpUploadNotFoundError(HTTPException):
+class HttpUploadNotFoundError(HttpCustomExceptionBase):
     """Thrown when an upload with given ID could not be found."""
 
-    def __init__(self, *, upload_id: str):
+    exception_id = "noSuchUpload"
+
+    class DataModel(BaseModel):
+        """Model for exception data"""
+
+        upload_id: str
+
+    def __init__(self, *, upload_id: str, status_code: int = 404):
         """Construct message and init the exception."""
         super().__init__(
-            status_code=404,
-            exception_id="noSuchUpload",
+            status_code=status_code,
             description=(f"The upload with ID {upload_id} does not exist."),
             data={"upload_id": upload_id},
         )
 
 
-class HttpUploadPresentError(HTTPException):
+class HttpExistingActiveUploadError(HttpCustomExceptionBase):
     """Thrown when trying to create a new upload while there is another upload active."""
 
-    def __init__(self, *, file_id: str, status: models.UploadStatus):
+    exception_id = "existingActiveUpload"
+
+    class DataModel(BaseModel):
+        """Model for exception data"""
+
+        file_id: str
+        active_upload: models.UploadAttempt
+
+    def __init__(
+        self,
+        *,
+        file_id: str,
+        active_upload: models.UploadAttempt,
+        status_code: int = 400,
+    ):
         """Construct message and init the exception."""
         super().__init__(
-            status_code=404,
-            exception_id=f"uploadAttemptPresent{_format_upload_status(status)}",
+            status_code=status_code,
             description=(
-                f"An upload attempt with status {status.value} is already"
+                f"An upload attempt with status {active_upload.status.value} is already"
                 + "present for the file with ID {file_id}. Cannot create a new one."
             ),
-            data={"file_id": file_id, "upload_status": status.value},
+            data={
+                "file_id": file_id,
+                "active_upload": active_upload,
+            },
         )
 
 
-class HttpInvalidUploadChange(HTTPException):
+class HttpUploadNotPendingError(HttpCustomExceptionBase):
     """Thrown when updating an upload that cannot be uploaded anymore."""
 
-    def __init__(self, *, upload_id: str, current_status: models.UploadStatus):
+    exception_id = "uploadNotPending"
+
+    class DataModel(BaseModel):
+        """Model for exception data"""
+
+        upload_id: str
+        current_upload_status: models.UploadStatus
+
+    def __init__(
+        self,
+        *,
+        upload_id: str,
+        current_status: models.UploadStatus,
+        status_code: int = 400,
+    ):
         """Construct message and init the exception."""
         super().__init__(
-            status_code=404,
-            exception_id=f"invalidChangeFrom{_format_upload_status(current_status)}",
+            status_code=status_code,
             description=(
                 f"The upload with ID {upload_id} has the status {current_status}"
                 + " and cannot be updated anymore."
@@ -92,4 +145,34 @@ class HttpInvalidUploadChange(HTTPException):
                 "upload_id": upload_id,
                 "current_upload_status": current_status.value,
             },
+        )
+
+
+class HttpUploadStatusChangeError(HttpCustomExceptionBase):
+    """Thrown when a problem occured when trying to change the upload status."""
+
+    exception_id = "uploadStatusChange"
+
+    class DataModel(BaseModel):
+        """Model for exception data"""
+
+        upload_id: str
+        target_status: models.UploadStatus
+
+    def __init__(
+        self,
+        *,
+        upload_id: str,
+        target_status: models.UploadStatus,
+        reason: str,
+        status_code: int = 400,
+    ):
+        """Construct message and init the exception."""
+        super().__init__(
+            status_code=status_code,
+            description=(
+                f"Failed to change the status of upload with id {upload_id} to"
+                + f" '{target_status}': {reason}"
+            ),
+            data={"upload_id": upload_id, "target_status": target_status},
         )
