@@ -24,7 +24,7 @@ from ucs.domain import models
 class FileUnkownError(RuntimeError):
     """Thrown when a file with the given ID is not known."""
 
-    def __init__(self, file_id: str):
+    def __init__(self, *, file_id: str):
         self.file_id = file_id
         message = f"The file with ID {file_id} is unkown."
         super().__init__(message)

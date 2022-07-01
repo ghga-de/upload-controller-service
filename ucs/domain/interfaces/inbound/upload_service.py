@@ -15,7 +15,6 @@
 
 """Interfaces for the main upload handling logic of this service."""
 
-
 from typing import Protocol
 
 from ucs.domain import models
@@ -28,21 +27,30 @@ from ucs.domain.interfaces.inbound.file_service import FileUnkownError  # noqa: 
 class UploadUnkownError(RuntimeError):
     """Thrown when an upload attempt with the given ID is not known."""
 
-    def __init__(self, upload_id: str):
+    def __init__(self, *, upload_id: str):
         self.upload_id = upload_id
         message = f"The upload attempt with ID {upload_id} is unkown."
         super().__init__(message)
 
 
-class UploadNotPendingError(RuntimeError):
-    """Thrown when an upload was expected in "pending" state for performing an action."""
+class UploadStatusMissmatchError(RuntimeError):
+    """Thrown when an upload was expected to have a specific status for performing
+    an action."""
 
-    def __init__(self, upload_id: str, *, current_status: models.UploadStatus):
-        self.current_status = current_status
+    def __init__(
+        self,
+        *,
+        upload_id: str,
+        expected_status: models.UploadStatus,
+        current_status: models.UploadStatus,
+    ):
         self.upload_id = upload_id
+        self.expected_status = expected_status
+        self.current_status = current_status
         message = (
-            f"The upload with ID {upload_id} must be in 'pending' state to perform"
-            + f" the requested action, however, its current state is: {current_status}"
+            f"The upload with ID {upload_id} must be in '{expected_status}' state to"
+            + " perform the requested action, however, its current state is:"
+            + str(current_status)
         )
         super().__init__(message)
 
@@ -65,7 +73,7 @@ class ExistingActiveUploadError(RuntimeError):
 class UploadCompletionError(RuntimeError):
     """Thrown when the confirmation of an upload attempt failed."""
 
-    def __init__(self, upload_id: str, reason: str):
+    def __init__(self, *, upload_id: str, reason: str):
         self.reason = reason
         self.upload_id = upload_id
         message = (
@@ -79,7 +87,7 @@ class UploadCompletionError(RuntimeError):
 class UploadCancelError(RuntimeError):
     """Thrown when the cancelling of an upload attempt failed."""
 
-    def __init__(self, upload_id: str):
+    def __init__(self, *, upload_id: str):
         self.upload_id = upload_id
         self.possible_reason = (
             "An ongoing part upload might be a reason. Please complete all part upload"
@@ -105,7 +113,7 @@ class StorageAndDatabaseOutOfSyncError(RuntimeError):
 class FileAlreadyInInboxError(StorageAndDatabaseOutOfSyncError):
     """Thrown when a file is unexpectedly already in the inbox."""
 
-    def __init__(self, file_id: str):
+    def __init__(self, *, file_id: str):
         self.file_id = file_id
         problem = f"The file with ID {file_id} is already in the inbox."
         super().__init__(problem=problem)
@@ -114,10 +122,19 @@ class FileAlreadyInInboxError(StorageAndDatabaseOutOfSyncError):
 class FileNotInInboxError(StorageAndDatabaseOutOfSyncError):
     """Thrown when a file is declared to be uploaded but was not found in the inbox."""
 
-    def __init__(self, file_id: str):
+    def __init__(self, *, file_id: str):
         self.file_id = file_id
         problem = f"The file with ID {file_id} not in the inbox."
         super().__init__(problem=problem)
+
+
+class NoLatestUploadError(RuntimeError):
+    """Thrown when a latest upload is expected for a file but no one was found."""
+
+    def __init__(self, *, file_id: str):
+        self.file_id = file_id
+        message = f"The file with ID {file_id} as no upload."
+        super().__init__(message)
 
 
 class IUploadService(Protocol):
@@ -160,5 +177,23 @@ class IUploadService(Protocol):
     def cancel(self, *, upload_id: str) -> None:
         """
         Cancel the multi-part upload with the given ID.
+        """
+        ...
+
+    def accept_latest(self, *, file_id: str) -> None:
+        """
+        Accept the latest multi-part upload for the given file.
+
+        Here the file ID is used, as this method is triggered by downstream services
+        that only know the file ID not the upload attempt.
+        """
+        ...
+
+    def reject_latest(self, *, file_id: str) -> None:
+        """
+        Accept the latest multi-part upload for the given file.
+
+        Here the file ID is used, as this method is triggered by downstream services
+        that only know the file ID not the upload attempt.
         """
         ...

@@ -29,7 +29,7 @@ class UploadAttemptNotFoundError(RuntimeError):
     """Thrown when trying to access an upload attempt with an ID that doesn't exist in
     the database."""
 
-    def __init__(self, upload_id: Optional[str]):
+    def __init__(self, *, upload_id: Optional[str]):
         message = (
             f"The upload attempt with ID '{upload_id}' does not exist in the database."
         )
@@ -40,7 +40,7 @@ class UploadAttemptAlreadExistsError(RuntimeError):
     """Thrown when trying create a new upload attempt with an ID that already exist in
     the database."""
 
-    def __init__(self, upload_id: Optional[str]):
+    def __init__(self, *, upload_id: Optional[str]):
         message = (
             f"An upload attempt with ID '{upload_id}' does already exist in the"
             + " database."

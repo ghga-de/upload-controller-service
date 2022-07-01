@@ -33,7 +33,7 @@ from ucs.domain.interfaces.inbound.upload_service import (
     IUploadService,
     UploadCancelError,
     UploadCompletionError,
-    UploadNotPendingError,
+    UploadStatusMissmatchError,
     UploadUnkownError,
 )
 
@@ -223,7 +223,7 @@ def update_upload_status(
             upload_service.complete(upload_id=upload_id)
         else:
             upload_service.cancel(upload_id=upload_id)
-    except UploadNotPendingError as error:
+    except UploadStatusMissmatchError as error:
         raise http_exceptions.HttpUploadNotPendingError(
             upload_id=upload_id, current_status=error.current_status
         ) from error

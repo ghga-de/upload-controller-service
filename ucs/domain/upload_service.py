@@ -22,10 +22,11 @@ from ucs.domain.interfaces.inbound.upload_service import (
     FileAlreadyInInboxError,
     FileUnkownError,
     IUploadService,
+    NoLatestUploadError,
     StorageAndDatabaseOutOfSyncError,
     UploadCancelError,
     UploadCompletionError,
-    UploadNotPendingError,
+    UploadStatusMissmatchError,
     UploadUnkownError,
 )
 from ucs.domain.interfaces.internal.part_calc import IPartSizeCalculator
@@ -38,6 +39,7 @@ from ucs.domain.interfaces.outbound.storage import (
     MultiPartUploadAbortError,
     MultiPartUploadConfirmError,
     MultiPartUploadNotFoundError,
+    ObjectNotFoundError,
 )
 from ucs.domain.interfaces.outbound.upload_dao import (
     IUploadAttemptDAO,
@@ -81,29 +83,35 @@ class UploadService(IUploadService):
             if not storage.does_bucket_exist(bucket_id=self._s3_inbox_bucket_id):
                 storage.create_bucket(self._s3_inbox_bucket_id)
 
-    def _get_upload_if_pending(self, upload_id: str) -> models.UploadAttempt:
+    def _get_upload_if_status(
+        self, upload_id: str, status: models.UploadStatus
+    ) -> models.UploadAttempt:
         """Makes sure that the upload with the given ID exists and that its current
-        status is 'pending'. If that is the case, the upload is return. Otherwise
-        an UploadNotPendingError is raise."""
+        status matches the specified status. If that is the case, the upload is return. Otherwise
+        an UploadStatusMissmatchError is raise."""
 
         upload = self.get_details(upload_id=upload_id)
 
-        if upload.status != models.UploadStatus.PENDING:
-            raise UploadNotPendingError(
-                upload_id=upload.upload_id, current_status=upload.status
+        if upload.status != status:
+            raise UploadStatusMissmatchError(
+                upload_id=upload.upload_id,
+                expected_status=status,
+                current_status=upload.status,
             )
 
         return upload
 
     def _cancel_with_final_status(
-        self, upload_id: str, *, final_status: models.UploadStatus
+        self, *, upload_id: str, final_status: models.UploadStatus
     ) -> None:
         """
         Cancel the multi-part upload with the given ID and set the specified final
         status.
         """
 
-        upload = self._get_upload_if_pending(upload_id)
+        upload = self._get_upload_if_status(
+            upload_id, status=models.UploadStatus.PENDING
+        )
 
         # mark the upload as aborted in the object storage:
         with self._object_storage as storage:
@@ -114,7 +122,7 @@ class UploadService(IUploadService):
                     object_id=upload.file_id,
                 )
             except MultiPartUploadAbortError as error:
-                raise UploadCancelError(upload_id) from error
+                raise UploadCancelError(upload_id=upload_id) from error
             except MultiPartUploadNotFoundError:
                 # This correspond to an inconsistency between the database and
                 # the storage, however, since this cancel method might be used to
@@ -124,6 +132,53 @@ class UploadService(IUploadService):
         # change the final status of the upload in the database:
         with self._upload_attempt_dao as ua_dao:
             updated_upload = upload.copy(update={"status": final_status})
+            ua_dao.update(updated_upload)
+
+    def _clear_latest_with_final_status(
+        self, *, file_id: str, final_status: models.UploadStatus
+    ):
+        """
+        Clear a multi-part upload after receiving a final accept/reject decision.
+        """
+
+        with self._upload_attempt_dao as ua_dao:
+            latest_upload = ua_dao.get_latest_by_file(file_id)
+
+        if latest_upload is None:
+            raise NoLatestUploadError(file_id=file_id)
+
+        if latest_upload.status != models.UploadStatus.UPLOADED:
+            raise UploadStatusMissmatchError(
+                upload_id=latest_upload.upload_id,
+                expected_status=models.UploadStatus.UPLOADED,
+                current_status=latest_upload.status,
+            )
+
+        # remove the object from the object storage:
+        with self._object_storage as storage:
+            try:
+                storage.delete_object(
+                    bucket_id=self._s3_inbox_bucket_id,
+                    object_id=latest_upload.file_id,
+                )
+            except ObjectNotFoundError as error:
+                # This is unexpected. Thus setting the status of the upload attempt to
+                # failed and raise.
+                self._cancel_with_final_status(
+                    upload_id=latest_upload.upload_id,
+                    final_status=models.UploadStatus.FAILED,
+                )
+                raise StorageAndDatabaseOutOfSyncError(
+                    problem=(
+                        f"Trying clear the upload with ID {latest_upload.upload_id} (final status:"
+                        + f" {final_status}), however, the corresponding file with id"
+                        + f" {file_id} could not be found in the database."
+                    )
+                ) from error
+
+        # mark the upload as complete (uploaded) in the database:
+        with self._upload_attempt_dao as ua_dao:
+            updated_upload = latest_upload.copy(update={"status": final_status})
             ua_dao.update(updated_upload)
 
     def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
@@ -136,7 +191,7 @@ class UploadService(IUploadService):
             try:
                 file = fm_dao.get(file_id)
             except FileMetadataNotFoundError as error:
-                raise FileUnkownError(file_id) from error
+                raise FileUnkownError(file_id=file_id) from error
 
         # check if another upload is currently active or accepted:
         with self._upload_attempt_dao as ua_dao:
@@ -154,7 +209,7 @@ class UploadService(IUploadService):
             if storage.does_object_exist(
                 bucket_id=self._s3_inbox_bucket_id, object_id=file_id
             ):
-                raise FileAlreadyInInboxError(file_id)
+                raise FileAlreadyInInboxError(file_id=file_id)
 
             # otherwise initiate the multipart upload:
             upload_id = storage.init_multipart_upload(
@@ -188,9 +243,6 @@ class UploadService(IUploadService):
                         bucket_id=self._s3_inbox_bucket_id,
                         object_id=file_id,
                     )
-                    storage.delete_object(
-                        bucket_id=self._s3_inbox_bucket_id, object_id=file_id
-                    )
                     raise
 
             return upload
@@ -204,7 +256,7 @@ class UploadService(IUploadService):
             try:
                 return ua_dao.get(upload_id)
             except UploadAttemptNotFoundError as error:
-                raise UploadUnkownError(upload_id) from error
+                raise UploadUnkownError(upload_id=upload_id) from error
 
     def create_part_url(self, *, upload_id: str, part_no: int) -> str:
         """
@@ -212,7 +264,9 @@ class UploadService(IUploadService):
         the given number of the upload with the given ID.
         """
 
-        upload = self._get_upload_if_pending(upload_id)
+        upload = self._get_upload_if_status(
+            upload_id, status=models.UploadStatus.PENDING
+        )
 
         with self._object_storage as storage:
             try:
@@ -236,7 +290,9 @@ class UploadService(IUploadService):
         Confirm the completion of the multi-part upload with the given ID.
         """
 
-        upload = self._get_upload_if_pending(upload_id)
+        upload = self._get_upload_if_status(
+            upload_id, status=models.UploadStatus.PENDING
+        )
 
         # mark the upload as complete in the object storage:
         with self._object_storage as storage:
@@ -250,7 +306,7 @@ class UploadService(IUploadService):
                 # This can typically not be repaired, so aborting the upload attempt
                 # and marking it as failed in the database:
                 self._cancel_with_final_status(
-                    upload_id, final_status=models.UploadStatus.FAILED
+                    upload_id=upload_id, final_status=models.UploadStatus.FAILED
                 )
 
                 raise UploadCompletionError(
@@ -270,5 +326,28 @@ class UploadService(IUploadService):
         """
 
         self._cancel_with_final_status(
-            upload_id, final_status=models.UploadStatus.CANCELLED
+            upload_id=upload_id, final_status=models.UploadStatus.CANCELLED
+        )
+
+    def accept_latest(self, *, file_id: str) -> None:
+        """
+        Accept the latest multi-part upload for the given file.
+
+        Here the file ID is used, as this method is triggered by downstream services
+        that only know the file ID not the upload attempt.
+        """
+
+        self._clear_latest_with_final_status(
+            file_id=file_id, final_status=models.UploadStatus.ACCEPTED
+        )
+
+    def reject_latest(self, *, file_id: str) -> None:
+        """
+        Accept the latest multi-part upload for the given file.
+
+        Here the file ID is used, as this method is triggered by downstream services
+        that only know the file ID not the upload attempt.
+        """
+        self._clear_latest_with_final_status(
+            file_id=file_id, final_status=models.UploadStatus.REJECTED
         )

@@ -52,6 +52,6 @@ class FileMetadataNotFoundError(RuntimeError):
     """Thrown when trying to access a file with a file ID that doesn't
     exist in the database."""
 
-    def __init__(self, file_id: Optional[str]):
+    def __init__(self, *, file_id: Optional[str]):
         message = f"The file with file ID '{file_id}' does not exist in the database."
         super().__init__(message)

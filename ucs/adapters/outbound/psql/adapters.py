@@ -196,7 +196,7 @@ class PsqlUploadAttemptDAO(PsqlDaoBase, IUploadAttemptDAO):
             pass
         else:
             # this is a problem:
-            raise UploadAttemptAlreadExistsError(upload.upload_id)
+            raise UploadAttemptAlreadExistsError(upload_id=upload.upload_id)
 
         # create new upload:
         self._create(obj=upload, orm_model=orm_models.UploadAttempt)
