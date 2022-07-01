@@ -90,6 +90,7 @@ class Container(containers.DeclarativeContainer):
         rabbitmq_host=config.rabbitmq_host,
         rabbitmq_port=config.rabbitmq_port,
         topic_new_study=config.topic_new_study,
-        topic_file_registered=config.topic_file_registered,
+        topic_file_accepted=config.topic_file_accepted,
         file_metadata_service=file_metadata_service,
+        upload_service=upload_service,
     )

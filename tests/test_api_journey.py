@@ -21,6 +21,8 @@ from datetime import datetime
 from typing import Literal
 
 from fastapi import status
+from ghga_message_schemas import schemas
+from ghga_service_chassis_lib.utils import exec_with_timeout
 
 from tests.fixtures.joint import *  # noqa: 403
 from tests.fixtures.s3 import upload_part_via_url
@@ -119,11 +121,37 @@ def perform_upload(
 def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
-    # register new files to the service:
-    file_metadata_service = (
-        joint_fixture.container.file_metadata_service()
-    )  # to be replaced with event-based API
-    file_metadata_service.upsert_multiple(EXAMPLE_FILES)
+    # publish an event to register new files:
+    study_id = EXAMPLE_FILES[0].grouping_label
+    associated_files = [
+        {
+            "file_id": file.file_id,
+            "md5_checksum": file.md5_checksum,
+            "size": file.size,
+            "file_name": file.file_name,
+            "creation_date": file.creation_date.isoformat(),
+            "update_date": file.update_date.isoformat(),
+            "format": file.format,
+        }
+        for file in EXAMPLE_FILES
+    ]
+    new_study_event = {
+        "study": {"id": study_id},
+        "associated_files": associated_files,
+        "timestamp": datetime.now().isoformat(),
+    }
+    study_publisher = joint_fixture.amqp.get_test_publisher(
+        topic_name=joint_fixture.config.topic_new_study,
+        message_schema=schemas.SCHEMAS["new_study_created"],
+    )
+    study_publisher.publish(new_study_event)
+
+    # use the event subscriber to receive and process the event:
+    event_subscriber = joint_fixture.container.event_subscriber()
+    exec_with_timeout(
+        func=lambda: event_subscriber.subscribe_new_study(run_forever=False),
+        timeout_after=2,
+    )
 
     for file in EXAMPLE_FILES:
         # get file metadata:
@@ -140,3 +168,38 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
 
         # perform another upload and confirm it:
         perform_upload(joint_fixture, file_id=file.file_id, final_status="uploaded")
+
+        # publish an event to mark the file as accepted:
+        file_accepted_event = {
+            "file_id": file.file_id,
+            "md5_checksum": file.md5_checksum,
+            "size": file.size,
+            "creation_date": file.creation_date.isoformat(),
+            "update_date": file.update_date.isoformat(),
+            "format": file.format,
+            "grouping_label": study_id,
+            "timestamp": datetime.now().isoformat(),
+        }
+        acceptance_publisher = joint_fixture.amqp.get_test_publisher(
+            topic_name=joint_fixture.config.topic_file_accepted,
+            message_schema=schemas.SCHEMAS["file_internally_registered"],
+        )
+        acceptance_publisher.publish(file_accepted_event)
+
+        # receive the acceptance event:
+        exec_with_timeout(
+            func=lambda: event_subscriber.subscribe_file_accepted(run_forever=False),
+            timeout_after=2,
+        )
+
+        # make sure that the latest upload of the corresponding file was marked as
+        # accepted:
+        # (first get the ID of the latest upload for that file:)
+        response = joint_fixture.rest_client.get(f"/files/{file.file_id}")
+        assert response.status_code == status.HTTP_200_OK
+        latest_upload_id = response.json()["latest_upload_id"]
+
+        # (Then get details on that upload:)
+        response = joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["status"] == "accepted"

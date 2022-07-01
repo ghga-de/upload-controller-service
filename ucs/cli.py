@@ -28,7 +28,7 @@ class Topics(str, Enum):
     """Supported topics"""
 
     NEW_STUDY = "new_study"
-    FILE_REGISTERED = "file_registered"
+    FILE_ACCEPTED = "file_accepted"
 
 
 config = Config()
