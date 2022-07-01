@@ -147,7 +147,9 @@ def create_upload(
             active_upload=error.active_upload,
         ) from error
     except FileUnkownError as error:
-        raise HttpFileNotFoundUploadError(file_id=upload_creation.file_id) from error
+        raise HttpFileNotFoundUploadError(
+            file_id=upload_creation.file_id, status_code=400
+        ) from error
 
 
 @router.get(
@@ -163,7 +165,7 @@ def create_upload(
     },
 )
 @inject
-def get_upload_details(
+def get_upload(
     upload_id: str,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):

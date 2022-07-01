@@ -56,7 +56,7 @@ EXAMPLE_UPLOADS = (
     models.UploadAttempt(
         upload_id="testUpload001",
         file_id="testFile001",
-        status=models.UploadStatus.PENDING,
+        status=models.UploadStatus.CANCELLED,
         part_size=1234,
     ),
     models.UploadAttempt(

@@ -115,6 +115,11 @@ class UploadService(IUploadService):
                 )
             except MultiPartUploadAbortError as error:
                 raise UploadCancelError(upload_id) from error
+            except MultiPartUploadNotFoundError:
+                # This correspond to an inconsistency between the database and
+                # the storage, however, since this cancel method might be used to
+                # resolve this inconsistency, this exception will be ignored.
+                pass
 
         # change the final status of the upload in the database:
         with self._upload_attempt_dao as ua_dao:

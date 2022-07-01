@@ -125,7 +125,8 @@ def test_init_upload_unkown_file(joint_fixture: JointFixture):  # noqa: F405
 
 
 def test_init_other_active_upload(joint_fixture: JointFixture):  # noqa: F405
-    """Test initializing a new upload for a non existing file."""
+    """Test initializing a new upload when there is another active update already
+    existing."""
 
     # insert a pending upload into the database:
     joint_fixture.psql.populate_file_metadata([EXAMPLE_FILE])
