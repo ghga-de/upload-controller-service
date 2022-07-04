@@ -16,6 +16,7 @@
 """DAO implementation to manage File Info in a database."""
 
 import uuid
+from typing import Any
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -94,7 +95,7 @@ class FileMetadata(Base):
         doc="The format of the file: BAM, SAM, CRAM, BAI, etc.",
     )
 
-    upload_attempts = relationship("UploadAttempt", back_populates="file_metadata")
+    upload_attempts: Any = relationship("UploadAttempt", back_populates="file_metadata")
 
 
 class UploadAttempt(Base):
@@ -149,4 +150,4 @@ class UploadAttempt(Base):
             + " `uploaded`, and `accepted` are mutually exclusive."
         ),
     )
-    file_metadata = relationship("FileMetadata", back_populates="upload_attempts")
+    file_metadata: Any = relationship("FileMetadata", back_populates="upload_attempts")

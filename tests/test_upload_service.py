@@ -15,15 +15,16 @@
 
 """Test the FileMetadataService"""
 
-from datetime import datetime
-
 import pytest
 from ghga_message_schemas import schemas
-from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
-from tests.fixtures.config import DEFAULT_CONFIG
+from tests.fixtures.example_data import (
+    EXAMPLE_FILE,
+    EXAMPLE_STORAGE_OBJECT,
+    EXAMPLE_UPLOAD,
+)
 from tests.fixtures.joint import *  # noqa: 403
-from tests.fixtures.s3 import FileObject, upload_part_via_url
+from tests.fixtures.s3 import upload_part_via_url
 from ucs.domain import models
 from ucs.domain.interfaces.inbound.upload_service import (
     ExistingActiveUploadError,
@@ -33,30 +34,6 @@ from ucs.domain.interfaces.inbound.upload_service import (
     UploadUnkownError,
 )
 from ucs.domain.part_calc import DEFAULT_PART_SIZE
-
-EXAMPLE_FILE = models.FileMetadata(
-    file_id="testFile001",
-    file_name="Test File 001",
-    md5_checksum="fake-checksum",
-    size=12345678,
-    grouping_label="test",
-    creation_date=datetime.now(),
-    update_date=datetime.now(),
-    format="txt",
-)
-
-EXAMPLE_OBJECT = FileObject(
-    file_path=TEST_FILE_PATHS[0],
-    bucket_id=DEFAULT_CONFIG.s3_inbox_bucket_id,
-    object_id=EXAMPLE_FILE.file_id,
-)
-
-EXAMPLE_UPLOAD = models.UploadAttempt(
-    upload_id="testUpload001",
-    file_id="testFile001",
-    status=models.UploadStatus.PENDING,
-    part_size=1234,
-)
 
 
 def test_happy(joint_fixture: JointFixture):  # noqa: F405
@@ -164,7 +141,7 @@ def test_init_already_in_inbox(joint_fixture: JointFixture):  # noqa: F405
 
     # insert a file into the database and the storage:
     joint_fixture.psql.populate_file_metadata([EXAMPLE_FILE])
-    joint_fixture.s3.populate_file_objects([EXAMPLE_OBJECT])
+    joint_fixture.s3.populate_file_objects([EXAMPLE_STORAGE_OBJECT])
 
     # construct service:
     upload_service = joint_fixture.container.upload_service()
@@ -183,16 +160,16 @@ def test_accept_and_reject(accept: bool, joint_fixture: JointFixture):  # noqa: 
     # populate databases and storages:
     joint_fixture.psql.populate_file_metadata([EXAMPLE_FILE])
     joint_fixture.psql.populate_upload_attempts([upload])
-    joint_fixture.s3.populate_file_objects([EXAMPLE_OBJECT])
+    joint_fixture.s3.populate_file_objects([EXAMPLE_STORAGE_OBJECT])
 
     # construct service:
     upload_service = joint_fixture.container.upload_service()
 
     # accept or reject the upload:
     if accept:
-        _ = upload_service.accept_latest(file_id=upload.file_id)
+        upload_service.accept_latest(file_id=upload.file_id)
     else:
-        _ = upload_service.reject_latest(file_id=upload.file_id)
+        upload_service.reject_latest(file_id=upload.file_id)
 
     # make sure that the status in the database was updated:
     with joint_fixture.container.upload_attempt_dao() as ua_dao:
@@ -206,7 +183,8 @@ def test_accept_and_reject(accept: bool, joint_fixture: JointFixture):  # noqa: 
     # make sure that the object in the storage is gone:
     with joint_fixture.container.object_storage() as storage:
         assert not storage.does_object_exist(
-            bucket_id=EXAMPLE_OBJECT.bucket_id, object_id=EXAMPLE_OBJECT.object_id
+            bucket_id=EXAMPLE_STORAGE_OBJECT.bucket_id,
+            object_id=EXAMPLE_STORAGE_OBJECT.object_id,
         )
 
 
@@ -226,16 +204,25 @@ def test_unkown_upload(joint_fixture: JointFixture):  # noqa: F405
         _ = upload_service.create_part_url(upload_id=upload_id, part_no=1)
 
     with pytest.raises(UploadUnkownError):
-        _ = upload_service.complete(upload_id=upload_id)
+        upload_service.complete(upload_id=upload_id)
 
     with pytest.raises(UploadUnkownError):
-        _ = upload_service.cancel(upload_id=upload_id)
+        upload_service.cancel(upload_id=upload_id)
 
-    with pytest.raises(UploadUnkownError):
-        _ = upload_service.accept(upload_id=upload_id)
 
-    with pytest.raises(UploadUnkownError):
-        _ = upload_service.reject(upload_id=upload_id)
+def test_unkown_file(joint_fixture: JointFixture):  # noqa: F405
+    """Test working with a file that does not exist."""
+
+    file_id = "myNonExistingFile"
+
+    # construct service:
+    upload_service = joint_fixture.container.upload_service()
+
+    with pytest.raises(FileUnkownError):
+        upload_service.accept_latest(file_id=file_id)
+
+    with pytest.raises(FileUnkownError):
+        upload_service.reject_latest(file_id=file_id)
 
 
 @pytest.mark.parametrize(
@@ -262,10 +249,10 @@ def test_non_pending_upload(
         _ = upload_service.create_part_url(upload_id=upload_id, part_no=1)
 
     with pytest.raises(UploadStatusMissmatchError):
-        _ = upload_service.complete(upload_id=upload_id)
+        upload_service.complete(upload_id=upload_id)
 
     with pytest.raises(UploadStatusMissmatchError):
-        _ = upload_service.cancel(upload_id=upload_id)
+        upload_service.cancel(upload_id=upload_id)
 
 
 @pytest.mark.parametrize(
@@ -293,7 +280,7 @@ def test_non_uploaded_upload(
 
     # try to work with non existing upload:
     with pytest.raises(UploadStatusMissmatchError):
-        _ = upload_service.accept_latest(file_id=file_id)
+        upload_service.accept_latest(file_id=file_id)
 
     with pytest.raises(UploadStatusMissmatchError):
-        _ = upload_service.reject_latest(file_id=file_id)
+        upload_service.reject_latest(file_id=file_id)

@@ -15,25 +15,12 @@
 
 """Tests FileMetadataDAO implementations base on PostgreSQL"""
 
-from datetime import datetime
-
 import pytest
 
+from tests.fixtures.example_data import EXAMPLE_FILE
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
 from ucs.adapters.outbound.psql.adapters import PsqlFileMetadataDAO
-from ucs.domain import models
 from ucs.domain.interfaces.outbound.file_dao import FileMetadataNotFoundError
-
-EXAMPLE_FILE = models.FileMetadata(
-    file_id="testFile001",
-    file_name="Test File 001",
-    md5_checksum="fake-checksum",
-    size=12345678,
-    grouping_label="test",
-    creation_date=datetime.now(),
-    update_date=datetime.now(),
-    format="txt",
-)
 
 
 def test_get_existing_file_metadata(psql_fixture: PsqlFixture):  # noqa: F811

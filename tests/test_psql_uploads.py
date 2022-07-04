@@ -17,21 +17,14 @@
 
 import pytest
 
+from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOAD
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
-from tests.test_psql_file import EXAMPLE_FILE
 from ucs.adapters.outbound.psql.adapters import PsqlUploadAttemptDAO
 from ucs.domain import models
 from ucs.domain.interfaces.outbound.upload_dao import (
     FileMetadataNotFoundError,
     UploadAttemptAlreadExistsError,
     UploadAttemptNotFoundError,
-)
-
-EXAMPLE_UPLOAD = models.UploadAttempt(
-    upload_id="testUpload001",
-    file_id="testFile001",
-    status=models.UploadStatus.PENDING,
-    part_size=1234,
 )
 
 

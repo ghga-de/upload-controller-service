@@ -16,43 +16,13 @@
 """Test edge cases of the fastapi_ adapter not covered by `test.test_api_journey`."""
 
 import json
-from datetime import datetime
 
 import pytest
 from fastapi import status
 
+from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOADS
 from tests.fixtures.joint import *  # noqa: 403
 from ucs.domain import models
-
-# Examples:
-# - there are two files
-# - two upload attempts that can be registered to the first file
-
-EXAMPLE_FILE = models.FileMetadata(
-    file_id="testFile001",
-    file_name="Test File 001",
-    md5_checksum="fake-checksum",
-    size=12345678,
-    grouping_label="test",
-    creation_date=datetime.now(),
-    update_date=datetime.now(),
-    format="txt",
-)
-
-EXAMPLE_UPLOADS = (
-    models.UploadAttempt(
-        upload_id="testUpload001",
-        file_id="testFile001",
-        status=models.UploadStatus.CANCELLED,
-        part_size=1234,
-    ),
-    models.UploadAttempt(
-        upload_id="testUpload002",
-        file_id="testFile001",
-        status=models.UploadStatus.PENDING,
-        part_size=1234,
-    ),
-)
 
 
 def test_get_health(joint_fixture: JointFixture):  # noqa: F405

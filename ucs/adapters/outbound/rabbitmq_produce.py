@@ -48,7 +48,7 @@ class RabbitMQEventPublisher(IEventPublisher):
     def publish_upload_received(
         self,
         *,
-        file_metadata: models.FileMetadataWithUpload,
+        file_metadata: models.FileMetadata,
     ) -> None:
         """
         Publishes a message to a specified topic

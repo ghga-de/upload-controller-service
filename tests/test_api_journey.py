@@ -24,37 +24,9 @@ from fastapi import status
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
 
+from tests.fixtures.example_data import EXAMPLE_FILES
 from tests.fixtures.joint import *  # noqa: 403
 from tests.fixtures.s3 import upload_part_via_url
-from ucs.domain import models
-
-# Examples:
-# - there are two files
-# - two upload attempts that can be registered to the first file
-
-
-EXAMPLE_FILES = (
-    models.FileMetadata(
-        file_id="testFile001",
-        file_name="Test File 001",
-        md5_checksum="fake-checksum",
-        size=12345678,
-        grouping_label="test",
-        creation_date=datetime.now(),
-        update_date=datetime.now(),
-        format="txt",
-    ),
-    models.FileMetadata(
-        file_id="testFile002",
-        file_name="Test File 002",
-        md5_checksum="fake-checksum",
-        size=12345678,
-        grouping_label="test",
-        creation_date=datetime.now(),
-        update_date=datetime.now(),
-        format="txt",
-    ),
-)
 
 
 def perform_upload(

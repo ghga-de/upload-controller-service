@@ -24,3 +24,4 @@ topic_file_accepted: file_internally_registered
 topic_new_study: new_study_created
 topic_upload_received: file_upload_received
 workers: 1
+

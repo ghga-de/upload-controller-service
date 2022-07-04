@@ -17,6 +17,7 @@
 
 from typing import Any, Optional
 
+import pydantic
 from ghga_service_chassis_lib.postgresql import (
     PostgresqlConfigBase,
     SyncPostgresqlConnector,
@@ -79,14 +80,14 @@ class PsqlDaoBase:
         return orm_file
 
     def _create(
-        self, *, obj: models.BaseModelORM, orm_model: type[DeclarativeMeta]
+        self, *, obj: pydantic.BaseModel, orm_model: type[DeclarativeMeta]
     ) -> None:
         """Register a new file."""
 
         orm_obj = orm_model(**obj.dict())
         self._session.add(orm_obj)
 
-    def _update(self, *, obj: models.BaseModelORM, orm_obj: DeclarativeMeta) -> None:
+    def _update(self, *, obj: pydantic.BaseModel, orm_obj: DeclarativeMeta) -> None:
         """Update an existing file."""
 
         for key, value in obj.dict().items():

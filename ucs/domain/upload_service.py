@@ -145,7 +145,10 @@ class UploadService(IUploadService):
         """
 
         with self._upload_attempt_dao as ua_dao:
-            latest_upload = ua_dao.get_latest_by_file(file_id)
+            try:
+                latest_upload = ua_dao.get_latest_by_file(file_id)
+            except FileMetadataNotFoundError as error:
+                raise FileUnkownError(file_id=file_id) from error
 
         if latest_upload is None:
             raise NoLatestUploadError(file_id=file_id)

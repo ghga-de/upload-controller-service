@@ -44,15 +44,6 @@ class UploadStatus(Enum):
 # fmt: on
 
 
-class BaseModelORM(BaseModel):
-    """Pydantic base model with orm mode enabled."""
-
-    class Config:
-        """Additional pydantic configs."""
-
-        orm_mode = True
-
-
 class UploadAttempt(BaseModel):
     """
     A model containing details on an upload attempt for a specific File.
