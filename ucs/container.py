@@ -80,6 +80,7 @@ class Container(containers.DeclarativeContainer):
         file_metadata_dao=file_metadata_dao,
         upload_attempt_dao=upload_attempt_dao,
         object_storage=object_storage,
+        event_publisher=event_publisher,
     )
 
     # inbound adapters:

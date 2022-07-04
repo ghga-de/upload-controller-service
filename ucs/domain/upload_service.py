@@ -30,6 +30,7 @@ from ucs.domain.interfaces.inbound.upload_service import (
     UploadUnkownError,
 )
 from ucs.domain.interfaces.internal.part_calc import IPartSizeCalculator
+from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
 from ucs.domain.interfaces.outbound.file_dao import (
     FileMetadataNotFoundError,
     IFileMetadataDAO,
@@ -67,6 +68,7 @@ class UploadService(IUploadService):
         file_metadata_dao: IFileMetadataDAO,
         upload_attempt_dao: IUploadAttemptDAO,
         object_storage: IObjectStorage,
+        event_publisher: IEventPublisher,
         # domain internal dependencies are immediately injected:
         part_size_calculator: IPartSizeCalculator = calculate_part_size,
     ):
@@ -76,6 +78,7 @@ class UploadService(IUploadService):
         self._file_metadata_dao = file_metadata_dao
         self._upload_attempt_dao = upload_attempt_dao
         self._object_storage = object_storage
+        self._event_publisher = event_publisher
         self._part_size_calculator = part_size_calculator
 
         # Create inbox bucket if it doesn't exist:
@@ -319,6 +322,11 @@ class UploadService(IUploadService):
                 update={"status": models.UploadStatus.UPLOADED}
             )
             ua_dao.update(updated_upload)
+
+        # publish an event, informing other services that a new upload was received:
+        with self._file_metadata_dao as fm_dao:
+            file = fm_dao.get(upload.file_id)
+        self._event_publisher.publish_upload_received(file_metadata=file)
 
     def cancel(self, *, upload_id: str) -> None:
         """

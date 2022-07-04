@@ -18,6 +18,7 @@
 from datetime import datetime
 
 import pytest
+from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
 from tests.fixtures.config import DEFAULT_CONFIG
@@ -64,6 +65,12 @@ def test_happy(joint_fixture: JointFixture):  # noqa: F405
     # populate database with file metadata:
     joint_fixture.psql.populate_file_metadata([EXAMPLE_FILE])
 
+    # initialize a subscriber that will consume downstream events:
+    downstream_subscriber = joint_fixture.amqp.get_test_subscriber(
+        topic_name=joint_fixture.config.topic_upload_received,
+        message_schema=schemas.SCHEMAS["file_upload_received"],
+    )
+
     # construct service:
     upload_service = joint_fixture.container.upload_service()
 
@@ -88,6 +95,10 @@ def test_happy(joint_fixture: JointFixture):  # noqa: F405
     # check status again
     upload_post_complete = upload_service.get_details(upload_id=upload_id)
     assert upload_post_complete.status == models.UploadStatus.UPLOADED
+
+    # receive the event that a new file was uploaded:
+    downstream_message = downstream_subscriber.subscribe(timeout_after=2)
+    assert downstream_message["file_id"] == EXAMPLE_FILE.file_id
 
 
 def test_cancel(joint_fixture: JointFixture):  # noqa: F405

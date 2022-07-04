@@ -121,6 +121,20 @@ def perform_upload(
 def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
+    # initialize upstream event publisher and downstream event subscriber:
+    study_publisher = joint_fixture.amqp.get_test_publisher(
+        topic_name=joint_fixture.config.topic_new_study,
+        message_schema=schemas.SCHEMAS["new_study_created"],
+    )
+    acceptance_publisher = joint_fixture.amqp.get_test_publisher(
+        topic_name=joint_fixture.config.topic_file_accepted,
+        message_schema=schemas.SCHEMAS["file_internally_registered"],
+    )
+    downstream_subscriber = joint_fixture.amqp.get_test_subscriber(
+        topic_name=joint_fixture.config.topic_upload_received,
+        message_schema=schemas.SCHEMAS["file_upload_received"],
+    )
+
     # publish an event to register new files:
     study_id = EXAMPLE_FILES[0].grouping_label
     associated_files = [
@@ -140,10 +154,6 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         "associated_files": associated_files,
         "timestamp": datetime.now().isoformat(),
     }
-    study_publisher = joint_fixture.amqp.get_test_publisher(
-        topic_name=joint_fixture.config.topic_new_study,
-        message_schema=schemas.SCHEMAS["new_study_created"],
-    )
     study_publisher.publish(new_study_event)
 
     # use the event subscriber to receive and process the event:
@@ -169,6 +179,10 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         # perform another upload and confirm it:
         perform_upload(joint_fixture, file_id=file.file_id, final_status="uploaded")
 
+        # receive the event that a new file was uploaded:
+        downstream_message = downstream_subscriber.subscribe(timeout_after=2)
+        assert downstream_message["file_id"] == file.file_id
+
         # publish an event to mark the file as accepted:
         file_accepted_event = {
             "file_id": file.file_id,
@@ -180,10 +194,6 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
             "grouping_label": study_id,
             "timestamp": datetime.now().isoformat(),
         }
-        acceptance_publisher = joint_fixture.amqp.get_test_publisher(
-            topic_name=joint_fixture.config.topic_file_accepted,
-            message_schema=schemas.SCHEMAS["file_internally_registered"],
-        )
         acceptance_publisher.publish(file_accepted_event)
 
         # receive the acceptance event:

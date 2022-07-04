@@ -47,6 +47,7 @@ class RabbitMQEventPublisher(IEventPublisher):
 
     def publish_upload_received(
         self,
+        *,
         file_metadata: models.FileMetadataWithUpload,
     ) -> None:
         """
