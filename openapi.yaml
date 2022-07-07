@@ -69,15 +69,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - existingActiveUpload
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpExistingActiveUploadErrorData:
@@ -104,15 +104,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - fileNotRegistered
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpFileNotFoundErrorData:
@@ -136,15 +136,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - fileNotRegistered
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpFileNotFoundUploadErrorData:
@@ -168,15 +168,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - noFileAccess
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpNoFileAccessErrorData:
@@ -200,15 +200,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - noSuchUpload
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpUploadNotFoundErrorData:
@@ -232,15 +232,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - uploadNotPending
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpUploadNotPendingErrorData:
@@ -267,15 +267,15 @@ components:
             of the exception.
           title: Description
           type: string
-        exceptionId:
+        exception_id:
           enum:
           - uploadStatusChange
-          title: Exceptionid
+          title: Exception Id
           type: string
       required:
       - data
       - description
-      - exceptionId
+      - exception_id
       title: HttpUploadStatusChangeErrorData
       type: object
     HttpUploadStatusChangeErrorData:

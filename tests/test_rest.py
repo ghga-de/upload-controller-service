@@ -41,7 +41,7 @@ def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa: F405
     response = joint_fixture.rest_client.get(f"/files/{file_id}")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["exceptionId"] == "fileNotRegistered"
+    assert response.json()["exception_id"] == "fileNotRegistered"
 
 
 def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
@@ -51,7 +51,7 @@ def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
     response = joint_fixture.rest_client.post("/uploads", json={"file_id": file_id})
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["exceptionId"] == "fileNotRegistered"
+    assert response.json()["exception_id"] == "fileNotRegistered"
 
 
 @pytest.mark.parametrize(
@@ -83,7 +83,7 @@ def test_create_upload_other_active(
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_body = response.json()
-    assert response_body["exceptionId"] == "existingActiveUpload"
+    assert response_body["exception_id"] == "existingActiveUpload"
     assert response_body["data"]["active_upload"] == json.loads(existing_upload.json())
 
 
@@ -94,7 +94,7 @@ def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
     response = joint_fixture.rest_client.get(f"/uploads/{upload_id}")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["exceptionId"] == "noSuchUpload"
+    assert response.json()["exception_id"] == "noSuchUpload"
 
 
 def test_update_upload_status_not_found(joint_fixture: JointFixture):  # noqa: F405
@@ -107,7 +107,7 @@ def test_update_upload_status_not_found(joint_fixture: JointFixture):  # noqa: F
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["exceptionId"] == "noSuchUpload"
+    assert response.json()["exception_id"] == "noSuchUpload"
 
 
 @pytest.mark.parametrize(
@@ -160,7 +160,7 @@ def test_update_upload_status_non_pending(
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_body = response.json()
-        assert response_body["exceptionId"] == "uploadNotPending"
+        assert response_body["exception_id"] == "uploadNotPending"
         assert response_body["data"]["current_upload_status"] == old_status.value
 
 
@@ -174,4 +174,4 @@ def test_create_presigned_url_not_found(joint_fixture: JointFixture):  # noqa: F
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["exceptionId"] == "noSuchUpload"
+    assert response.json()["exception_id"] == "noSuchUpload"

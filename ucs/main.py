@@ -17,7 +17,6 @@
 
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app
-from httpyexpect.server.handlers.fastapi_ import configure_exception_handler
 
 from ucs.adapters.inbound.fastapi_.routes import router
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
@@ -44,7 +43,6 @@ def get_rest_api(*, config: Config) -> FastAPI:
     api = FastAPI()
     api.include_router(router)
     configure_app(api, config=config)
-    configure_exception_handler(api)
 
     return api
 
