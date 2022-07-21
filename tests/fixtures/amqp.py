@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""General testing utilities"""
+"""Pub sub fixtures"""
 
-from pathlib import Path
+from ghga_service_chassis_lib.pubsub_testing import AmqpFixture  # noqa: F401 - shortcut
+from ghga_service_chassis_lib.pubsub_testing import amqp_fixture_factory
 
-BASE_DIR = Path(__file__).parent.resolve()
+from tests.fixtures.config import DEFAULT_CONFIG
+
+amqp_fixture = amqp_fixture_factory(service_name=DEFAULT_CONFIG.service_name)

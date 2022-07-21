@@ -234,11 +234,11 @@
       ],
       "type": "string"
     },
-    "topic_file_registered": {
-      "title": "Topic File Registered",
+    "topic_file_accepted": {
+      "title": "Topic File Accepted",
       "default": "file_internally_registered",
       "env_names": [
-        "ucs_topic_file_registered"
+        "ucs_topic_file_accepted"
       ],
       "type": "string"
     },

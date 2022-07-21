@@ -28,7 +28,7 @@ class Topics(str, Enum):
     """Supported topics"""
 
     NEW_STUDY = "new_study"
-    FILE_REGISTERED = "file_registered"
+    FILE_ACCEPTED = "file_accepted"
 
 
 config = Config()
@@ -53,4 +53,4 @@ def consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
     if topic == topic.NEW_STUDY:
         event_consumer.subscribe_new_study(run_forever=run_forever)
     else:
-        event_consumer.subscribe_file_registered(run_forever=run_forever)
+        raise NotImplementedError()

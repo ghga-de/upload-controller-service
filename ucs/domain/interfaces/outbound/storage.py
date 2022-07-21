@@ -17,6 +17,9 @@
 
 # pylint: disable=unused-import
 from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
+    MultiPartUploadAbortError,
+    MultiPartUploadConfirmError,
+    MultiPartUploadNotFoundError,
     ObjectAlreadyExistsError,
     ObjectIdValidationError,
     ObjectNotFoundError,

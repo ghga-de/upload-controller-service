@@ -47,20 +47,21 @@ class RabbitMQEventPublisher(IEventPublisher):
 
     def publish_upload_received(
         self,
-        file_info: models.FileInfoExternal,
+        *,
+        file_metadata: models.FileMetadata,
     ) -> None:
         """
         Publishes a message to a specified topic
         """
 
         message = {
-            "file_id": file_info.file_id,
-            "grouping_label": file_info.grouping_label,
-            "md5_checksum": file_info.md5_checksum,
-            "format": file_info.format,
-            "creation_date": file_info.creation_date.isoformat(),
-            "update_date": file_info.update_date.isoformat(),
-            "size": file_info.size,
+            "file_id": file_metadata.file_id,
+            "grouping_label": file_metadata.grouping_label,
+            "md5_checksum": file_metadata.md5_checksum,
+            "format": file_metadata.format,
+            "creation_date": file_metadata.creation_date.isoformat(),
+            "update_date": file_metadata.update_date.isoformat(),
+            "size": file_metadata.size,
         }
 
         # create a topic object:

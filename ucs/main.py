@@ -38,7 +38,7 @@ def get_rest_api(*, config: Config) -> FastAPI:
     """Creates a FastAPI app."""
 
     container = setup_container(config=config)
-    container.wire(modules=["ucs.adapters.inbound.fastapi_"])
+    container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
 
     api = FastAPI()
     api.include_router(router)
