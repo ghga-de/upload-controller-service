@@ -21,7 +21,7 @@ WORKDIR /service
 # install dependencies
 RUN apt update
 RUN apt install libpq-dev python-dev gcc -y
-
+RUN apt install libgnutls30
 RUN pip install .
 
 # create new user and execute as that user
