@@ -14,8 +14,6 @@
 .github/workflows/dev_cd.yaml
 .github/workflows/unit_and_int_tests.yaml
 
-db_migration
-
 docs/README.md
 
 example_data
@@ -31,3 +29,4 @@ README.md
 setup.py
 
 .static_files
+.mandatory_files
