@@ -2,10 +2,8 @@
 components:
   schemas:
     FileMetadataWithUpload:
-      description: 'A model containing basic metadata on a file plus information on
-        the current
-
-        upload.'
+      description: A model containing basic file metadata and information on the current
+        upload.
       properties:
         creation_date:
           format: date-time
