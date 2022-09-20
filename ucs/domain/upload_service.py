@@ -91,7 +91,7 @@ class UploadService(IUploadService):
     ) -> models.UploadAttempt:
         """Makes sure that the upload with the given ID exists and that its current
         status matches the specified status. If that is the case, the upload is return. Otherwise
-        an UploadStatusMissmatchError is raise."""
+        an UploadStatusMissmatchError is raised."""
 
         upload = self.get_details(upload_id=upload_id)
 
@@ -176,9 +176,9 @@ class UploadService(IUploadService):
                 )
                 raise StorageAndDatabaseOutOfSyncError(
                     problem=(
-                        f"Trying clear the upload with ID {latest_upload.upload_id} (final status:"
-                        + f" {final_status}), however, the corresponding file with id"
-                        + f" {file_id} could not be found in the database."
+                        f"Trying to clear the upload with ID {latest_upload.upload_id}"
+                        + f" (final status: {final_status}), however, the corresponding"
+                        + f" file with id {file_id} could not be found in the database."
                     )
                 ) from error
 

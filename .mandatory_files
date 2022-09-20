@@ -29,3 +29,5 @@ config_schema.json
 example_config.yaml
 README.md
 setup.py
+
+.static_files

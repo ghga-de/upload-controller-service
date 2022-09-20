@@ -56,7 +56,7 @@ class UploadStatusMissmatchError(RuntimeError):
 
 
 class ExistingActiveUploadError(RuntimeError):
-    """Thrown when trying to create a new upload while there is another upload active."""
+    """Thrown when trying to create a new upload while another upload is already active."""
 
     def __init__(self, *, active_upload: models.UploadAttempt):
         self.active_upload = active_upload
@@ -78,7 +78,7 @@ class UploadCompletionError(RuntimeError):
         self.upload_id = upload_id
         message = (
             f"The confirmation of the upload attempt with ID {upload_id} failed."
-            + " The upload attempt was aborted and cannot be resumed. The reason was:"
+            + " The upload attempt was aborted and cannot be resumed. The reason was: "
             + reason
         )
         super().__init__(message)
@@ -90,7 +90,7 @@ class UploadCancelError(RuntimeError):
     def __init__(self, *, upload_id: str):
         self.upload_id = upload_id
         self.possible_reason = (
-            "An ongoing part upload might be a reason. Please complete all part upload"
+            "An ongoing part upload might be a reason. Please complete all part uploads"
             + " and try to cancel again."
         )
         message = (

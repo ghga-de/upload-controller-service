@@ -67,7 +67,7 @@ class UploadAttempt(BaseModel):
 
 class FileMetadata(BaseModel):
     """
-    A model containing basic metadata on a file.
+    A model containing basic file metadata.
     """
 
     file_id: str
@@ -88,8 +88,7 @@ class FileMetadata(BaseModel):
 
 class FileMetadataWithUpload(FileMetadata):
     """
-    A model containing basic metadata on a file plus information on the current
-    upload.
+    A model containing basic file metadata and information on the current upload.
     """
 
     latest_upload_id: Optional[str] = Field(

@@ -42,7 +42,7 @@ def _part_size_options() -> Generator[int, None, None]:
 
 # pylint: disable=inconsistent-return-statements
 def calculate_part_size(file_size: int) -> int:  # type: ignore
-    # MyPy and pyling complains that the function does not return, however, they do not
+    # MyPy and pyling complain that the function does not return, however, they do not
     # recognize that the `_part_size_options` generator will never exhaust.
     """Calculates the recommended part size for up-/downloading a given file.
 
