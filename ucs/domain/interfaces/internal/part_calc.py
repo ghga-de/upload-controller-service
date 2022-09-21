@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""General testing utilities"""
+"""Interface of a part size calculator."""
 
-from pathlib import Path
+from typing import Callable
 
-BASE_DIR = Path(__file__).parent.resolve()
+IPartSizeCalculator = Callable[[int], int]

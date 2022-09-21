@@ -15,32 +15,20 @@
 
 """REST API-specific data models (not used by core package)"""
 
-from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
-class FileMetadata(BaseModel):
-    """
-    A model containing all the metadata needed to pass it on to other microservices
-    """
-
-    file_id: str
-    file_name: str
-    md5_checksum: str
-    size: int
-    grouping_label: str
-    creation_date: datetime
-    update_date: datetime
-    format: str
-    current_upload_id: Optional[str] = Field(
-        None,
-        description="ID of the current upload. `Null` if no update has been initiated, yet.",
-    )
+# shortcuts:
+# pylint: disable=unused-import
+from ucs.domain.models import (  # noqa: F401
+    FileMetadataWithUpload,
+    UploadAttempt,
+    UploadStatus,
+)
 
 
-class UploadCreation(BaseModel):
+class UploadAttemptCreation(BaseModel):
     """Properties required to create a new upload."""
 
     file_id: str = Field(
@@ -53,21 +41,7 @@ class UploadCreation(BaseModel):
         title = "Properties required to create a new upload"
 
 
-class UploadDetails(UploadCreation):
-    """Details returned upon creation of a new multipart upload."""
-
-    upload_id: str
-    part_size: int = Field(
-        ..., description="Part size to be used for upload. Specified in bytes."
-    )
-
-    class Config:
-        """Additional Model Config."""
-
-        title = "Multi-Part Upload Details"
-
-
-class UploadUpdate(BaseModel):
+class UploadAttemptUpdate(BaseModel):
     """Request body to update an existing mutli-part upload."""
 
     status: Literal["uploaded", "cancelled"]
@@ -78,8 +52,8 @@ class UploadUpdate(BaseModel):
         title = "Multi-Part Upload Update"
 
 
-class AccessURL(BaseModel):
-    """Contains a pre-signed for uploading the bytes of one file part."""
+class PartUploadDetails(BaseModel):
+    """Contains details for uploading the bytes of one file part."""
 
     url: str = Field(
         ...,

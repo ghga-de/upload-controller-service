@@ -15,28 +15,55 @@
 
 """Fixtures for testing the storage DAO"""
 
-from typing import List
+from typing import Generator
 
-from ghga_service_chassis_lib.object_storage_dao_testing import ObjectFixture
-from ghga_service_chassis_lib.s3_testing import s3_fixture_factory
-
-from . import state
-from .config import DEFAULT_CONFIG
-
-existing_buckets: List[str] = [
-    DEFAULT_CONFIG.s3_inbox_bucket_id,
-]
-existing_objects: List[ObjectFixture] = []
-
-for file in state.FILES.values():
-    if file.in_inbox:
-        for storage_object in file.storage_objects:
-            if storage_object.bucket_id not in existing_buckets:
-                existing_buckets.append(storage_object.bucket_id)
-            existing_objects.append(storage_object)
-
-
-s3_fixture = s3_fixture_factory(
-    existing_buckets=existing_buckets,
-    existing_objects=existing_objects,
+import pytest
+import requests
+from ghga_service_chassis_lib.object_storage_dao import ObjectStorageDao
+from ghga_service_chassis_lib.object_storage_dao_testing import (
+    ObjectFixture as FileObject,
 )
+from ghga_service_chassis_lib.object_storage_dao_testing import populate_storage
+from ghga_service_chassis_lib.s3 import ObjectStorageS3, S3ConfigBase
+from ghga_service_chassis_lib.s3_testing import config_from_localstack_container
+from testcontainers.localstack import LocalStackContainer
+
+
+class S3Fixture:
+    """Yielded by the `s3_fixture` function"""
+
+    def __init__(self, config: S3ConfigBase, storage: ObjectStorageDao):
+        """Initialize with config."""
+        self.config = config
+        self.storage = storage
+
+    def populate_buckets(self, buckets: list[str]):
+        """Populate the storage with buckets."""
+
+        populate_storage(self.storage, bucket_fixtures=buckets, object_fixtures=[])
+
+    def populate_file_objects(self, file_objects: list[FileObject]):
+        """Populate the storage with file objects."""
+
+        populate_storage(self.storage, bucket_fixtures=[], object_fixtures=file_objects)
+
+
+@pytest.fixture
+def s3_fixture() -> Generator[S3Fixture, None, None]:
+    """Pytest fixture for tests depending on the ObjectStorageS3 DAO."""
+
+    with LocalStackContainer(image="localstack/localstack:0.14.2").with_services(
+        "s3"
+    ) as localstack:
+        config = config_from_localstack_container(localstack)
+
+        with ObjectStorageS3(config=config) as storage:
+            yield S3Fixture(config=config, storage=storage)
+
+
+def upload_part_via_url(*, url: str, size: int):
+    """Upload a file part of given size using the given URL."""
+
+    content = b"\0" * size
+    response = requests.put(url, data=content)
+    response.raise_for_status()

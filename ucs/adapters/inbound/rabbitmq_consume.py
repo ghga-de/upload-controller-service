@@ -22,8 +22,9 @@ from pathlib import Path
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ucs.domain.interfaces.inbound.upload import IUploadService
-from ucs.domain.models import FileInfoInternal
+from ucs.domain import models
+from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
+from ucs.domain.interfaces.inbound.upload_service import IUploadService
 
 HERE = Path(__file__).parent.resolve()
 
@@ -39,28 +40,21 @@ class RabbitMQEventConsumer:
         rabbitmq_host: str,
         rabbitmq_port: str,
         topic_new_study: str,
-        topic_file_registered: str,
-        upload_service: IUploadService,
+        topic_file_accepted: str,
+        file_metadata_service: IFileMetadataService,
+        upload_service: IUploadService
     ):
         """Ininitalize class instance with config and inbound adapter objects."""
-        self._upload_service = upload_service
+
         self._config = PubSubConfigBase(
             service_name=service_name,
             rabbitmq_host=rabbitmq_host,
             rabbitmq_port=rabbitmq_port,
         )
         self._topic_new_study = topic_new_study
-        self._topic_file_registered = topic_file_registered
-
-    def _process_file_registered_message(self, message: dict):
-        """
-        Processes the message by checking if the file really is in the outbox,
-        otherwise throwing an error
-        """
-
-        file_id = message["file_id"]
-
-        self._upload_service.handle_file_registered(file_id)
+        self._topic_file_accepted = topic_file_accepted
+        self._file_metadata_service = file_metadata_service
+        self._upload_service = upload_service
 
     def _process_new_study_message(self, message: dict):
         """
@@ -68,11 +62,11 @@ class RabbitMQEventConsumer:
         otherwise throwing an error
         """
 
-        files = message["associated_files"]
+        study_files = message["associated_files"]
         grouping_label = message["study"]["id"]
 
-        study_files = [
-            FileInfoInternal(
+        files = [
+            models.FileMetadata(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
                 md5_checksum=file["md5_checksum"],
@@ -82,14 +76,23 @@ class RabbitMQEventConsumer:
                 update_date=file["update_date"],
                 format=file["format"],
             )
-            for file in files
+            for file in study_files
         ]
 
-        self._upload_service.handle_new_study(study_files)
+        self._file_metadata_service.upsert_multiple(files)
+
+    def _process_file_accepted_message(self, message: dict):
+        """
+        Processes the message to accept an upload.
+        """
+
+        file_id = message["file_id"]
+
+        self._upload_service.accept_latest(file_id=file_id)
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """
-        Runs a subscribing process for the "new_study_created" topic
+        Subscribes to the "new_study_created" topic
         """
 
         # create a topic object:
@@ -105,20 +108,20 @@ class RabbitMQEventConsumer:
             run_forever=run_forever,
         )
 
-    def subscribe_file_registered(self, run_forever: bool = True) -> None:
+    def subscribe_file_accepted(self, run_forever: bool = True) -> None:
         """
-        Runs a subscribing process for the "new_study_created" topic
+        Runs a subscribing process for the "file_internally_registered" topic
         """
 
         # create a topic object:
         topic = AmqpTopic(
             config=self._config,
-            topic_name=self._topic_file_registered,
+            topic_name=self._topic_file_accepted,
             json_schema=schemas.SCHEMAS["file_internally_registered"],
         )
 
         # subscribe:
         topic.subscribe(
-            exec_on_message=self._process_file_registered_message,
+            exec_on_message=self._process_file_accepted_message,
             run_forever=run_forever,
         )

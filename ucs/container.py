@@ -18,14 +18,20 @@
 from dependency_injector import containers, providers
 
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.psql import PsqlFileInfoDAO
+from ucs.adapters.outbound.psql.adapters import (
+    PsqlFileMetadataDAO,
+    PsqlUploadAttemptDAO,
+)
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
-from ucs.domain.interfaces.inbound.upload import IUploadService
+from ucs.domain.file_service import FileMetadataServive
+from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
+from ucs.domain.interfaces.inbound.upload_service import IUploadService
 from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_info import IFileInfoDAO
+from ucs.domain.interfaces.outbound.file_dao import IFileMetadataDAO
 from ucs.domain.interfaces.outbound.storage import IObjectStorage
-from ucs.domain.upload import UploadService
+from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
+from ucs.domain.upload_service import UploadService
 
 
 class Container(containers.DeclarativeContainer):
@@ -35,11 +41,15 @@ class Container(containers.DeclarativeContainer):
 
     # outbound adapters:
 
-    file_info_dao = providers.Factory[IFileInfoDAO](
-        PsqlFileInfoDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
+    file_metadata_dao = providers.Factory[IFileMetadataDAO](
+        PsqlFileMetadataDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
     )
 
-    object_storage_dao = providers.Factory[IObjectStorage](
+    upload_attempt_dao = providers.Factory[IUploadAttemptDAO](
+        PsqlUploadAttemptDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
+    )
+
+    object_storage = providers.Factory[IObjectStorage](
         S3ObjectStorage,
         s3_endpoint_url=config.s3_endpoint_url,
         s3_access_key_id=config.s3_access_key_id,
@@ -58,11 +68,18 @@ class Container(containers.DeclarativeContainer):
 
     # domain:
 
+    file_metadata_service = providers.Factory[IFileMetadataService](
+        FileMetadataServive,
+        file_metadata_dao=file_metadata_dao,
+        upload_attempt_dao=upload_attempt_dao,
+    )
+
     upload_service = providers.Factory[IUploadService](
         UploadService,
         s3_inbox_bucket_id=config.s3_inbox_bucket_id,
-        file_info_dao=file_info_dao,
-        object_storage_dao=object_storage_dao,
+        file_metadata_dao=file_metadata_dao,
+        upload_attempt_dao=upload_attempt_dao,
+        object_storage=object_storage,
         event_publisher=event_publisher,
     )
 
@@ -74,6 +91,7 @@ class Container(containers.DeclarativeContainer):
         rabbitmq_host=config.rabbitmq_host,
         rabbitmq_port=config.rabbitmq_port,
         topic_new_study=config.topic_new_study,
-        topic_file_registered=config.topic_file_registered,
+        topic_file_accepted=config.topic_file_accepted,
+        file_metadata_service=file_metadata_service,
         upload_service=upload_service,
     )

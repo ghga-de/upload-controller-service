@@ -17,58 +17,86 @@
 
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # fmt: off
-class UploadState(Enum):
+class UploadStatus(Enum):
 
     """
-    The current upload state. Can be registered (no information),
-    pending (the user has requested an upload url),
-    uploaded (the user has confirmed the upload),
-    or registered (the file has been registered with the internal-file-registry).
+    The current upload state. Can be one of:
+        - PENDING (the user has requested an upload url)
+        - CANCELLED (the user has canceled the upload)
+        - UPLOADED (the user has confirmed the upload)
+        - FAILED (the upload has failed for a technical reason)
+        - ACCEPTED (the upload was accepted by a downstream service)
+        - REJECTED (the upload was rejected by a downstream service)
     """
 
-    REGISTERED = "registered"
     PENDING = "pending"
+    CANCELLED = "cancelled"
     UPLOADED = "uploaded"
-    COMPLETED = "completed"
+    FAILED = "failed"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 # fmt: on
 
 
-class FileInfoPatchState(BaseModel):
+class UploadAttempt(BaseModel):
     """
-    A model containing all the metadata needed to perform a patch on an orm field
-    """
-
-    state: UploadState = UploadState.REGISTERED
-
-
-class FileInfoExternal(FileInfoPatchState):
-    """
-    A model containing all the metadata needed to pass it on to other microservices
+    A model containing details on an upload attempt for a specific File.
     """
 
-    grouping_label: str
+    upload_id: str
+    file_id: str = Field(
+        ..., description="The ID of the file corresponding to this upload."
+    )
+    status: UploadStatus
+    part_size: int = Field(
+        ..., description="Part size to be used for upload. Specified in bytes."
+    )
+
+    class Config:
+        """Additional Model Config."""
+
+        orm_mode = True
+        title = "Multi-Part Upload Details"
+
+
+class FileMetadata(BaseModel):
+    """
+    A model containing basic file metadata.
+    """
+
     file_id: str
+    file_name: str
     md5_checksum: str
     size: int
+    grouping_label: str
     creation_date: datetime
     update_date: datetime
     format: str
 
     class Config:
-        """Additional pydantic configs."""
+        """Additional Model Config."""
 
         orm_mode = True
+        title = "Basic File Metadata"
 
 
-class FileInfoInternal(FileInfoExternal):
+class FileMetadataWithUpload(FileMetadata):
     """
-    A model containing all the metadata submitted for one file from the metadata service
-    with the new_study_created topic.
+    A model containing basic file metadata and information on the current upload.
     """
 
-    file_name: str
+    latest_upload_id: Optional[str] = Field(
+        None,
+        description="ID of the current upload. `Null` if no update has been initiated, yet.",
+    )
+
+    class Config:
+        """Additional Model Config."""
+
+        title = "File Metadata"

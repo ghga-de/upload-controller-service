@@ -15,75 +15,67 @@
 
 """Fixtures for testing the PostgreSQL functionalities"""
 
-from dataclasses import dataclass
-from typing import Generator, List
+from typing import Any, Generator, Sequence
 
 import pytest
 from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
 from ghga_service_chassis_lib.postgresql_testing import config_from_psql_container
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from testcontainers.postgres import PostgresContainer
 
-from ucs.adapters.outbound.psql import Base, FileInfo, PsqlFileInfoDAO
+from ucs.adapters.outbound.psql import orm_models
 from ucs.domain import models
 
-from . import get_cont_and_conf, state
 
-existing_file_infos: List[models.FileInfoInternal] = []
-non_existing_file_infos: List[models.FileInfoInternal] = []
+class PsqlFixture:
+    """Yielded by the psql fixture."""
 
-for file in state.FILES.values():
-    if file.in_db:
-        existing_file_infos.append(file.file_info)
-    else:
-        non_existing_file_infos.append(file.file_info)
+    def __init__(
+        self,
+        *,
+        config: PostgresqlConfigBase,
+        session_factory: sessionmaker,
+    ):
+        """Initialize with config."""
 
+        self.session_factory = session_factory
+        self.config = config
 
-def populate_db(db_url: str, file_infos: List[models.FileInfoInternal]):
-    """Create and populates the DB"""
+    def populate(self, orm_objects: Sequence[Any]):
+        """Add a file entry to the database."""
 
-    # setup database and tables:
-    engine = create_engine(db_url)
-    Base.metadata.create_all(engine)
+        with self.session_factory() as session:
+            for orm_object in orm_objects:
+                session.add(orm_object)
+            session.commit()
 
-    # populate with test data:
-    session_factor = sessionmaker(engine)
-    with session_factor() as session:
-        for existing_file_info in file_infos:
-            param_dict = {
-                **existing_file_info.dict(),
-            }
-            orm_entry = FileInfo(**param_dict)
-            session.add(orm_entry)
-        session.commit()
+    def populate_file_metadata(self, files: list[models.FileMetadata]):
+        """Add a file entry to the database."""
 
+        orm_files = [orm_models.FileMetadata(**file.dict()) for file in files]
+        self.populate(orm_files)
 
-@dataclass
-class PsqlState:
-    """Info yielded by the `psql_fixture` function"""
+    def populate_upload_attempts(self, uploads: Sequence[models.UploadAttempt]):
+        """Add a file entry to the database."""
 
-    config: PostgresqlConfigBase
-    file_info_dao: PsqlFileInfoDAO
-    existing_file_infos: List[models.FileInfoInternal]
-    non_existing_file_infos: List[models.FileInfoInternal]
+        orm_uploads = [orm_models.UploadAttempt(**upload.dict()) for upload in uploads]
+        self.populate(orm_uploads)
 
 
 @pytest.fixture
-def psql_fixture() -> Generator[PsqlState, None, None]:
+def psql_fixture(
+    base: DeclarativeMeta = orm_models.Base,
+) -> Generator[PsqlFixture, None, None]:
     """Pytest fixture for tests of the Prostgres DAO implementation."""
 
     with PostgresContainer() as postgres:
-        psq_config = config_from_psql_container(postgres)
-        container, config = get_cont_and_conf(sources=[psq_config])
-        file_info_dao = container.file_info_dao()
+        config = config_from_psql_container(postgres)
 
-        populate_db(config.db_url, file_infos=existing_file_infos)
+        # setup database and tables:
+        engine = create_engine(config.db_url)
+        base.metadata.create_all(engine)
+        session_factory = sessionmaker(engine)
 
-        with file_info_dao as fi_dao:
-            yield PsqlState(
-                config=config,
-                file_info_dao=fi_dao,  # type: ignore
-                existing_file_infos=existing_file_infos,
-                non_existing_file_infos=non_existing_file_infos,
-            )
+        yield PsqlFixture(config=config, session_factory=session_factory)
