@@ -20,7 +20,6 @@ example_data
 
 
 tests/fixtures/__init__.py
-tests/__init__.py
 
 Dockerfile
 config_schema.json
@@ -28,5 +27,4 @@ example_config.yaml
 README.md
 setup.py
 
-.static_files
 .mandatory_files
