@@ -22,13 +22,9 @@ from typing import Union
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Path, status
 
-from ucs.adapters.inbound.fastapi_ import http_exceptions, rest_models
 from ucs.container import Container
-from ucs.domain.interfaces.inbound.file_service import (
-    FileUnkownError,
-    IFileMetadataService,
-)
-from ucs.domain.interfaces.inbound.upload_service import (
+from ucs.ports.inbound.file_service import FileUnkownError, IFileMetadataService
+from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     IUploadService,
     UploadCancelError,
@@ -36,6 +32,7 @@ from ucs.domain.interfaces.inbound.upload_service import (
     UploadStatusMissmatchError,
     UploadUnkownError,
 )
+from ucs.translators.inbound.fastapi_ import http_exceptions, rest_models
 
 router = APIRouter()
 

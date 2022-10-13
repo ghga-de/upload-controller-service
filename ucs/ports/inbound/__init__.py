@@ -13,20 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Interfaces for event publishing adapters and the exception they may throw."""
-
-from typing import Protocol
-
-from ucs.domain import models
-
-
-class IEventPublisher(Protocol):
-    """An interface for an adapter that publishes events happening to this service."""
-
-    def publish_upload_received(
-        self,
-        *,
-        file_metadata: models.FileMetadata,
-    ) -> None:
-        """Publish event informing that a new upload was received."""
-        ...
+"""Inbound hexagonal port definitions."""

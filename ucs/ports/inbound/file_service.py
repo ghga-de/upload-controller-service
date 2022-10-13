@@ -18,7 +18,7 @@
 
 from typing import Protocol, Sequence
 
-from ucs.domain import models
+from ucs.core import models
 
 
 class FileUnkownError(RuntimeError):

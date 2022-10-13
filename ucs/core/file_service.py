@@ -18,16 +18,10 @@
 
 from typing import Sequence
 
-from ucs.domain import models
-from ucs.domain.interfaces.inbound.file_service import (
-    FileUnkownError,
-    IFileMetadataService,
-)
-from ucs.domain.interfaces.outbound.file_dao import (
-    FileMetadataNotFoundError,
-    IFileMetadataDAO,
-)
-from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
+from ucs.core import models
+from ucs.ports.inbound.file_service import FileUnkownError, IFileMetadataService
+from ucs.ports.outbound.file_dao import FileMetadataNotFoundError, IFileMetadataDAO
+from ucs.ports.outbound.upload_dao import IUploadAttemptDAO
 
 
 class FileMetadataServive(IFileMetadataService):

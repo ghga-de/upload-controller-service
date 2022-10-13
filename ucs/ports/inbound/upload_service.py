@@ -17,11 +17,11 @@
 
 from typing import Protocol
 
-from ucs.domain import models
+from ucs.core import models
 
 # shortcuts:
 # pylint: disable=unused-import
-from ucs.domain.interfaces.inbound.file_service import FileUnkownError  # noqa: F401
+from ucs.ports.inbound.file_service import FileUnkownError  # noqa: F401
 
 
 class UploadUnkownError(RuntimeError):

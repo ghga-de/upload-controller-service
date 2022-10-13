@@ -19,13 +19,13 @@ import pytest
 
 from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOAD
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
-from ucs.adapters.outbound.psql.adapters import PsqlUploadAttemptDAO
-from ucs.domain import models
-from ucs.domain.interfaces.outbound.upload_dao import (
+from ucs.core import models
+from ucs.ports.outbound.upload_dao import (
     FileMetadataNotFoundError,
     UploadAttemptAlreadExistsError,
     UploadAttemptNotFoundError,
 )
+from ucs.translators.outbound.psql.adapters import PsqlUploadAttemptDAO
 
 
 def test_get_existing(psql_fixture: PsqlFixture):  # noqa: F811

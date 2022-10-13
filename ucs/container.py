@@ -17,21 +17,21 @@
 
 from dependency_injector import containers, providers
 
-from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.psql.adapters import (
+from ucs.core.file_service import FileMetadataServive
+from ucs.core.upload_service import UploadService
+from ucs.ports.inbound.file_service import IFileMetadataService
+from ucs.ports.inbound.upload_service import IUploadService
+from ucs.ports.outbound.event_pub import IEventPublisher
+from ucs.ports.outbound.file_dao import IFileMetadataDAO
+from ucs.ports.outbound.storage import IObjectStorage
+from ucs.ports.outbound.upload_dao import IUploadAttemptDAO
+from ucs.translators.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.translators.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
     PsqlUploadAttemptDAO,
 )
-from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
-from ucs.adapters.outbound.s3 import S3ObjectStorage
-from ucs.domain.file_service import FileMetadataServive
-from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
-from ucs.domain.interfaces.inbound.upload_service import IUploadService
-from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_dao import IFileMetadataDAO
-from ucs.domain.interfaces.outbound.storage import IObjectStorage
-from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
-from ucs.domain.upload_service import UploadService
+from ucs.translators.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ucs.translators.outbound.s3 import S3ObjectStorage
 
 
 class Container(containers.DeclarativeContainer):

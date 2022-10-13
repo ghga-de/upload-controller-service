@@ -17,12 +17,10 @@
 
 from typing import Optional, Protocol
 
-from ucs.domain import models
+from ucs.core import models
 
 # pylint: disable=unused-import
-from ucs.domain.interfaces.outbound.file_dao import (  # noqa: F401
-    FileMetadataNotFoundError,
-)
+from ucs.ports.outbound.file_dao import FileMetadataNotFoundError  # noqa: F401
 
 
 class UploadAttemptNotFoundError(RuntimeError):

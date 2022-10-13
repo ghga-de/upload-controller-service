@@ -19,8 +19,8 @@ import pytest
 
 from tests.fixtures.example_data import EXAMPLE_FILE
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
-from ucs.adapters.outbound.psql.adapters import PsqlFileMetadataDAO
-from ucs.domain.interfaces.outbound.file_dao import FileMetadataNotFoundError
+from ucs.ports.outbound.file_dao import FileMetadataNotFoundError
+from ucs.translators.outbound.psql.adapters import PsqlFileMetadataDAO
 
 
 def test_get_existing_file_metadata(psql_fixture: PsqlFixture):  # noqa: F811

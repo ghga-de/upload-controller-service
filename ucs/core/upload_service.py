@@ -16,8 +16,10 @@
 
 """The main upload handling logic."""
 
-from ucs.domain import models
-from ucs.domain.interfaces.inbound.upload_service import (
+from ucs.core import models
+from ucs.core.interfaces.part_calc import IPartSizeCalculator
+from ucs.core.part_calc import calculate_part_size
+from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     FileAlreadyInInboxError,
     FileUnkownError,
@@ -29,24 +31,16 @@ from ucs.domain.interfaces.inbound.upload_service import (
     UploadStatusMissmatchError,
     UploadUnkownError,
 )
-from ucs.domain.interfaces.internal.part_calc import IPartSizeCalculator
-from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_dao import (
-    FileMetadataNotFoundError,
-    IFileMetadataDAO,
-)
-from ucs.domain.interfaces.outbound.storage import (
+from ucs.ports.outbound.event_pub import IEventPublisher
+from ucs.ports.outbound.file_dao import FileMetadataNotFoundError, IFileMetadataDAO
+from ucs.ports.outbound.storage import (
     IObjectStorage,
     MultiPartUploadAbortError,
     MultiPartUploadConfirmError,
     MultiPartUploadNotFoundError,
     ObjectNotFoundError,
 )
-from ucs.domain.interfaces.outbound.upload_dao import (
-    IUploadAttemptDAO,
-    UploadAttemptNotFoundError,
-)
-from ucs.domain.part_calc import calculate_part_size
+from ucs.ports.outbound.upload_dao import IUploadAttemptDAO, UploadAttemptNotFoundError
 
 
 class UploadService(IUploadService):

@@ -22,7 +22,7 @@ from fastapi import status
 
 from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOADS
 from tests.fixtures.joint import *  # noqa: 403
-from ucs.domain import models
+from ucs.core import models
 
 
 def test_get_health(joint_fixture: JointFixture):  # noqa: F405

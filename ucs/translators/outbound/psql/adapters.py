@@ -26,17 +26,14 @@ from sqlalchemy import desc
 from sqlalchemy.future import select
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from ucs.adapters.outbound.psql import orm_models
-from ucs.domain import models
-from ucs.domain.interfaces.outbound.file_dao import (
-    FileMetadataNotFoundError,
-    IFileMetadataDAO,
-)
-from ucs.domain.interfaces.outbound.upload_dao import (
+from ucs.core import models
+from ucs.ports.outbound.file_dao import FileMetadataNotFoundError, IFileMetadataDAO
+from ucs.ports.outbound.upload_dao import (
     IUploadAttemptDAO,
     UploadAttemptAlreadExistsError,
     UploadAttemptNotFoundError,
 )
+from ucs.translators.outbound.psql import orm_models
 
 
 class PsqlDaoBase:

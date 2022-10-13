@@ -25,15 +25,15 @@ from tests.fixtures.example_data import (
 )
 from tests.fixtures.joint import *  # noqa: 403
 from tests.fixtures.s3 import upload_part_via_url
-from ucs.domain import models
-from ucs.domain.interfaces.inbound.upload_service import (
+from ucs.core import models
+from ucs.core.part_calc import DEFAULT_PART_SIZE
+from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     FileAlreadyInInboxError,
     FileUnkownError,
     UploadStatusMissmatchError,
     UploadUnkownError,
 )
-from ucs.domain.part_calc import DEFAULT_PART_SIZE
 
 
 def test_happy(joint_fixture: JointFixture):  # noqa: F405

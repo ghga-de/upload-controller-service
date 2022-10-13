@@ -24,7 +24,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 
-from ucs.domain.models import UploadStatus
+from ucs.core.models import UploadStatus
 
 Base: DeclarativeMeta = declarative_base()
 

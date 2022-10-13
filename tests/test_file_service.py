@@ -18,17 +18,16 @@
 from datetime import datetime
 
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
-from ucs.adapters.outbound.psql.adapters import (
+from ucs.core import models
+from ucs.core.file_service import FileMetadataServive
+from ucs.translators.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
     PsqlUploadAttemptDAO,
 )
-from ucs.domain import models
-from ucs.domain.file_service import FileMetadataServive
 
 # Examples:
 # - there are two files
 # - two upload attempts that can be registered to the first file
-
 EXAMPLE_FILES = (
     models.FileMetadata(
         file_id="testFile001",
