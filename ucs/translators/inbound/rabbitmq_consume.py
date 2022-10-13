@@ -29,6 +29,13 @@ from ucs.ports.inbound.upload_service import IUploadService
 HERE = Path(__file__).parent.resolve()
 
 
+class RMQConsumerConfig(PubSubConfigBase):
+    """Config parameters and their defaults."""
+
+    topic_file_accepted: str = "file_internally_registered"
+    topic_new_study: str = "new_study_created"
+
+
 class RabbitMQEventConsumer:
     """Adapter that consumes events received from an Apache RabbitMQ broker."""
 
@@ -36,23 +43,15 @@ class RabbitMQEventConsumer:
     def __init__(
         self,
         *,
-        service_name: str,
-        rabbitmq_host: str,
-        rabbitmq_port: str,
-        topic_new_study: str,
-        topic_file_accepted: str,
+        config: RMQConsumerConfig,
         file_metadata_service: IFileMetadataService,
         upload_service: IUploadService
     ):
         """Ininitalize class instance with config and inbound adapter objects."""
 
-        self._config = PubSubConfigBase(
-            service_name=service_name,
-            rabbitmq_host=rabbitmq_host,
-            rabbitmq_port=rabbitmq_port,
-        )
-        self._topic_new_study = topic_new_study
-        self._topic_file_accepted = topic_file_accepted
+        self._config = config
+        self._topic_new_study = config.topic_new_study
+        self._topic_file_accepted = config.topic_file_accepted
         self._file_metadata_service = file_metadata_service
         self._upload_service = upload_service
 

@@ -42,10 +42,10 @@ class PsqlDaoBase:
     """
 
     # pylint: disable=super-init-not-called
-    def __init__(self, *, db_url: str, db_print_logs: bool = False):
+    def __init__(self, *, config: PostgresqlConfigBase):
         """initialze DAO implementation"""
 
-        self._config = PostgresqlConfigBase(db_url=db_url, db_print_logs=db_print_logs)
+        self._config = config
         self._postgresql_connector = SyncPostgresqlConnector(self._config)
 
         # will be defined on __enter__:

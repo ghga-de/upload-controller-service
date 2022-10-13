@@ -226,11 +226,11 @@
         "type": "string"
       }
     },
-    "s3_inbox_bucket_id": {
+    "inbox_bucket": {
       "title": "S3 Inbox Bucket Id",
       "default": "inbox",
       "env_names": [
-        "ucs_s3_inbox_bucket_id"
+        "ucs_inbox_bucket"
       ],
       "type": "string"
     },

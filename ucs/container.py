@@ -16,15 +16,11 @@
 """Module hosting the dependency injection container."""
 
 from dependency_injector import containers, providers
+from hexkit.inject import ContainerBase, get_configurator, get_constructor
+from ucs.config import Config
 
 from ucs.core.file_service import FileMetadataServive
 from ucs.core.upload_service import UploadService
-from ucs.ports.inbound.file_service import IFileMetadataService
-from ucs.ports.inbound.upload_service import IUploadService
-from ucs.ports.outbound.event_pub import IEventPublisher
-from ucs.ports.outbound.file_dao import IFileMetadataDAO
-from ucs.ports.outbound.storage import IObjectStorage
-from ucs.ports.outbound.upload_dao import IUploadAttemptDAO
 from ucs.translators.inbound.rabbitmq_consume import RabbitMQEventConsumer
 from ucs.translators.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
@@ -34,64 +30,43 @@ from ucs.translators.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.translators.outbound.s3 import S3ObjectStorage
 
 
-class Container(containers.DeclarativeContainer):
+class Container(ContainerBase):
     """DI Container"""
 
-    config = providers.Configuration()
+    config = get_configurator(Config)
 
     # outbound adapters:
 
-    file_metadata_dao = providers.Factory[IFileMetadataDAO](
-        PsqlFileMetadataDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
-    )
+    file_metadata_dao = get_constructor(PsqlFileMetadataDAO, config=config)
 
-    upload_attempt_dao = providers.Factory[IUploadAttemptDAO](
-        PsqlUploadAttemptDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
-    )
+    upload_attempt_dao = get_constructor(PsqlUploadAttemptDAO, config=config)
 
-    object_storage = providers.Factory[IObjectStorage](
-        S3ObjectStorage,
-        s3_endpoint_url=config.s3_endpoint_url,
-        s3_access_key_id=config.s3_access_key_id,
-        s3_secret_access_key=config.s3_secret_access_key,
-        s3_session_token=config.s3_session_token,
-        aws_config_ini=config.aws_config_ini,
-    )
+    object_storage = get_constructor(S3ObjectStorage, config=config)
 
-    event_publisher = providers.Factory[IEventPublisher](
-        RabbitMQEventPublisher,
-        service_name=config.service_name,
-        rabbitmq_host=config.rabbitmq_host,
-        rabbitmq_port=config.rabbitmq_port,
-        topic_upload_received=config.topic_upload_received,
-    )
+    event_publisher = get_constructor(RabbitMQEventPublisher, config=config)
 
     # domain:
 
-    file_metadata_service = providers.Factory[IFileMetadataService](
+    file_metadata_service = get_constructor(
         FileMetadataServive,
         file_metadata_dao=file_metadata_dao,
         upload_attempt_dao=upload_attempt_dao,
     )
 
-    upload_service = providers.Factory[IUploadService](
+    upload_service = get_constructor(
         UploadService,
-        s3_inbox_bucket_id=config.s3_inbox_bucket_id,
         file_metadata_dao=file_metadata_dao,
         upload_attempt_dao=upload_attempt_dao,
         object_storage=object_storage,
         event_publisher=event_publisher,
+        config=config,
     )
 
     # inbound adapters:
 
-    event_subscriber = providers.Factory[RabbitMQEventConsumer](
+    event_subscriber = get_constructor(
         RabbitMQEventConsumer,
-        service_name=config.service_name,
-        rabbitmq_host=config.rabbitmq_host,
-        rabbitmq_port=config.rabbitmq_port,
-        topic_new_study=config.topic_new_study,
-        topic_file_accepted=config.topic_file_accepted,
         file_metadata_service=file_metadata_service,
         upload_service=upload_service,
+        config=config,
     )

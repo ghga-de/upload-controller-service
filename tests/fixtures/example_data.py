@@ -46,7 +46,7 @@ EXAMPLE_FILES = [
 # An example of a storage file object corresponding to the EXAMPLE_FILE:
 EXAMPLE_STORAGE_OBJECT = FileObject(
     file_path=TEST_FILE_PATHS[0],
-    bucket_id=DEFAULT_CONFIG.s3_inbox_bucket_id,
+    bucket_id=DEFAULT_CONFIG.inbox_bucket,
     object_id=EXAMPLE_FILE.file_id,
 )
 

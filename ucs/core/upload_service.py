@@ -16,6 +16,8 @@
 
 """The main upload handling logic."""
 
+from pydantic import BaseSettings
+
 from ucs.core import models
 from ucs.core.interfaces.part_calc import IPartSizeCalculator
 from ucs.core.part_calc import calculate_part_size
@@ -43,6 +45,12 @@ from ucs.ports.outbound.storage import (
 from ucs.ports.outbound.upload_dao import IUploadAttemptDAO, UploadAttemptNotFoundError
 
 
+class UploadServiceConfig(BaseSettings):
+    """Config parameters and their defaults."""
+
+    inbox_bucket: str = "inbox"
+
+
 class UploadService(IUploadService):
     """Service for handling multi-part uploads to the Inbox storage.
 
@@ -58,7 +66,7 @@ class UploadService(IUploadService):
     def __init__(
         self,
         *,
-        s3_inbox_bucket_id: str,
+        config: UploadServiceConfig,
         file_metadata_dao: IFileMetadataDAO,
         upload_attempt_dao: IUploadAttemptDAO,
         object_storage: IObjectStorage,
@@ -68,7 +76,7 @@ class UploadService(IUploadService):
     ):
         """Ininitalize class instance with configs and outbound adapter objects."""
 
-        self._s3_inbox_bucket_id = s3_inbox_bucket_id
+        self._inbox_bucket = config.inbox_bucket
         self._file_metadata_dao = file_metadata_dao
         self._upload_attempt_dao = upload_attempt_dao
         self._object_storage = object_storage
@@ -77,8 +85,8 @@ class UploadService(IUploadService):
 
         # Create inbox bucket if it doesn't exist:
         with self._object_storage as storage:
-            if not storage.does_bucket_exist(bucket_id=self._s3_inbox_bucket_id):
-                storage.create_bucket(self._s3_inbox_bucket_id)
+            if not storage.does_bucket_exist(bucket_id=self._inbox_bucket):
+                storage.create_bucket(self._inbox_bucket)
 
     def _get_upload_if_status(
         self, upload_id: str, status: models.UploadStatus
@@ -115,7 +123,7 @@ class UploadService(IUploadService):
             try:
                 storage.abort_multipart_upload(
                     upload_id=upload_id,
-                    bucket_id=self._s3_inbox_bucket_id,
+                    bucket_id=self._inbox_bucket,
                     object_id=upload.file_id,
                 )
             except MultiPartUploadAbortError as error:
@@ -158,7 +166,7 @@ class UploadService(IUploadService):
         with self._object_storage as storage:
             try:
                 storage.delete_object(
-                    bucket_id=self._s3_inbox_bucket_id,
+                    bucket_id=self._inbox_bucket,
                     object_id=latest_upload.file_id,
                 )
             except ObjectNotFoundError as error:
@@ -207,13 +215,13 @@ class UploadService(IUploadService):
         with self._object_storage as storage:
             # check if the file already exists in the inbox:
             if storage.does_object_exist(
-                bucket_id=self._s3_inbox_bucket_id, object_id=file_id
+                bucket_id=self._inbox_bucket, object_id=file_id
             ):
                 raise FileAlreadyInInboxError(file_id=file_id)
 
             # otherwise initiate the multipart upload:
             upload_id = storage.init_multipart_upload(
-                bucket_id=self._s3_inbox_bucket_id, object_id=file_id
+                bucket_id=self._inbox_bucket, object_id=file_id
             )
 
             # get the recommended part size:
@@ -240,7 +248,7 @@ class UploadService(IUploadService):
                     # there is nothing we can do to handel this exception.
                     storage.abort_multipart_upload(
                         upload_id=upload_id,
-                        bucket_id=self._s3_inbox_bucket_id,
+                        bucket_id=self._inbox_bucket,
                         object_id=file_id,
                     )
                     raise
@@ -272,7 +280,7 @@ class UploadService(IUploadService):
             try:
                 return storage.get_part_upload_url(
                     upload_id=upload_id,
-                    bucket_id=self._s3_inbox_bucket_id,
+                    bucket_id=self._inbox_bucket,
                     object_id=upload.file_id,
                     part_number=part_no,
                 )
@@ -299,7 +307,7 @@ class UploadService(IUploadService):
             try:
                 storage.complete_multipart_upload(
                     upload_id=upload_id,
-                    bucket_id=self._s3_inbox_bucket_id,
+                    bucket_id=self._inbox_bucket,
                     object_id=upload.file_id,
                 )
             except MultiPartUploadConfirmError as error:
