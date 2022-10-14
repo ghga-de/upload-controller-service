@@ -15,13 +15,14 @@
 
 """Module hosting the dependency injection container."""
 
-from dependency_injector import containers, providers
 from hexkit.inject import ContainerBase, get_configurator, get_constructor
-from ucs.config import Config
+from hexkit.providers.mongodb import MongoDbDaoFactory
 
+from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
 from ucs.core.upload_service import UploadService
 from ucs.translators.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.translators.outbound.dao import DaoCollectionConstructor
 from ucs.translators.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
     PsqlUploadAttemptDAO,
@@ -34,6 +35,12 @@ class Container(ContainerBase):
     """DI Container"""
 
     config = get_configurator(Config)
+
+    # outbound providers:
+    dao_factory = get_constructor(MongoDbDaoFactory, config=config)
+
+    # outbound translators:
+    dao_collection = get_constructor(DaoCollectionConstructor, dao_factory=dao_factory)
 
     # outbound adapters:
 

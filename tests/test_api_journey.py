@@ -20,6 +20,7 @@ import json
 from datetime import datetime
 from typing import Literal
 
+import pytest
 from fastapi import status
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
@@ -90,7 +91,8 @@ def perform_upload(
     return upload_details["upload_id"]
 
 
-def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
+@pytest.mark.asyncio
+async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
     # initialize upstream event publisher and downstream event subscriber:

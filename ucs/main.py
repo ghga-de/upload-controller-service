@@ -15,30 +15,31 @@
 
 """In this module object construction and dependency injection is carried out."""
 
+from enum import Enum
+
 from fastapi import FastAPI
-from ghga_service_chassis_lib.api import configure_app
+from ghga_service_chassis_lib.api import configure_app, run_server
 
 from ucs.config import Config
 from ucs.container import Container
 from ucs.translators.inbound.fastapi_.routes import router
-from ucs.translators.inbound.rabbitmq_consume import RabbitMQEventConsumer
 
 
-def setup_container(*, config: Config) -> Container:
+def get_configured_container(*, config: Config) -> Container:
     """Create and configure a DI container."""
 
     container = Container()
-    container.config.from_pydantic(config)
-    container.init_resources()
+    container.config.load_config(config)
 
     return container
 
 
 def get_rest_api(*, config: Config) -> FastAPI:
-    """Creates a FastAPI app."""
+    """Creates a FastAPI app.
 
-    container = setup_container(config=config)
-    container.wire(modules=["ucs.translators.inbound.fastapi_.routes"])
+    For full functionality of the api, run in the context of an CI container with
+    correct wireing and initialized resources (see the run_api function below).
+    """
 
     api = FastAPI()
     api.include_router(router)
@@ -47,8 +48,33 @@ def get_rest_api(*, config: Config) -> FastAPI:
     return api
 
 
-def get_event_consumer(*, config: Config) -> RabbitMQEventConsumer:
-    """Create an instance of RabbitMQEventConsumer"""
+class Topics(str, Enum):
+    """Supported topics"""
 
-    container = setup_container(config=config)
-    return container.event_subscriber()
+    NEW_STUDY = "new_study"
+    FILE_ACCEPTED = "file_accepted"
+
+
+async def run_api():
+    """Run the HTTP REST API."""
+
+    config = Config()
+
+    async with get_configured_container(config=config) as container:
+        container.wire(modules=["ucs.translators.inbound.fastapi_.routes"])
+        api = get_rest_api(config=config)
+        await run_server(app=api, config=config)
+
+
+async def consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
+    """Run an event consumer listening to the specified topic."""
+
+    config = Config()
+
+    async with get_configured_container(config=config) as container:
+        event_consumer = container.event_subscriber()
+
+        if topic == topic.NEW_STUDY:
+            event_consumer.subscribe_new_study(run_forever=run_forever)
+        else:
+            raise NotImplementedError()

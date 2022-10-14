@@ -71,8 +71,8 @@ def test_happy(psql_fixture: PsqlFixture):  # noqa: F811
     """Tests the basic happy path of using the FileMetadataService"""
 
     # construct service and dependencies:
-    upload_attempt_dao = PsqlUploadAttemptDAO(db_url=psql_fixture.config.db_url)
-    file_metadata_dao = PsqlFileMetadataDAO(db_url=psql_fixture.config.db_url)
+    upload_attempt_dao = PsqlUploadAttemptDAO(config=psql_fixture.config)
+    file_metadata_dao = PsqlFileMetadataDAO(config=psql_fixture.config)
     file_metadata_service = FileMetadataServive(
         file_metadata_dao=file_metadata_dao,
         upload_attempt_dao=upload_attempt_dao,

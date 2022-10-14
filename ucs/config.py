@@ -19,15 +19,17 @@ from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
 from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
 from ghga_service_chassis_lib.s3 import S3ConfigBase
+from hexkit.providers.mongodb import MongoDbConfig
 
 from ucs.core.upload_service import UploadServiceConfig
-from ucs.translators.outbound.rabbitmq_produce import RMQPublisherConfig
 from ucs.translators.inbound.rabbitmq_consume import RMQConsumerConfig
+from ucs.translators.outbound.rabbitmq_produce import RMQPublisherConfig
 
 
 @config_from_yaml(prefix="ucs")
 class Config(
     ApiConfigBase,
+    MongoDbConfig,
     PostgresqlConfigBase,
     UploadServiceConfig,
     RMQPublisherConfig,

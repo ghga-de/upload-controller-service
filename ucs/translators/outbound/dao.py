@@ -15,8 +15,6 @@
 
 """DAO translators for accessing the database."""
 
-
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from hexkit.protocols.dao import DaoFactoryProtocol
@@ -26,11 +24,12 @@ from ucs.ports.outbound.dao import DaoCollection
 
 
 @dataclass
-class DaoConstructor:
-    """A collection of DAOs for interacting with the database."""
+class DaoCollectionConstructor:
+    """Constructor compatible with the hexkit.inject.AsyncConstructable type. Used to
+    construct a collection of DAOs for interacting with the database.
+    """
 
     @staticmethod
-    @asynccontextmanager
     async def construct(*, dao_factory: DaoFactoryProtocol):
         """Setup a collection of DAOs using the specified provider of the
         DaoFactoryProtocol."""
@@ -42,6 +41,6 @@ class DaoConstructor:
             name="upload_attempts", dto_model=models.UploadAttempt, id_field="upload_id"
         )
 
-        yield DaoCollection(
+        return DaoCollection(
             file_metadata=file_metadata, upload_attempts=upload_attempts
         )

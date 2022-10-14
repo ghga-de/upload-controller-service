@@ -25,16 +25,16 @@ __all__ = [
 
 from dataclasses import dataclass
 
-import pytest
+import fastapi.testclient
+import pytest_asyncio
 
 from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
 from tests.fixtures.psql import PsqlFixture, psql_fixture
-from tests.fixtures.rest import RestTestClient
 from tests.fixtures.s3 import S3Fixture, s3_fixture
 from ucs.config import Config
 from ucs.container import Container
-from ucs.main import setup_container
+from ucs.main import get_configured_container, get_rest_api
 
 
 @dataclass
@@ -45,12 +45,12 @@ class JointFixture:
     container: Container
     psql: PsqlFixture
     amqp: AmqpFixture
-    rest_client: RestTestClient
+    rest_client: fastapi.testclient.TestClient
     s3: S3Fixture
 
 
-@pytest.fixture
-def joint_fixture(
+@pytest_asyncio.fixture
+async def joint_fixture(
     psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
 ) -> JointFixture:
     """A fixture that embeds all other fixtures for API-level integration testing"""
@@ -61,16 +61,18 @@ def joint_fixture(
     )
 
     # create a DI container instance:
-    container = setup_container(config=config)
+    async with get_configured_container(config=config) as container:
+        container.wire(modules=["ucs.translators.inbound.fastapi_.routes"])
 
-    # setup an API test client:
-    rest_client = RestTestClient(config=config)
+        # setup an API test client:
+        api = get_rest_api(config=config)
+        rest_client = fastapi.testclient.TestClient(api)
 
-    return JointFixture(
-        config=config,
-        container=container,
-        psql=psql_fixture,
-        amqp=amqp_fixture,
-        rest_client=rest_client,
-        s3=s3_fixture,
-    )
+        return JointFixture(
+            config=config,
+            container=container,
+            psql=psql_fixture,
+            amqp=amqp_fixture,
+            rest_client=rest_client,
+            s3=s3_fixture,
+        )
