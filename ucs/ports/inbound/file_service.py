@@ -16,9 +16,11 @@
 """Interfaces for the main upload handling logic of this service."""
 
 
-from typing import Protocol, Sequence
+from typing import Iterable, Protocol, Sequence
 
 from ucs.core import models
+
+UPDATABLE_METADATA_FIELDS = {"status"}
 
 
 class FileUnkownError(RuntimeError):
@@ -30,20 +32,40 @@ class FileUnkownError(RuntimeError):
         super().__init__(message)
 
 
-class FileMetadataPort(Protocol):
-    """Interface of a service handling file metata.
+class InvalidFileMetadatUpdateError(RuntimeError):
+    """Thrown when trying to update a metadata field of a file that is not allowed to
+    change (i.e. not in the UPDATABLE_METADATA_FIELDS set)."""
 
-    Raises:
-        - FileUnkownError
-    """
+    def __init__(self, *, file_id: str, invalid_fields: Iterable[str]):
+        self.file_id = file_id
+        message = (
+            f"Following fields for the with ID {file_id} cannot be updated: "
+            + ", ".join(invalid_fields)
+        )
+        super().__init__(message)
+
+
+class FileMetadataPort(Protocol):
+    """Interface of a service handling file metata."""
 
     async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
-        """Registeres new files or updates existing ones."""
+        """Registeres new files or updates existing ones.
+
+        Raises:
+            InvalidFileMetadatUpdateError:
+                When trying to update a metadata field, that can only be set on
+                creation.
+        """
         ...
 
     async def get_by_id(
         self,
         file_id: str,
     ) -> models.FileMetadata:
-        """Get metadata on the filed with the provided id."""
+        """Get metadata on the filed with the provided ID.
+
+        Raises:
+            FileUnkownError:
+                When a file with the corresponding ID does not exist.
+        """
         ...

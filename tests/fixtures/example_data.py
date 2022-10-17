@@ -33,6 +33,7 @@ EXAMPLE_FILE = models.FileMetadata(
     creation_date=datetime.now(),
     update_date=datetime.now(),
     format="txt",
+    latest_upload_id="testUpload001",
 )
 
 # A list of metadata in case multiple file entries are needed:
@@ -56,6 +57,7 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
     file_id="testFile001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
+    datetime_created=datetime.now(),
 )
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:

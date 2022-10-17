@@ -77,7 +77,7 @@ def health():
     summary="Get file metadata including the current upload attempt.",
     operation_id="getFileMetadata",
     status_code=status.HTTP_200_OK,
-    response_model=rest_models.FileMetadataWithUpload,
+    response_model=rest_models.FileMetadata,
     response_description="File metadata including the current upload attempt",
     responses={
         status.HTTP_403_FORBIDDEN: ERROR_RESPONSES["noFileAccess"],
