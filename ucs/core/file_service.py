@@ -19,57 +19,57 @@
 from typing import Sequence
 
 from ucs.core import models
-from ucs.ports.inbound.file_service import FileUnkownError, IFileMetadataService
-from ucs.ports.outbound.file_dao import FileMetadataNotFoundError, IFileMetadataDAO
+from ucs.ports.inbound.file_service import FileUnkownError, FileMetadataPort
+from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
 from ucs.ports.outbound.upload_dao import IUploadAttemptDAO
 
 
-class FileMetadataServive(IFileMetadataService):
+class FileMetadataServive(FileMetadataPort):
     """Implementation of a service handling file metata.
 
     Raises:
         - FileUnkownError
     """
 
-    def __init__(
-        self,
-        *,
-        file_metadata_dao: IFileMetadataDAO,
-        upload_attempt_dao: IUploadAttemptDAO,
-    ):
+    def __init__(self, *, daos: DaoCollection):
         """Ininitalize class instance with configs and outbound adapter objects."""
-        self._file_metadata_dao = file_metadata_dao
-        self._upload_attempt_dao = upload_attempt_dao
+        self._daos = daos
 
-    def upsert_multiple(self, files: Sequence[models.FileMetadata]) -> None:
+    async def _complete_upsert_metadata(
+        self, upsert_metadata: models.FileMetadataUpsert
+    ) -> models.FileMetadata:
+        """The given upsert metadata is supplemented with data from the database (if
+        existent).
         """
-        Registeres new files or updates existing ones.
-        """
-        with self._file_metadata_dao as fm_dao:
-            for file in files:
-                fm_dao.upsert(file)
 
-    def get(
+        try:
+            existing_metadata = await self._daos.file_metadata.get_by_id(
+                upsert_metadata.file_id
+            )
+        except ResourceNotFoundError:
+            # there is no entry for that file in the database, yet
+            return models.FileMetadata(**upsert_metadata.dict(), latest_upload_id=None)
+
+        return models.FileMetadata(
+            **upsert_metadata.dict(),
+            latest_upload_id=existing_metadata.latest_upload_id
+        )
+
+    async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
+        """Registeres new files or updates existing ones."""
+
+        for file in files:
+            full_file_metadata = await self._complete_upsert_metadata(file)
+
+            await self._daos.file_metadata.upsert(full_file_metadata)
+
+    async def get_by_id(
         self,
         file_id: str,
-    ) -> models.FileMetadataWithUpload:
-        """
-        Get metadata on the filed with the provided id.
-        """
+    ) -> models.FileMetadata:
+        """Get metadata on the filed with the provided id."""
 
-        # get basic file metadata:
-        with self._file_metadata_dao as fm_dao:
-            try:
-                file_metadata = fm_dao.get(file_id)
-            except FileMetadataNotFoundError as error:
-                raise FileUnkownError(file_id=file_id) from error
-
-        # get the latest upload attempt
-        with self._upload_attempt_dao as ua_dao:
-            latest_upload = ua_dao.get_latest_by_file(file_id)
-        latest_upload_id = None if latest_upload is None else latest_upload.upload_id
-
-        # assemble information:
-        return models.FileMetadataWithUpload(
-            latest_upload_id=latest_upload_id, **file_metadata.dict()
-        )
+        try:
+            return await self._daos.file_metadata.get_by_id(file_id)
+        except ResourceNotFoundError as error:
+            raise FileUnkownError(file_id=file_id) from error

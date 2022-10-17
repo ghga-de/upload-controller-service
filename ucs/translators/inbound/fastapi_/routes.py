@@ -23,7 +23,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Path, status
 
 from ucs.container import Container
-from ucs.ports.inbound.file_service import FileUnkownError, IFileMetadataService
+from ucs.ports.inbound.file_service import FileUnkownError, FileMetadataPort
 from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     IUploadService,
@@ -87,14 +87,14 @@ def health():
 @inject
 def get_file_metadata(
     file_id: str,
-    file_metadata_service: IFileMetadataService = Depends(
+    file_metadata_service: FileMetadataPort = Depends(
         Provide[Container.file_metadata_service]
     ),
 ):
     """Get file metadata including the current upload attempt."""
 
     try:
-        return file_metadata_service.get(file_id)
+        return file_metadata_service.get_by_id(file_id)
     except FileUnkownError as error:
         raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
 

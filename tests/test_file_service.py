@@ -15,11 +15,17 @@
 
 """Test the FileMetadataService"""
 
-from datetime import datetime
+from copy import deepcopy
+from datetime import datetime, timedelta
+
+from hexkit.providers.mongodb import MongoDbConfig, MongoDbDaoFactory
+from hexkit.providers.mongodb.testutils import mongodb_fixture, MongoDbFixture
+import pytest
 
 from tests.fixtures.psql import PsqlFixture, psql_fixture  # noqa: F401
 from ucs.core import models
 from ucs.core.file_service import FileMetadataServive
+from ucs.translators.outbound.dao import DaoCollectionConstructor
 from ucs.translators.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
     PsqlUploadAttemptDAO,
@@ -38,6 +44,7 @@ EXAMPLE_FILES = (
         creation_date=datetime.now(),
         update_date=datetime.now(),
         format="txt",
+        latest_upload_id="testUpload002"
     ),
     models.FileMetadata(
         file_id="testFile002",
@@ -48,6 +55,7 @@ EXAMPLE_FILES = (
         creation_date=datetime.now(),
         update_date=datetime.now(),
         format="txt",
+        latest_upload_id=None
     ),
 )
 
@@ -57,33 +65,44 @@ EXAMPLE_UPLOADS = (
         file_id="testFile001",
         status=models.UploadStatus.CANCELLED,
         part_size=1234,
+        datetime_created=datetime.now() - timedelta(days=1),  # created yesterday
     ),
     models.UploadAttempt(
         upload_id="testUpload002",
         file_id="testFile001",
         status=models.UploadStatus.PENDING,
         part_size=1234,
+        datetime_created=datetime.now(),
     ),
 )
 
 
-def test_happy(psql_fixture: PsqlFixture):  # noqa: F811
-    """Tests the basic happy path of using the FileMetadataService"""
+@pytest.mark.asyncio
+async def test_upsert(mongodb_fixture: MongoDbFixture):  # noqa: F811
+    """Tests the upserting file metadata using the FileMetadataService"""
 
     # construct service and dependencies:
-    upload_attempt_dao = PsqlUploadAttemptDAO(config=psql_fixture.config)
-    file_metadata_dao = PsqlFileMetadataDAO(config=psql_fixture.config)
-    file_metadata_service = FileMetadataServive(
-        file_metadata_dao=file_metadata_dao,
-        upload_attempt_dao=upload_attempt_dao,
-    )
+    dao_collection = await DaoCollectionConstructor.construct(dao_factory=mongodb_fixture.dao_factory)
+    file_metadata_service = FileMetadataServive(daos=dao_collection)
+
+    # populate the database with two file example and corresponding upload attempts:
+    for example_file in EXAMPLE_FILES:
+        await dao_collection.file_metadata.insert(example_file)
+
+    for example_upload in EXAMPLE_UPLOADS:
+        await dao_collection.upload_attempts.insert(example_upload)
+
+    # construct an update (including modifications to the existing entries as well as a
+    # new entry):
+    file_updates = deepcopy(EXAMPLE_FILES)
+    file_updates[0]
 
     # create file metadata:
-    file_metadata_service.upsert_multiple(EXAMPLE_FILES)
+    await file_metadata_service.upsert_multiple(EXAMPLE_FILES)
 
     # check that the newly created file metadata is available:
     for expected_file in EXAMPLE_FILES:
-        obtained_file = file_metadata_service.get(file_id=expected_file.file_id)
+        obtained_file = await file_metadata_service.get_by_id(file_id=expected_file.file_id)
 
         # compare the parameters that are part of the expected_file:
         expected_file_data = expected_file.dict()
@@ -95,10 +114,10 @@ def test_happy(psql_fixture: PsqlFixture):  # noqa: F811
         assert obtained_file.latest_upload_id is None
 
     # side-load upload attempts to the first file example:
-    psql_fixture.populate_upload_attempts(EXAMPLE_UPLOADS)
+    mongodb_fixture.
     expected_upload_id = EXAMPLE_UPLOADS[-1].upload_id
     corresponding_file_id = EXAMPLE_FILES[0].file_id
 
     # check the latest upload attempt using the service again:
-    obtained_file = file_metadata_service.get(file_id=corresponding_file_id)
+    obtained_file = file_metadata_service.get_by_id(file_id=corresponding_file_id)
     assert obtained_file.latest_upload_id == expected_upload_id

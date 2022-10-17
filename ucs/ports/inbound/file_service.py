@@ -30,24 +30,20 @@ class FileUnkownError(RuntimeError):
         super().__init__(message)
 
 
-class IFileMetadataService(Protocol):
+class FileMetadataPort(Protocol):
     """Interface of a service handling file metata.
 
     Raises:
         - FileUnkownError
     """
 
-    def upsert_multiple(self, files: Sequence[models.FileMetadata]) -> None:
-        """
-        Registeres new files or updates existing ones.
-        """
+    async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
+        """Registeres new files or updates existing ones."""
         ...
 
-    def get(
+    async def get_by_id(
         self,
         file_id: str,
-    ) -> models.FileMetadataWithUpload:
-        """
-        Get metadata on the filed with the provided id.
-        """
+    ) -> models.FileMetadata:
+        """Get metadata on the filed with the provided id."""
         ...
