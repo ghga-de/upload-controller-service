@@ -53,11 +53,7 @@ def _assert_update_allowed(
 
 
 class FileMetadataServive(FileMetadataPort):
-    """Implementation of a service handling file metata.
-
-    Raises:
-        - FileUnkownError
-    """
+    """Implementation of a service handling file metata."""
 
     def __init__(self, *, daos: DaoCollection):
         """Ininitalize class instance with configs and outbound adapter objects."""
