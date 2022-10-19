@@ -130,14 +130,14 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
     },
 )
 @inject
-def create_upload(
+async def create_upload(
     upload_creation: rest_models.UploadAttemptCreation,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """Initiate a new mutli-part upload for the given file."""
 
     try:
-        return upload_service.initiate_new(file_id=upload_creation.file_id)
+        return await upload_service.initiate_new(file_id=upload_creation.file_id)
     except ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,
@@ -162,7 +162,7 @@ def create_upload(
     },
 )
 @inject
-def get_upload(
+async def get_upload(
     upload_id: str,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
@@ -171,7 +171,7 @@ def get_upload(
     """
 
     try:
-        return upload_service.get_details(upload_id=upload_id)
+        return await upload_service.get_details(upload_id=upload_id)
     except UploadUnkownError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
@@ -205,7 +205,7 @@ def get_upload(
     },
 )
 @inject
-def update_upload_status(
+async def update_upload_status(
     upload_id: str,
     update: rest_models.UploadAttemptUpdate,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
@@ -217,9 +217,9 @@ def update_upload_status(
 
     try:
         if update.status == "uploaded":
-            upload_service.complete(upload_id=upload_id)
+            await upload_service.complete(upload_id=upload_id)
         else:
-            upload_service.cancel(upload_id=upload_id)
+            await upload_service.cancel(upload_id=upload_id)
     except UploadStatusMissmatchError as error:
         raise http_exceptions.HttpUploadNotPendingError(
             upload_id=upload_id, current_status=error.current_status
@@ -253,7 +253,7 @@ def update_upload_status(
     },
 )
 @inject
-def create_presigned_url(
+async def create_presigned_url(
     upload_id: str,
     part_no: int = Path(..., ge=1, le=10000),
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
@@ -264,7 +264,7 @@ def create_presigned_url(
     """
 
     try:
-        presigned_url = upload_service.create_part_url(
+        presigned_url = await upload_service.create_part_url(
             upload_id=upload_id, part_no=part_no
         )
     except UploadUnkownError as error:

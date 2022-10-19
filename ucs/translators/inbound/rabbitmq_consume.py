@@ -17,6 +17,7 @@
 Subscriptions to async topics
 """
 
+import asyncio
 from pathlib import Path
 
 from ghga_message_schemas import schemas
@@ -65,7 +66,7 @@ class RabbitMQEventConsumer:
         grouping_label = message["study"]["id"]
 
         files = [
-            models.FileMetadata(
+            models.FileMetadataUpsert(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
                 md5_checksum=file["md5_checksum"],
@@ -78,7 +79,7 @@ class RabbitMQEventConsumer:
             for file in study_files
         ]
 
-        self._file_metadata_service.upsert_multiple(files)
+        asyncio.run(self._file_metadata_service.upsert_multiple(files))
 
     def _process_file_accepted_message(self, message: dict):
         """
@@ -87,7 +88,7 @@ class RabbitMQEventConsumer:
 
         file_id = message["file_id"]
 
-        self._upload_service.accept_latest(file_id=file_id)
+        asyncio.run(self._upload_service.accept_latest(file_id=file_id))
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """
