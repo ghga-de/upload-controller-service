@@ -22,8 +22,8 @@ from ghga_service_chassis_lib.s3 import S3ConfigBase
 from hexkit.providers.mongodb import MongoDbConfig
 
 from ucs.core.upload_service import UploadServiceConfig
-from ucs.translators.inbound.rabbitmq_consume import RMQConsumerConfig
-from ucs.translators.outbound.rabbitmq_produce import RMQPublisherConfig
+from ucs.adapters.inbound.rabbitmq_consume import RMQConsumerConfig
+from ucs.adapters.outbound.rabbitmq_produce import RMQPublisherConfig
 
 
 @config_from_yaml(prefix="ucs")

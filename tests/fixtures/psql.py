@@ -26,7 +26,7 @@ from sqlalchemy.orm.decl_api import DeclarativeMeta
 from testcontainers.postgres import PostgresContainer
 
 from ucs.core import models
-from ucs.translators.outbound.psql import orm_models
+from ucs.adapters.outbound.psql import orm_models
 
 
 class PsqlFixture:

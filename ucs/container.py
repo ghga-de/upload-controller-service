@@ -21,14 +21,14 @@ from hexkit.providers.mongodb import MongoDbDaoFactory
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
 from ucs.core.upload_service import UploadService
-from ucs.translators.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.translators.outbound.dao import DaoCollectionConstructor
-from ucs.translators.outbound.psql.adapters import (
+from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.adapters.outbound.dao import DaoCollectionConstructor
+from ucs.adapters.outbound.psql.adapters import (
     PsqlFileMetadataDAO,
     PsqlUploadAttemptDAO,
 )
-from ucs.translators.outbound.rabbitmq_produce import RabbitMQEventPublisher
-from ucs.translators.outbound.s3 import S3ObjectStorage
+from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ucs.adapters.outbound.s3 import S3ObjectStorage
 
 
 class Container(ContainerBase):
@@ -54,16 +54,11 @@ class Container(ContainerBase):
 
     # domain:
 
-    file_metadata_service = get_constructor(
-        FileMetadataServive,
-        file_metadata_dao=file_metadata_dao,
-        upload_attempt_dao=upload_attempt_dao,
-    )
+    file_metadata_service = get_constructor(FileMetadataServive, daos=dao_collection)
 
     upload_service = get_constructor(
         UploadService,
-        file_metadata_dao=file_metadata_dao,
-        upload_attempt_dao=upload_attempt_dao,
+        daos=dao_collection,
         object_storage=object_storage,
         event_publisher=event_publisher,
         config=config,

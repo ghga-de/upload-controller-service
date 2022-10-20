@@ -18,7 +18,7 @@
 __all__ = [
     "joint_fixture",
     "JointFixture",
-    "psql_fixture",
+    "mongodb_fixture",
     "amqp_fixture",
     "s3_fixture",
 ]
@@ -27,14 +27,15 @@ from dataclasses import dataclass
 
 import fastapi.testclient
 import pytest_asyncio
+from hexkit.providers.mongodb.testutils import mongodb_fixture, MongoDbFixture  # F401
 
-from tests.fixtures.amqp import AmqpFixture, amqp_fixture
-from tests.fixtures.config import get_config
-from tests.fixtures.psql import PsqlFixture, psql_fixture
-from tests.fixtures.s3 import S3Fixture, s3_fixture
 from ucs.config import Config
 from ucs.container import Container
 from ucs.main import get_configured_container, get_rest_api
+
+from tests.fixtures.amqp import AmqpFixture, amqp_fixture
+from tests.fixtures.config import get_config
+from tests.fixtures.s3 import S3Fixture, s3_fixture
 
 
 @dataclass
@@ -43,7 +44,7 @@ class JointFixture:
 
     config: Config
     container: Container
-    psql: PsqlFixture
+    mongodb: MongoDbFixture
     amqp: AmqpFixture
     rest_client: fastapi.testclient.TestClient
     s3: S3Fixture
@@ -51,27 +52,27 @@ class JointFixture:
 
 @pytest_asyncio.fixture
 async def joint_fixture(
-    psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
+    mongodb_fixture: MongoDbFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
 ) -> JointFixture:
     """A fixture that embeds all other fixtures for API-level integration testing"""
 
     # merge configs from different sources with the default one:
     config = get_config(
-        sources=[psql_fixture.config, amqp_fixture.config, s3_fixture.config]
+        sources=[mongodb_fixture.config, amqp_fixture.config, s3_fixture.config]
     )
 
-    # create a DI container instance:
+    # create a DI container instance:translators
     async with get_configured_container(config=config) as container:
-        container.wire(modules=["ucs.translators.inbound.fastapi_.routes"])
+        container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
 
         # setup an API test client:
         api = get_rest_api(config=config)
         rest_client = fastapi.testclient.TestClient(api)
 
-        return JointFixture(
+        yield JointFixture(
             config=config,
             container=container,
-            psql=psql_fixture,
+            mongodb=mongodb_fixture,
             amqp=amqp_fixture,
             rest_client=rest_client,
             s3=s3_fixture,

@@ -16,6 +16,7 @@
 """Simulate client behavior and test a typical journey through the APIs exposed by this
 service (incl. REST and event-driven APIs)."""
 
+import asyncio
 import json
 from datetime import datetime
 from typing import Literal
@@ -57,7 +58,7 @@ def perform_upload(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["latest_upload_id"] == upload_details["upload_id"]
 
-    # get upload metadata via an ID:
+    # get upload metadata via the upload ID:
     response = joint_fixture.rest_client.get(f"/uploads/{upload_details['upload_id']}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == upload_details
@@ -91,8 +92,7 @@ def perform_upload(
     return upload_details["upload_id"]
 
 
-@pytest.mark.asyncio
-async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
+def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
     # initialize upstream event publisher and downstream event subscriber:
@@ -131,7 +131,10 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     study_publisher.publish(new_study_event)
 
     # use the event subscriber to receive and process the event:
-    event_subscriber = joint_fixture.container.event_subscriber()
+    async def get_subscriber():
+        return await joint_fixture.container.event_subscriber()
+
+    event_subscriber = asyncio.run(get_subscriber())
     exec_with_timeout(
         func=lambda: event_subscriber.subscribe_new_study(run_forever=False),
         timeout_after=2,

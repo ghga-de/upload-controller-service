@@ -22,7 +22,7 @@ from ghga_service_chassis_lib.api import configure_app, run_server
 
 from ucs.config import Config
 from ucs.container import Container
-from ucs.translators.inbound.fastapi_.routes import router
+from ucs.adapters.inbound.fastapi_.routes import router
 
 
 def get_configured_container(*, config: Config) -> Container:
@@ -61,7 +61,7 @@ async def run_api():
     config = Config()
 
     async with get_configured_container(config=config) as container:
-        container.wire(modules=["ucs.translators.inbound.fastapi_.routes"])
+        container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
         api = get_rest_api(config=config)
         await run_server(app=api, config=config)
 
