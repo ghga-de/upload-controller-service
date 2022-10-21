@@ -19,16 +19,16 @@ import asyncio
 
 import typer
 
-from ucs.main import Topics, consume_events, run_api
+from ucs.main import Topics, consume_events, run_rest
 
 cli = typer.Typer()
 
 
-@cli.command(name="run-api")
+@cli.command(name="run-rest")
 def sync_run_api():
     """Run the HTTP REST API."""
 
-    asyncio.run(run_api())
+    asyncio.run(run_rest())
 
 
 @cli.command(name="consume-events")

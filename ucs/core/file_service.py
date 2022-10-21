@@ -20,15 +20,17 @@ from typing import Sequence
 
 from ucs.core import models
 from ucs.ports.inbound.file_service import (
-    FileUnkownError,
-    InvalidFileMetadatUpdateError,
     UPDATABLE_METADATA_FIELDS,
     FileMetadataPort,
+    FileUnkownError,
+    InvalidFileMetadatUpdateError,
 )
 from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
 
 
-def _get_metadata_diff(a: models.FileMetadata, b: models.FileMetadata) -> set[str]:
+def _get_metadata_diff(
+    a: models.FileMetadata, b: models.FileMetadata  # pylint: disable=invalid-name
+) -> set[str]:
     """Check which fields differ between the metadata provided in a and b."""
 
     a_dict = a.dict()
@@ -87,8 +89,14 @@ class FileMetadataServive(FileMetadataPort):
 
         await self._daos.file_metadata.update(full_metadata)
 
-    async def _upsert_one(self, file: models.FileMetadataUpsert) -> None:
-        """Register a new file or update the metadata for an existing one."""
+    async def upsert_one(self, file: models.FileMetadataUpsert) -> None:
+        """Register a new file or update the metadata for an existing one.
+
+        Raises:
+            InvalidFileMetadatUpdateError:
+                When trying to update a metadata field, that can only be set on
+                creation.
+        """
 
         # check if the file already exist:
         try:
@@ -112,7 +120,7 @@ class FileMetadataServive(FileMetadataPort):
         """
 
         for file in files:
-            await self._upsert_one(file)
+            await self.upsert_one(file)
 
     async def get_by_id(
         self,

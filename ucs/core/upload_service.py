@@ -17,6 +17,7 @@
 """The main upload handling logic."""
 
 from datetime import datetime
+
 from pydantic import BaseSettings
 
 from ucs.core import models
@@ -34,18 +35,16 @@ from ucs.ports.inbound.upload_service import (
     UploadStatusMissmatchError,
     UploadUnkownError,
 )
+from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
 from ucs.ports.outbound.event_pub import IEventPublisher
-from ucs.ports.outbound.file_dao import FileMetadataNotFoundError, IFileMetadataDAO
 from ucs.ports.outbound.storage import (
     IObjectStorage,
     MultiPartUploadAbortError,
+    MultiPartUploadAlreadyExistsError,
     MultiPartUploadConfirmError,
     MultiPartUploadNotFoundError,
-    MultiPartUploadAlreadyExistsError,
     ObjectNotFoundError,
 )
-from ucs.ports.outbound.upload_dao import IUploadAttemptDAO, UploadAttemptNotFoundError
-from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
 
 
 class UploadServiceConfig(BaseSettings):
@@ -148,7 +147,7 @@ class UploadService(IUploadService):
 
         try:
             file = await self._daos.file_metadata.get_by_id(file_id)
-        except FileMetadataNotFoundError as error:
+        except ResourceNotFoundError as error:
             raise FileUnkownError(file_id=file_id) from error
 
         if file.latest_upload_id is None:
@@ -270,7 +269,7 @@ class UploadService(IUploadService):
 
         try:
             file = await self._daos.file_metadata.get_by_id(file_id)
-        except FileMetadataNotFoundError as error:
+        except ResourceNotFoundError as error:
             raise FileUnkownError(file_id=file_id) from error
 
         await self._assert_no_active_upload(file_id=file_id)
@@ -301,7 +300,7 @@ class UploadService(IUploadService):
 
         try:
             return await self._daos.upload_attempts.get_by_id(upload_id)
-        except UploadAttemptNotFoundError as error:
+        except ResourceNotFoundError as error:
             raise UploadUnkownError(upload_id=upload_id) from error
 
     async def create_part_url(self, *, upload_id: str, part_no: int) -> str:

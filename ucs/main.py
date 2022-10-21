@@ -20,9 +20,9 @@ from enum import Enum
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app, run_server
 
+from ucs.adapters.inbound.fastapi_.routes import router
 from ucs.config import Config
 from ucs.container import Container
-from ucs.adapters.inbound.fastapi_.routes import router
 
 
 def get_configured_container(*, config: Config) -> Container:
@@ -55,7 +55,7 @@ class Topics(str, Enum):
     FILE_ACCEPTED = "file_accepted"
 
 
-async def run_api():
+async def run_rest():
     """Run the HTTP REST API."""
 
     config = Config()

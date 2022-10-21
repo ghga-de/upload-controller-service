@@ -16,11 +16,11 @@
 """Simulate client behavior and test a typical journey through the APIs exposed by this
 service (incl. REST and event-driven APIs)."""
 
-import asyncio
 import json
 from datetime import datetime
 from typing import Literal
 
+import nest_asyncio
 import pytest
 from fastapi import status
 from ghga_message_schemas import schemas
@@ -29,9 +29,14 @@ from ghga_service_chassis_lib.utils import exec_with_timeout
 from tests.fixtures.example_data import EXAMPLE_FILES
 from tests.fixtures.joint import *  # noqa: 403
 from tests.fixtures.s3 import upload_part_via_url
+from ucs.core import models
+
+# this is a temporary solution to run an event loop within another event loop
+# will be solved once transitioning to kafka:
+nest_asyncio.apply()
 
 
-def perform_upload(
+async def perform_upload(
     joint_fixture: JointFixture,  # noqa: F405
     *,
     file_id: str,
@@ -45,7 +50,9 @@ def perform_upload(
     """
 
     # initiate new upload:
-    response = joint_fixture.rest_client.post("/uploads", json={"file_id": file_id})
+    response = await joint_fixture.rest_client.post(
+        "/uploads", json={"file_id": file_id}
+    )
     assert response.status_code == status.HTTP_200_OK
     upload_details = response.json()
     assert upload_details["status"] == "pending"
@@ -54,19 +61,21 @@ def perform_upload(
     assert "part_size" in upload_details
 
     # check that the latest_upload_id points to the newly created upload:
-    response = joint_fixture.rest_client.get(f"/files/{file_id}")
+    response = await joint_fixture.rest_client.get(f"/files/{file_id}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["latest_upload_id"] == upload_details["upload_id"]
 
     # get upload metadata via the upload ID:
-    response = joint_fixture.rest_client.get(f"/uploads/{upload_details['upload_id']}")
+    response = await joint_fixture.rest_client.get(
+        f"/uploads/{upload_details['upload_id']}"
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == upload_details
 
     # upload a couple of file parts:
     for part_no in range(1, 4):
         # request an upload URL for a part:
-        response = joint_fixture.rest_client.post(
+        response = await joint_fixture.rest_client.post(
             f"/uploads/{upload_details['upload_id']}/parts/{part_no}/signed_urls"
         )
         assert response.status_code == status.HTTP_200_OK
@@ -79,20 +88,23 @@ def perform_upload(
         )
 
     # set the final status:
-    response = joint_fixture.rest_client.patch(
+    response = await joint_fixture.rest_client.patch(
         f"/uploads/{upload_details['upload_id']}", json={"status": final_status}
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # confirm the final status:
-    response = joint_fixture.rest_client.get(f"/uploads/{upload_details['upload_id']}")
+    response = await joint_fixture.rest_client.get(
+        f"/uploads/{upload_details['upload_id']}"
+    )
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["status"] == final_status
 
     return upload_details["upload_id"]
 
 
-def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
+@pytest.mark.asyncio
+async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
     # initialize upstream event publisher and downstream event subscriber:
@@ -109,6 +121,14 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
 
+    # # register a new file (later this be done via an event):
+    upserted_files = [
+        models.FileMetadataUpsert(**file.dict(exclude={"latest_upload_id"}))
+        for file in EXAMPLE_FILES
+    ]
+    # file_metadata_service = await joint_fixture.container.file_metadata_service()
+    # await file_metadata_service.upsert_one(file=upserted_file)
+
     # publish an event to register new files:
     study_id = EXAMPLE_FILES[0].grouping_label
     associated_files = [
@@ -121,7 +141,7 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
             "update_date": file.update_date.isoformat(),
             "format": file.format,
         }
-        for file in EXAMPLE_FILES
+        for file in upserted_files
     ]
     new_study_event = {
         "study": {"id": study_id},
@@ -131,43 +151,46 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     study_publisher.publish(new_study_event)
 
     # use the event subscriber to receive and process the event:
-    async def get_subscriber():
-        return await joint_fixture.container.event_subscriber()
-
-    event_subscriber = asyncio.run(get_subscriber())
+    event_subscriber = await joint_fixture.container.event_subscriber()
     exec_with_timeout(
         func=lambda: event_subscriber.subscribe_new_study(run_forever=False),
         timeout_after=2,
     )
 
-    for file in EXAMPLE_FILES:
+    for upserted_file in upserted_files:
         # get file metadata:
-        response = joint_fixture.rest_client.get(f"/files/{file.file_id}")
+        response = await joint_fixture.rest_client.get(
+            f"/files/{upserted_file.file_id}"
+        )
         assert response.status_code == status.HTTP_200_OK
-        expected_metadata = json.loads(file.json())
+        expected_metadata = json.loads(upserted_file.json())
         obtained_metadata = response.json()
         for field in expected_metadata:
             assert obtained_metadata[field] == expected_metadata[field]
         assert obtained_metadata["latest_upload_id"] is None
 
         # perform an upload and cancel it:
-        perform_upload(joint_fixture, file_id=file.file_id, final_status="cancelled")
+        await perform_upload(
+            joint_fixture, file_id=upserted_file.file_id, final_status="cancelled"
+        )
 
         # perform another upload and confirm it:
-        perform_upload(joint_fixture, file_id=file.file_id, final_status="uploaded")
+        await perform_upload(
+            joint_fixture, file_id=upserted_file.file_id, final_status="uploaded"
+        )
 
         # receive the event that a new file was uploaded:
         downstream_message = downstream_subscriber.subscribe(timeout_after=2)
-        assert downstream_message["file_id"] == file.file_id
+        assert downstream_message["file_id"] == upserted_file.file_id
 
         # publish an event to mark the file as accepted:
         file_accepted_event = {
-            "file_id": file.file_id,
-            "md5_checksum": file.md5_checksum,
-            "size": file.size,
-            "creation_date": file.creation_date.isoformat(),
-            "update_date": file.update_date.isoformat(),
-            "format": file.format,
+            "file_id": upserted_file.file_id,
+            "md5_checksum": upserted_file.md5_checksum,
+            "size": upserted_file.size,
+            "creation_date": upserted_file.creation_date.isoformat(),
+            "update_date": upserted_file.update_date.isoformat(),
+            "format": upserted_file.format,
             "grouping_label": study_id,
             "timestamp": datetime.now().isoformat(),
         }
@@ -182,11 +205,13 @@ def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         # make sure that the latest upload of the corresponding file was marked as
         # accepted:
         # (first get the ID of the latest upload for that file:)
-        response = joint_fixture.rest_client.get(f"/files/{file.file_id}")
+        response = await joint_fixture.rest_client.get(
+            f"/files/{upserted_file.file_id}"
+        )
         assert response.status_code == status.HTTP_200_OK
         latest_upload_id = response.json()["latest_upload_id"]
 
         # (Then get details on that upload:)
-        response = joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
+        response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "accepted"

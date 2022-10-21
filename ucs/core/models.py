@@ -96,7 +96,10 @@ class FileMetadata(FileMetadataUpsert):
 
     latest_upload_id: Optional[str] = Field(
         None,
-        description="ID of the laterst upload (attempt). `Null/None` if no update has been initiated, yet.",
+        description=(
+            "ID of the laterst upload (attempt). `Null/None`"
+            + " if no update has been initiated, yet."
+        ),
     )
 
     class Config:

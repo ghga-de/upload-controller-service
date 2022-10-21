@@ -48,6 +48,16 @@ class InvalidFileMetadatUpdateError(RuntimeError):
 class FileMetadataPort(Protocol):
     """Interface of a service handling file metata."""
 
+    async def upsert_one(self, file: models.FileMetadataUpsert) -> None:
+        """Register a new file or update the metadata for an existing one.
+
+        Raises:
+            InvalidFileMetadatUpdateError:
+                When trying to update a metadata field, that can only be set on
+                creation.
+        """
+        ...
+
     async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
         """Registeres new files or updates existing ones.
 

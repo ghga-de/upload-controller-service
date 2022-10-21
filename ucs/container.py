@@ -18,17 +18,13 @@
 from hexkit.inject import ContainerBase, get_configurator, get_constructor
 from hexkit.providers.mongodb import MongoDbDaoFactory
 
+from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.adapters.outbound.dao import DaoCollectionConstructor
+from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
 from ucs.core.upload_service import UploadService
-from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.dao import DaoCollectionConstructor
-from ucs.adapters.outbound.psql.adapters import (
-    PsqlFileMetadataDAO,
-    PsqlUploadAttemptDAO,
-)
-from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
-from ucs.adapters.outbound.s3 import S3ObjectStorage
 
 
 class Container(ContainerBase):
@@ -43,10 +39,6 @@ class Container(ContainerBase):
     dao_collection = get_constructor(DaoCollectionConstructor, dao_factory=dao_factory)
 
     # outbound adapters:
-
-    file_metadata_dao = get_constructor(PsqlFileMetadataDAO, config=config)
-
-    upload_attempt_dao = get_constructor(PsqlUploadAttemptDAO, config=config)
 
     object_storage = get_constructor(S3ObjectStorage, config=config)
 
