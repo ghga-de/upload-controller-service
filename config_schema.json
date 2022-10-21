@@ -49,24 +49,6 @@
       "type": "string",
       "format": "path"
     },
-    "db_url": {
-      "title": "Db Url",
-      "description": "A URL to a PostgreSQL database.",
-      "example": "postgresql://user:password@mydbserver/dbname",
-      "env_names": [
-        "ucs_db_url"
-      ],
-      "type": "string"
-    },
-    "db_print_logs": {
-      "title": "Db Print Logs",
-      "description": "Print DB/ORM logs.",
-      "default": false,
-      "env_names": [
-        "ucs_db_print_logs"
-      ],
-      "type": "boolean"
-    },
     "service_name": {
       "title": "Service Name",
       "default": "upload_controller_service",
@@ -92,6 +74,76 @@
         "ucs_rabbitmq_port"
       ],
       "type": "integer"
+    },
+    "topic_file_accepted": {
+      "title": "Topic File Accepted",
+      "default": "file_internally_registered",
+      "env_names": [
+        "ucs_topic_file_accepted"
+      ],
+      "type": "string"
+    },
+    "topic_new_study": {
+      "title": "Topic New Study",
+      "default": "new_study_created",
+      "env_names": [
+        "ucs_topic_new_study"
+      ],
+      "type": "string"
+    },
+    "topic_upload_received": {
+      "title": "Topic Upload Received",
+      "default": "file_upload_received",
+      "env_names": [
+        "ucs_topic_upload_received"
+      ],
+      "type": "string"
+    },
+    "inbox_bucket": {
+      "title": "Inbox Bucket",
+      "default": "inbox",
+      "env_names": [
+        "ucs_inbox_bucket"
+      ],
+      "type": "string"
+    },
+    "db_url": {
+      "title": "Db Url",
+      "description": "A URL to a PostgreSQL database.",
+      "example": "postgresql://user:password@mydbserver/dbname",
+      "env_names": [
+        "ucs_db_url"
+      ],
+      "type": "string"
+    },
+    "db_print_logs": {
+      "title": "Db Print Logs",
+      "description": "Print DB/ORM logs.",
+      "default": false,
+      "env_names": [
+        "ucs_db_print_logs"
+      ],
+      "type": "boolean"
+    },
+    "db_connection_str": {
+      "title": "Db Connection Str",
+      "description": "MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/",
+      "example": "mongodb://localhost:27017",
+      "env_names": [
+        "ucs_db_connection_str"
+      ],
+      "type": "string",
+      "writeOnly": true,
+      "format": "password"
+    },
+    "db_name": {
+      "title": "Db Name",
+      "description": "Name of the database located on the MongoDB server.",
+      "example": "my-database",
+      "env_names": [
+        "ucs_db_name"
+      ],
+      "type": "string"
     },
     "host": {
       "title": "Host",
@@ -225,46 +277,16 @@
       "items": {
         "type": "string"
       }
-    },
-    "inbox_bucket": {
-      "title": "S3 Inbox Bucket Id",
-      "default": "inbox",
-      "env_names": [
-        "ucs_inbox_bucket"
-      ],
-      "type": "string"
-    },
-    "topic_file_accepted": {
-      "title": "Topic File Accepted",
-      "default": "file_internally_registered",
-      "env_names": [
-        "ucs_topic_file_accepted"
-      ],
-      "type": "string"
-    },
-    "topic_new_study": {
-      "title": "Topic New Study",
-      "default": "new_study_created",
-      "env_names": [
-        "ucs_topic_new_study"
-      ],
-      "type": "string"
-    },
-    "topic_upload_received": {
-      "title": "Topic Upload Received",
-      "default": "file_upload_received",
-      "env_names": [
-        "ucs_topic_upload_received"
-      ],
-      "type": "string"
     }
   },
   "required": [
     "s3_endpoint_url",
     "s3_access_key_id",
     "s3_secret_access_key",
+    "rabbitmq_host",
     "db_url",
-    "rabbitmq_host"
+    "db_connection_str",
+    "db_name"
   ],
   "additionalProperties": false
 }
