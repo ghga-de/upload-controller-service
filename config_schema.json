@@ -107,24 +107,6 @@
       ],
       "type": "string"
     },
-    "db_url": {
-      "title": "Db Url",
-      "description": "A URL to a PostgreSQL database.",
-      "example": "postgresql://user:password@mydbserver/dbname",
-      "env_names": [
-        "ucs_db_url"
-      ],
-      "type": "string"
-    },
-    "db_print_logs": {
-      "title": "Db Print Logs",
-      "description": "Print DB/ORM logs.",
-      "default": false,
-      "env_names": [
-        "ucs_db_print_logs"
-      ],
-      "type": "boolean"
-    },
     "db_connection_str": {
       "title": "Db Connection Str",
       "description": "MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/",
@@ -284,7 +266,6 @@
     "s3_access_key_id",
     "s3_secret_access_key",
     "rabbitmq_host",
-    "db_url",
     "db_connection_str",
     "db_name"
   ],

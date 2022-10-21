@@ -7,8 +7,6 @@ cors_allowed_methods: null
 cors_allowed_origins: null
 db_connection_str: '**********'
 db_name: dev_db
-db_print_logs: false
-db_url: postgresql://admin:admin@postgresql/inbox
 docs_url: /docs
 host: 127.0.0.1
 inbox_bucket: inbox
