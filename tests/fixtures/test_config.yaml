@@ -1,9 +1,7 @@
 rabbitmq_host: "rabbitmq"
 rabbitmq_port: 5672
-db_url: postgresql://postgres:postgres@test_postgres/postgres
 db_connection_str: "mongodb://mongodb:27017"
 db_name: "dev_db"
-db_print_logs: false
 s3_endpoint_url: http://test_localstack:4566
 s3_access_key_id: test
 s3_secret_access_key: test

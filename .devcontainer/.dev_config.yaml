@@ -1,5 +1,4 @@
 rabbitmq_host: rabbitmq
-db_url: postgresql://admin:admin@postgresql/inbox
 db_connection_str: "mongodb://mongodb:27017"
 db_name: "dev_db"
 s3_endpoint_url: http://localstack:4566
