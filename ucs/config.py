@@ -17,7 +17,6 @@
 
 from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
-from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
 from ghga_service_chassis_lib.s3 import S3ConfigBase
 from hexkit.providers.mongodb import MongoDbConfig
 
@@ -27,10 +26,9 @@ from ucs.core.upload_service import UploadServiceConfig
 
 
 @config_from_yaml(prefix="ucs")
-class Config(
+class Config(  # pylint: disable=too-many-ancestors
     ApiConfigBase,
     MongoDbConfig,
-    PostgresqlConfigBase,
     UploadServiceConfig,
     RMQPublisherConfig,
     RMQConsumerConfig,
