@@ -13,8 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of object storage adapters."""
-
-# pylint: disable=unused-import
-from ghga_service_chassis_lib.s3 import ObjectStorageS3 as S3ObjectStorage  # noqa: F401
-from ghga_service_chassis_lib.s3 import S3ConfigBase  # noqa: F401
+"""Inbound and outbound hexagonal port definitions."""

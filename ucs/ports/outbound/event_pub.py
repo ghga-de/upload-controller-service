@@ -17,10 +17,10 @@
 
 from typing import Protocol
 
-from ucs.domain import models
+from ucs.core import models
 
 
-class IEventPublisher(Protocol):
+class EventPublisher(Protocol):
     """An interface for an adapter that publishes events happening to this service."""
 
     def publish_upload_received(

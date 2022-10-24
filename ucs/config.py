@@ -17,18 +17,23 @@
 
 from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
-from ghga_service_chassis_lib.postgresql import PostgresqlConfigBase
-from ghga_service_chassis_lib.pubsub import PubSubConfigBase
 from ghga_service_chassis_lib.s3 import S3ConfigBase
+from hexkit.providers.mongodb import MongoDbConfig
+
+from ucs.adapters.inbound.rabbitmq_consume import RMQConsumerConfig
+from ucs.adapters.outbound.rabbitmq_produce import RMQPublisherConfig
+from ucs.core.upload_service import UploadServiceConfig
 
 
 @config_from_yaml(prefix="ucs")
-class Config(ApiConfigBase, PubSubConfigBase, PostgresqlConfigBase, S3ConfigBase):
+class Config(  # pylint: disable=too-many-ancestors
+    ApiConfigBase,
+    MongoDbConfig,
+    UploadServiceConfig,
+    RMQPublisherConfig,
+    RMQConsumerConfig,
+    S3ConfigBase,
+):
     """Config parameters and their defaults."""
 
     service_name: str = "upload_controller_service"
-
-    s3_inbox_bucket_id: str = "inbox"
-    topic_file_accepted: str = "file_internally_registered"
-    topic_new_study: str = "new_study_created"
-    topic_upload_received: str = "file_upload_received"

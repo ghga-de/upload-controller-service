@@ -15,42 +15,24 @@
 
 """Entrypoint of the package"""
 
-from enum import Enum
+import asyncio
 
 import typer
-from ghga_service_chassis_lib.api import run_server
 
-from ucs.config import Config
-from ucs.main import get_event_consumer, get_rest_api
-
-
-class Topics(str, Enum):
-    """Supported topics"""
-
-    NEW_STUDY = "new_study"
-    FILE_ACCEPTED = "file_accepted"
-
-
-config = Config()
-api = get_rest_api(config=config)
+from ucs.main import Topics, consume_events, run_rest
 
 cli = typer.Typer()
 
 
-@cli.command()
-def run_api():
+@cli.command(name="run-rest")
+def sync_run_api():
     """Run the HTTP REST API."""
 
-    run_server(app="ucs.cli:api", config=config)
+    asyncio.run(run_rest())
 
 
-@cli.command()
-def consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
+@cli.command(name="consume-events")
+def sync_consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
 
-    event_consumer = get_event_consumer(config=config)
-
-    if topic == topic.NEW_STUDY:
-        event_consumer.subscribe_new_study(run_forever=run_forever)
-    else:
-        raise NotImplementedError()
+    asyncio.run(consume_events(topic=topic, run_forever=run_forever))

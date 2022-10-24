@@ -17,16 +17,24 @@
 Subscriptions to async topics
 """
 
+import asyncio
 from pathlib import Path
 
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ucs.domain import models
-from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
-from ucs.domain.interfaces.inbound.upload_service import IUploadService
+from ucs.core import models
+from ucs.ports.inbound.file_service import FileMetadataPort
+from ucs.ports.inbound.upload_service import IUploadService
 
 HERE = Path(__file__).parent.resolve()
+
+
+class RMQConsumerConfig(PubSubConfigBase):
+    """Config parameters and their defaults."""
+
+    topic_file_accepted: str = "file_internally_registered"
+    topic_new_study: str = "new_study_created"
 
 
 class RabbitMQEventConsumer:
@@ -36,23 +44,15 @@ class RabbitMQEventConsumer:
     def __init__(
         self,
         *,
-        service_name: str,
-        rabbitmq_host: str,
-        rabbitmq_port: str,
-        topic_new_study: str,
-        topic_file_accepted: str,
-        file_metadata_service: IFileMetadataService,
+        config: RMQConsumerConfig,
+        file_metadata_service: FileMetadataPort,
         upload_service: IUploadService
     ):
         """Ininitalize class instance with config and inbound adapter objects."""
 
-        self._config = PubSubConfigBase(
-            service_name=service_name,
-            rabbitmq_host=rabbitmq_host,
-            rabbitmq_port=rabbitmq_port,
-        )
-        self._topic_new_study = topic_new_study
-        self._topic_file_accepted = topic_file_accepted
+        self._config = config
+        self._topic_new_study = config.topic_new_study
+        self._topic_file_accepted = config.topic_file_accepted
         self._file_metadata_service = file_metadata_service
         self._upload_service = upload_service
 
@@ -66,7 +66,7 @@ class RabbitMQEventConsumer:
         grouping_label = message["study"]["id"]
 
         files = [
-            models.FileMetadata(
+            models.FileMetadataUpsert(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
                 md5_checksum=file["md5_checksum"],
@@ -79,7 +79,7 @@ class RabbitMQEventConsumer:
             for file in study_files
         ]
 
-        self._file_metadata_service.upsert_multiple(files)
+        asyncio.run(self._file_metadata_service.upsert_multiple(files))
 
     def _process_file_accepted_message(self, message: dict):
         """
@@ -88,7 +88,7 @@ class RabbitMQEventConsumer:
 
         file_id = message["file_id"]
 
-        self._upload_service.accept_latest(file_id=file_id)
+        asyncio.run(self._upload_service.accept_latest(file_id=file_id))
 
     def subscribe_new_study(self, run_forever: bool = True) -> None:
         """

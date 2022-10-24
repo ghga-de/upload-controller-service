@@ -24,11 +24,8 @@ from fastapi import APIRouter, Depends, Path, status
 
 from ucs.adapters.inbound.fastapi_ import http_exceptions, rest_models
 from ucs.container import Container
-from ucs.domain.interfaces.inbound.file_service import (
-    FileUnkownError,
-    IFileMetadataService,
-)
-from ucs.domain.interfaces.inbound.upload_service import (
+from ucs.ports.inbound.file_service import FileMetadataPort, FileUnkownError
+from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     IUploadService,
     UploadCancelError,
@@ -70,8 +67,9 @@ ERROR_RESPONSES = {
 
 
 @router.get("/health", summary="health", status_code=status.HTTP_200_OK)
-def health():
+async def health():
     """Used to test if this service is alive"""
+
     return {"status": "OK"}
 
 
@@ -80,7 +78,7 @@ def health():
     summary="Get file metadata including the current upload attempt.",
     operation_id="getFileMetadata",
     status_code=status.HTTP_200_OK,
-    response_model=rest_models.FileMetadataWithUpload,
+    response_model=rest_models.FileMetadata,
     response_description="File metadata including the current upload attempt",
     responses={
         status.HTTP_403_FORBIDDEN: ERROR_RESPONSES["noFileAccess"],
@@ -88,16 +86,16 @@ def health():
     },
 )
 @inject
-def get_file_metadata(
+async def get_file_metadata(
     file_id: str,
-    file_metadata_service: IFileMetadataService = Depends(
+    file_metadata_service: FileMetadataPort = Depends(
         Provide[Container.file_metadata_service]
     ),
 ):
     """Get file metadata including the current upload attempt."""
 
     try:
-        return file_metadata_service.get(file_id)
+        return await file_metadata_service.get_by_id(file_id)
     except FileUnkownError as error:
         raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
 
@@ -133,14 +131,14 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
     },
 )
 @inject
-def create_upload(
+async def create_upload(
     upload_creation: rest_models.UploadAttemptCreation,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
     """Initiate a new mutli-part upload for the given file."""
 
     try:
-        return upload_service.initiate_new(file_id=upload_creation.file_id)
+        return await upload_service.initiate_new(file_id=upload_creation.file_id)
     except ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,
@@ -165,7 +163,7 @@ def create_upload(
     },
 )
 @inject
-def get_upload(
+async def get_upload(
     upload_id: str,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
 ):
@@ -174,7 +172,7 @@ def get_upload(
     """
 
     try:
-        return upload_service.get_details(upload_id=upload_id)
+        return await upload_service.get_details(upload_id=upload_id)
     except UploadUnkownError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
@@ -208,7 +206,7 @@ def get_upload(
     },
 )
 @inject
-def update_upload_status(
+async def update_upload_status(
     upload_id: str,
     update: rest_models.UploadAttemptUpdate,
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
@@ -220,9 +218,9 @@ def update_upload_status(
 
     try:
         if update.status == "uploaded":
-            upload_service.complete(upload_id=upload_id)
+            await upload_service.complete(upload_id=upload_id)
         else:
-            upload_service.cancel(upload_id=upload_id)
+            await upload_service.cancel(upload_id=upload_id)
     except UploadStatusMissmatchError as error:
         raise http_exceptions.HttpUploadNotPendingError(
             upload_id=upload_id, current_status=error.current_status
@@ -256,7 +254,7 @@ def update_upload_status(
     },
 )
 @inject
-def create_presigned_url(
+async def create_presigned_url(
     upload_id: str,
     part_no: int = Path(..., ge=1, le=10000),
     upload_service: IUploadService = Depends(Provide[Container.upload_service]),
@@ -267,7 +265,7 @@ def create_presigned_url(
     """
 
     try:
-        presigned_url = upload_service.create_part_url(
+        presigned_url = await upload_service.create_part_url(
             upload_id=upload_id, part_no=part_no
         )
     except UploadUnkownError as error:

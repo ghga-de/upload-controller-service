@@ -20,30 +20,25 @@ Publish asynchronous topics
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
-from ucs.domain import models
-from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
+from ucs.core import models
+from ucs.ports.outbound.event_pub import EventPublisher
 
 
-class RabbitMQEventPublisher(IEventPublisher):
-    """A RabbitMQ-based implementation of the IEventPublisher interface."""
+class RMQPublisherConfig(PubSubConfigBase):
+    """Config parameters and their defaults."""
+
+    topic_upload_received: str = "file_upload_received"
+
+
+class RabbitMQEventPublisher(EventPublisher):
+    """A RabbitMQ-based implementation of the EventPublisher interface."""
 
     # pylint: disable=super-init-not-called
-    def __init__(
-        self,
-        *,
-        service_name: str,
-        rabbitmq_host: str,
-        rabbitmq_port: str,
-        topic_upload_received: str,
-    ):
+    def __init__(self, *, config: RMQPublisherConfig):
         """Ininitalize class instance with config object."""
 
-        self._config = PubSubConfigBase(
-            service_name=service_name,
-            rabbitmq_host=rabbitmq_host,
-            rabbitmq_port=rabbitmq_port,
-        )
-        self._topic_upload_received = topic_upload_received
+        self._config = config
+        self._topic_upload_received = config.topic_upload_received
 
     def publish_upload_received(
         self,

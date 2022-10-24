@@ -18,23 +18,32 @@
 __all__ = [
     "joint_fixture",
     "JointFixture",
-    "psql_fixture",
+    "mongodb_fixture",
     "amqp_fixture",
     "s3_fixture",
 ]
 
+import socket
 from dataclasses import dataclass
+from typing import AsyncGenerator
 
-import pytest
+import httpx
+import pytest_asyncio
+from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
 
 from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
-from tests.fixtures.psql import PsqlFixture, psql_fixture
-from tests.fixtures.rest import RestTestClient
 from tests.fixtures.s3 import S3Fixture, s3_fixture
 from ucs.config import Config
 from ucs.container import Container
-from ucs.main import setup_container
+from ucs.main import get_configured_container, get_rest_api
+
+
+def get_free_port() -> int:
+    """Finds and returns a free port on localhost."""
+    sock = socket.socket()
+    sock.bind(("", 0))
+    return int(sock.getsockname()[1])
 
 
 @dataclass
@@ -43,34 +52,39 @@ class JointFixture:
 
     config: Config
     container: Container
-    psql: PsqlFixture
+    mongodb: MongoDbFixture
     amqp: AmqpFixture
-    rest_client: RestTestClient
+    rest_client: httpx.AsyncClient
     s3: S3Fixture
 
 
-@pytest.fixture
-def joint_fixture(
-    psql_fixture: PsqlFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
-) -> JointFixture:
+@pytest_asyncio.fixture
+async def joint_fixture(
+    mongodb_fixture: MongoDbFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
+) -> AsyncGenerator[JointFixture, None]:
     """A fixture that embeds all other fixtures for API-level integration testing"""
 
     # merge configs from different sources with the default one:
     config = get_config(
-        sources=[psql_fixture.config, amqp_fixture.config, s3_fixture.config]
+        sources=[mongodb_fixture.config, amqp_fixture.config, s3_fixture.config]
     )
 
-    # create a DI container instance:
-    container = setup_container(config=config)
+    # create a DI container instance:translators
+    async with get_configured_container(config=config) as container:
+        container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
 
-    # setup an API test client:
-    rest_client = RestTestClient(config=config)
+        # setup an API test client:
+        api = get_rest_api(config=config)
+        port = get_free_port()
+        async with httpx.AsyncClient(
+            app=api, base_url=f"http://localhost:{port}"
+        ) as rest_client:
 
-    return JointFixture(
-        config=config,
-        container=container,
-        psql=psql_fixture,
-        amqp=amqp_fixture,
-        rest_client=rest_client,
-        s3=s3_fixture,
-    )
+            yield JointFixture(
+                config=config,
+                container=container,
+                mongodb=mongodb_fixture,
+                amqp=amqp_fixture,
+                rest_client=rest_client,
+                s3=s3_fixture,
+            )

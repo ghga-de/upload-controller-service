@@ -13,21 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Fixtures and utilities for dealing with the API."""
-
-import fastapi.testclient
-
-from ucs.config import Config
-from ucs.main import get_rest_api
-
-
-class RestTestClient(fastapi.testclient.TestClient):
-    """A test client to which you can inject a custom Config object."""
-
-    def __init__(self, config: Config):
-        """Create the test client with a custom Config object."""
-        # Overwrite the get_config dep if config is specified, otherwise restore the
-        # default:
-        api = get_rest_api(config=config)
-
-        super().__init__(api)
+"""Inbound hexagonal port definitions."""

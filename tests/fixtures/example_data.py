@@ -21,7 +21,7 @@ from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
 
 from tests.fixtures.config import DEFAULT_CONFIG
 from tests.fixtures.s3 import FileObject
-from ucs.domain import models
+from ucs.core import models
 
 # Example metadata on a single file:
 EXAMPLE_FILE = models.FileMetadata(
@@ -33,6 +33,7 @@ EXAMPLE_FILE = models.FileMetadata(
     creation_date=datetime.now(),
     update_date=datetime.now(),
     format="txt",
+    latest_upload_id="testUpload001",
 )
 
 # A list of metadata in case multiple file entries are needed:
@@ -46,7 +47,7 @@ EXAMPLE_FILES = [
 # An example of a storage file object corresponding to the EXAMPLE_FILE:
 EXAMPLE_STORAGE_OBJECT = FileObject(
     file_path=TEST_FILE_PATHS[0],
-    bucket_id=DEFAULT_CONFIG.s3_inbox_bucket_id,
+    bucket_id=DEFAULT_CONFIG.inbox_bucket,
     object_id=EXAMPLE_FILE.file_id,
 )
 
@@ -56,6 +57,7 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
     file_id="testFile001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
+    datetime_created=datetime.now(),
 )
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:

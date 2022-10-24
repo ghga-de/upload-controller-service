@@ -17,11 +17,11 @@
 
 from typing import Protocol
 
-from ucs.domain import models
+from ucs.core import models
 
 # shortcuts:
 # pylint: disable=unused-import
-from ucs.domain.interfaces.inbound.file_service import FileUnkownError  # noqa: F401
+from ucs.ports.inbound.file_service import FileUnkownError  # noqa: F401
 
 
 class UploadUnkownError(RuntimeError):
@@ -149,38 +149,38 @@ class IUploadService(Protocol):
         - StorageAndDatabaseOutOfSyncError
     """
 
-    def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
+    async def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
         """
         Initiates a new multi-part upload for the file with the given ID.
         """
         ...
 
-    def get_details(self, *, upload_id: str) -> models.UploadAttempt:
+    async def get_details(self, *, upload_id: str) -> models.UploadAttempt:
         """
         Get details on an existing multipart upload by specifing its ID.
         """
         ...
 
-    def create_part_url(self, *, upload_id: str, part_no: int) -> str:
+    async def create_part_url(self, *, upload_id: str, part_no: int) -> str:
         """
         Create and return a pre-signed URL to upload the bytes for the file part with
         the given number of the upload with the given ID.
         """
         ...
 
-    def complete(self, *, upload_id: str) -> None:
+    async def complete(self, *, upload_id: str) -> None:
         """
         Confirm the completion of the multi-part upload with the given ID.
         """
         ...
 
-    def cancel(self, *, upload_id: str) -> None:
+    async def cancel(self, *, upload_id: str) -> None:
         """
         Cancel the multi-part upload with the given ID.
         """
         ...
 
-    def accept_latest(self, *, file_id: str) -> None:
+    async def accept_latest(self, *, file_id: str) -> None:
         """
         Accept the latest multi-part upload for the given file.
 
@@ -189,7 +189,7 @@ class IUploadService(Protocol):
         """
         ...
 
-    def reject_latest(self, *, file_id: str) -> None:
+    async def reject_latest(self, *, file_id: str) -> None:
         """
         Accept the latest multi-part upload for the given file.
 

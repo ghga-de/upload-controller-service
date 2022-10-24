@@ -15,83 +15,52 @@
 
 """Module hosting the dependency injection container."""
 
-from dependency_injector import containers, providers
+from hexkit.inject import ContainerBase, get_configurator, get_constructor
+from hexkit.providers.mongodb import MongoDbDaoFactory
 
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.psql.adapters import (
-    PsqlFileMetadataDAO,
-    PsqlUploadAttemptDAO,
-)
+from ucs.adapters.outbound.dao import DaoCollectionConstructor
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
-from ucs.domain.file_service import FileMetadataServive
-from ucs.domain.interfaces.inbound.file_service import IFileMetadataService
-from ucs.domain.interfaces.inbound.upload_service import IUploadService
-from ucs.domain.interfaces.outbound.event_pub import IEventPublisher
-from ucs.domain.interfaces.outbound.file_dao import IFileMetadataDAO
-from ucs.domain.interfaces.outbound.storage import IObjectStorage
-from ucs.domain.interfaces.outbound.upload_dao import IUploadAttemptDAO
-from ucs.domain.upload_service import UploadService
+from ucs.config import Config
+from ucs.core.file_service import FileMetadataServive
+from ucs.core.upload_service import UploadService
 
 
-class Container(containers.DeclarativeContainer):
+class Container(ContainerBase):
     """DI Container"""
 
-    config = providers.Configuration()
+    config = get_configurator(Config)
+
+    # outbound providers:
+    dao_factory = get_constructor(MongoDbDaoFactory, config=config)
+
+    # outbound translators:
+    dao_collection = get_constructor(DaoCollectionConstructor, dao_factory=dao_factory)
 
     # outbound adapters:
 
-    file_metadata_dao = providers.Factory[IFileMetadataDAO](
-        PsqlFileMetadataDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
-    )
+    object_storage = get_constructor(S3ObjectStorage, config=config)
 
-    upload_attempt_dao = providers.Factory[IUploadAttemptDAO](
-        PsqlUploadAttemptDAO, db_url=config.db_url, db_print_logs=config.db_print_logs
-    )
-
-    object_storage = providers.Factory[IObjectStorage](
-        S3ObjectStorage,
-        s3_endpoint_url=config.s3_endpoint_url,
-        s3_access_key_id=config.s3_access_key_id,
-        s3_secret_access_key=config.s3_secret_access_key,
-        s3_session_token=config.s3_session_token,
-        aws_config_ini=config.aws_config_ini,
-    )
-
-    event_publisher = providers.Factory[IEventPublisher](
-        RabbitMQEventPublisher,
-        service_name=config.service_name,
-        rabbitmq_host=config.rabbitmq_host,
-        rabbitmq_port=config.rabbitmq_port,
-        topic_upload_received=config.topic_upload_received,
-    )
+    event_publisher = get_constructor(RabbitMQEventPublisher, config=config)
 
     # domain:
 
-    file_metadata_service = providers.Factory[IFileMetadataService](
-        FileMetadataServive,
-        file_metadata_dao=file_metadata_dao,
-        upload_attempt_dao=upload_attempt_dao,
-    )
+    file_metadata_service = get_constructor(FileMetadataServive, daos=dao_collection)
 
-    upload_service = providers.Factory[IUploadService](
+    upload_service = get_constructor(
         UploadService,
-        s3_inbox_bucket_id=config.s3_inbox_bucket_id,
-        file_metadata_dao=file_metadata_dao,
-        upload_attempt_dao=upload_attempt_dao,
+        daos=dao_collection,
         object_storage=object_storage,
         event_publisher=event_publisher,
+        config=config,
     )
 
     # inbound adapters:
 
-    event_subscriber = providers.Factory[RabbitMQEventConsumer](
+    event_subscriber = get_constructor(
         RabbitMQEventConsumer,
-        service_name=config.service_name,
-        rabbitmq_host=config.rabbitmq_host,
-        rabbitmq_port=config.rabbitmq_port,
-        topic_new_study=config.topic_new_study,
-        topic_file_accepted=config.topic_file_accepted,
         file_metadata_service=file_metadata_service,
         upload_service=upload_service,
+        config=config,
     )

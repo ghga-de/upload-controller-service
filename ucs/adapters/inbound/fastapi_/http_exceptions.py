@@ -20,7 +20,7 @@ import json
 from httpyexpect.server import HttpCustomExceptionBase
 from pydantic import BaseModel
 
-from ucs.domain import models
+from ucs.core import models
 
 
 class HttpNoFileAccessError(HttpCustomExceptionBase):

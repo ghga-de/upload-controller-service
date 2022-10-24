@@ -57,6 +57,9 @@ class UploadAttempt(BaseModel):
     part_size: int = Field(
         ..., description="Part size to be used for upload. Specified in bytes."
     )
+    datetime_created: datetime = Field(
+        ..., description="Datetime when the upload attempt was created."
+    )
 
     class Config:
         """Additional Model Config."""
@@ -65,9 +68,9 @@ class UploadAttempt(BaseModel):
         title = "Multi-Part Upload Details"
 
 
-class FileMetadata(BaseModel):
+class FileMetadataUpsert(BaseModel):
     """
-    A model containing basic file metadata.
+    A model for creating new or updating existing file metadata entries.
     """
 
     file_id: str
@@ -83,20 +86,24 @@ class FileMetadata(BaseModel):
         """Additional Model Config."""
 
         orm_mode = True
-        title = "Basic File Metadata"
+        title = "File Metadata Creation"
 
 
-class FileMetadataWithUpload(FileMetadata):
+class FileMetadata(FileMetadataUpsert):
     """
-    A model containing basic file metadata and information on the current upload.
+    A model containing the full metadata on a file.
     """
 
     latest_upload_id: Optional[str] = Field(
         None,
-        description="ID of the current upload. `Null` if no update has been initiated, yet.",
+        description=(
+            "ID of the latest upload (attempt). `Null/None`"
+            + " if no update has been initiated, yet."
+        ),
     )
 
     class Config:
         """Additional Model Config."""
 
+        orm_mode = True
         title = "File Metadata"

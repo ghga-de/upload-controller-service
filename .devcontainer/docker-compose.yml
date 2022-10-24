@@ -11,7 +11,7 @@ services:
         # [Choice] Install Node.js
         INSTALL_NODE: "true"
         NODE_VERSION: "lts/*"
-        PACKAGE_NAME: "upload_controller_service"
+        PACKAGE_NAME: "ucs"
         # On Linux, you may need to update USER_UID and USER_GID below if not your local UID is not 1000.
         USER_UID: 1000
         USER_GID: 1000
@@ -25,42 +25,26 @@ services:
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
-    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:postgresql
-
     # Uncomment the next line to use a non-root user for all processes.
     user: vscode
 
     # define environment variables
     environment:
       UCS_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
-      DB_URL: postgresql://admin:admin@postgresql/inbox
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
-  postgresql:
-    image: postgres:latest
+  mongodb:
+    image: mongo:6.0.2
     restart: unless-stopped
     volumes:
-      - type: volume
-        source: postgres_fs
-        target: /var/lib/postgresql/data
-        volume:
-          nocopy: true
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_DB: inbox
-      POSTGRES_PASSWORD: admin
-
-    command: [ 'postgres', '-c', 'work_mem=512MB' ]
-    deploy:
-      endpoint_mode: dnsrr
+      - mongo_fs:/data/db
 
   rabbitmq:
     image: rabbitmq:3-management
     # useful ports:
-      # 5672 - broker
-      # 15672 - dashboard
+    # 5672 - broker
+    # 15672 - dashboard
 
   localstack:
     image: localstack/localstack
@@ -82,5 +66,5 @@ services:
     # useful ports: 4566 - AWS API
 
 volumes:
-  postgres_fs: {}
+  mongo_fs: {}
   s3_fs: {}

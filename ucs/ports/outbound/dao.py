@@ -13,8 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Implementation of object storage adapters."""
+"""DAO translators for accessing the database."""
 
+from dataclasses import dataclass
+
+# for convienience: forward errors that may be thrown by DAO instances:
 # pylint: disable=unused-import
-from ghga_service_chassis_lib.s3 import ObjectStorageS3 as S3ObjectStorage  # noqa: F401
-from ghga_service_chassis_lib.s3 import S3ConfigBase  # noqa: F401
+from hexkit.protocols.dao import (  # noqa: F401
+    DaoNaturalId,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
+)
+
+from ucs.core import models
+
+
+@dataclass
+class DaoCollection:
+    """A collection of DAOs for interacting with the database."""
+
+    file_metadata: DaoNaturalId[models.FileMetadata]
+    upload_attempts: DaoNaturalId[models.UploadAttempt]

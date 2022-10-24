@@ -12,5 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-"""Outbound adapters based on PostgreSQL"""
+"""Used to define the location of the main FastAPI app object."""
+
+# flake8: noqa
+# pylint: skip-file
+
+from fastapi import FastAPI
+
+from ucs.adapters.inbound.fastapi_.routes import router
+
+app = FastAPI()
+app.include_router(router)
