@@ -40,3 +40,6 @@ pytest.ini
 LICENSE
 requirements.txt
 setup.py
+
+.static_files
+.mandatory_files
