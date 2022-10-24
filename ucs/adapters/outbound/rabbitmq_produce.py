@@ -31,7 +31,7 @@ class RMQPublisherConfig(PubSubConfigBase):
 
 
 class RabbitMQEventPublisher(EventPublisher):
-    """A RabbitMQ-based implementation of the IEventPublisher interface."""
+    """A RabbitMQ-based implementation of the EventPublisher interface."""
 
     # pylint: disable=super-init-not-called
     def __init__(self, *, config: RMQPublisherConfig):

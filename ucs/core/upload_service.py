@@ -36,7 +36,7 @@ from ucs.ports.inbound.upload_service import (
     UploadUnkownError,
 )
 from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
-from ucs.ports.outbound.event_pub import IEventPublisher
+from ucs.ports.outbound.event_pub import EventPublisher
 from ucs.ports.outbound.storage import (
     IObjectStorage,
     MultiPartUploadAbortError,
@@ -71,7 +71,7 @@ class UploadService(IUploadService):
         config: UploadServiceConfig,
         daos: DaoCollection,
         object_storage: IObjectStorage,
-        event_publisher: IEventPublisher,
+        event_publisher: EventPublisher,
         # domain internal dependencies are immediately injected:
         part_size_calculator: IPartSizeCalculator = calculate_part_size,
     ):
