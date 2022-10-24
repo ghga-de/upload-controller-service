@@ -20,7 +20,7 @@ components:
           title: Grouping Label
           type: string
         latest_upload_id:
-          description: ID of the laterst upload (attempt). `Null/None` if no update
+          description: ID of the latest upload (attempt). `Null/None` if no update
             has been initiated, yet.
           title: Latest Upload Id
           type: string
