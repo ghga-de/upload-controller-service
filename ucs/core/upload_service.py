@@ -17,6 +17,7 @@
 """The main upload handling logic."""
 
 from datetime import datetime
+from typing import Callable
 
 from hexkit.utils import calc_part_size
 from pydantic import BaseSettings
@@ -71,6 +72,10 @@ class UploadService(IUploadService):
         daos: DaoCollection,
         object_storage: IObjectStorage,
         event_publisher: EventPublisher,
+        # domain internal dependencies are immediately injected:
+        part_size_calculator: Callable[[int], int] = lambda file_size: calc_part_size(
+            file_size=file_size
+        ),
     ):
         """Ininitalize class instance with configs and outbound adapter objects."""
 
@@ -78,6 +83,7 @@ class UploadService(IUploadService):
         self._daos = daos
         self._object_storage = object_storage
         self._event_publisher = event_publisher
+        self._part_size_calculator = part_size_calculator
 
         # Create inbox bucket if it doesn't exist:
         with self._object_storage as storage:
@@ -273,7 +279,7 @@ class UploadService(IUploadService):
         upload_id = await self._init_multipart_upload(file_id=file_id)
 
         # get the recommended part size:
-        part_size = calc_part_size(file_size=file.size)
+        part_size = self._part_size_calculator(file.size)
 
         # assemble the upload attempts details:
         upload = models.UploadAttempt(
