@@ -17,12 +17,12 @@
 """The main upload handling logic."""
 
 from datetime import datetime
+from typing import Callable
 
+from hexkit.utils import calc_part_size
 from pydantic import BaseSettings
 
 from ucs.core import models
-from ucs.core.interfaces.part_calc import IPartSizeCalculator
-from ucs.core.part_calc import calculate_part_size
 from ucs.ports.inbound.upload_service import (
     ExistingActiveUploadError,
     FileAlreadyInInboxError,
@@ -73,7 +73,9 @@ class UploadService(IUploadService):
         object_storage: IObjectStorage,
         event_publisher: EventPublisher,
         # domain internal dependencies are immediately injected:
-        part_size_calculator: IPartSizeCalculator = calculate_part_size,
+        part_size_calculator: Callable[[int], int] = lambda file_size: calc_part_size(
+            file_size=file_size
+        ),
     ):
         """Ininitalize class instance with configs and outbound adapter objects."""
 
