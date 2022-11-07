@@ -28,7 +28,9 @@
       "env_names": [
         "ucs_s3_secret_access_key"
       ],
-      "type": "string"
+      "type": "string",
+      "writeOnly": true,
+      "format": "password"
     },
     "s3_session_token": {
       "title": "S3 Session Token",
@@ -37,7 +39,9 @@
       "env_names": [
         "ucs_s3_session_token"
       ],
-      "type": "string"
+      "type": "string",
+      "writeOnly": true,
+      "format": "password"
     },
     "aws_config_ini": {
       "title": "Aws Config Ini",

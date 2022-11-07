@@ -17,7 +17,7 @@ rabbitmq_host: rabbitmq
 rabbitmq_port: 5672
 s3_access_key_id: test
 s3_endpoint_url: http://localstack:4566
-s3_secret_access_key: test
+s3_secret_access_key: '**********'
 s3_session_token: null
 service_name: upload_controller_service
 topic_file_accepted: file_internally_registered
