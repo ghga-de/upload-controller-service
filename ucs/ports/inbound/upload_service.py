@@ -15,152 +15,137 @@
 
 """Interfaces for the main upload handling logic of this service."""
 
-from typing import Protocol
+from abc import ABC, abstractmethod
 
 from ucs.core import models
-
-# shortcuts:
-# pylint: disable=unused-import
-from ucs.ports.inbound.file_service import FileUnkownError  # noqa: F401
+from ucs.ports.inbound.file_service import FileMetadataServicePort
 
 
-class UploadUnkownError(RuntimeError):
-    """Thrown when an upload attempt with the given ID is not known."""
+class UploadServicePort(ABC):
+    """Interface of a service handling uploads to the Inbox storage."""
 
-    def __init__(self, *, upload_id: str):
-        self.upload_id = upload_id
-        message = f"The upload attempt with ID {upload_id} is unkown."
-        super().__init__(message)
+    class FileUnkownError(FileMetadataServicePort.FileUnkownError):
+        """A shortcut to the corresponding error from the FileMetadataServicePort."""
 
+    class UploadUnkownError(RuntimeError):
+        """Thrown when an upload attempt with the given ID is not known."""
 
-class UploadStatusMissmatchError(RuntimeError):
-    """Thrown when an upload was expected to have a specific status for performing
-    an action."""
+        def __init__(self, *, upload_id: str):
+            self.upload_id = upload_id
+            message = f"The upload attempt with ID {upload_id} is unkown."
+            super().__init__(message)
 
-    def __init__(
-        self,
-        *,
-        upload_id: str,
-        expected_status: models.UploadStatus,
-        current_status: models.UploadStatus,
-    ):
-        self.upload_id = upload_id
-        self.expected_status = expected_status
-        self.current_status = current_status
-        message = (
-            f"The upload with ID {upload_id} must be in '{expected_status}' state to"
-            + " perform the requested action, however, its current state is:"
-            + str(current_status)
-        )
-        super().__init__(message)
+    class UploadStatusMissmatchError(RuntimeError):
+        """Thrown when an upload was expected to have a specific status for performing
+        an action."""
 
+        def __init__(
+            self,
+            *,
+            upload_id: str,
+            expected_status: models.UploadStatus,
+            current_status: models.UploadStatus,
+        ):
+            self.upload_id = upload_id
+            self.expected_status = expected_status
+            self.current_status = current_status
+            message = (
+                f"The upload with ID {upload_id} must be in '{expected_status}' state to"
+                + " perform the requested action, however, its current state is:"
+                + str(current_status)
+            )
+            super().__init__(message)
 
-class ExistingActiveUploadError(RuntimeError):
-    """Thrown when trying to create a new upload while another upload is already active."""
+    class ExistingActiveUploadError(RuntimeError):
+        """Thrown when trying to create a new upload while another upload is already active."""
 
-    def __init__(self, *, active_upload: models.UploadAttempt):
-        self.active_upload = active_upload
-        message = (
-            "Failed to create a new multi-part upload for the file with ID"
-            + f" {self.active_upload.file_id} because another upload is"
-            + " currently active or has been accepted."
-            + f" ID, status of the existing upload: {self.active_upload.upload_id},"
-            + f" {self.active_upload.status}"
-        )
-        super().__init__(message)
+        def __init__(self, *, active_upload: models.UploadAttempt):
+            self.active_upload = active_upload
+            message = (
+                "Failed to create a new multi-part upload for the file with ID"
+                + f" {self.active_upload.file_id} because another upload is"
+                + " currently active or has been accepted."
+                + f" ID, status of the existing upload: {self.active_upload.upload_id},"
+                + f" {self.active_upload.status}"
+            )
+            super().__init__(message)
 
+    class UploadCompletionError(RuntimeError):
+        """Thrown when the confirmation of an upload attempt failed."""
 
-class UploadCompletionError(RuntimeError):
-    """Thrown when the confirmation of an upload attempt failed."""
+        def __init__(self, *, upload_id: str, reason: str):
+            self.reason = reason
+            self.upload_id = upload_id
+            message = (
+                f"The confirmation of the upload attempt with ID {upload_id} failed."
+                + " The upload attempt was aborted and cannot be resumed. The reason was: "
+                + reason
+            )
+            super().__init__(message)
 
-    def __init__(self, *, upload_id: str, reason: str):
-        self.reason = reason
-        self.upload_id = upload_id
-        message = (
-            f"The confirmation of the upload attempt with ID {upload_id} failed."
-            + " The upload attempt was aborted and cannot be resumed. The reason was: "
-            + reason
-        )
-        super().__init__(message)
+    class UploadCancelError(RuntimeError):
+        """Thrown when the cancelling of an upload attempt failed."""
 
+        def __init__(self, *, upload_id: str):
+            self.upload_id = upload_id
+            self.possible_reason = (
+                "An ongoing part upload might be a reason. Please complete all part uploads"
+                + " and try to cancel again."
+            )
+            message = (
+                f"Failed to cancel the multi-part upload {upload_id}."
+                + self.possible_reason
+            )
+            super().__init__(message)
 
-class UploadCancelError(RuntimeError):
-    """Thrown when the cancelling of an upload attempt failed."""
+    class StorageAndDatabaseOutOfSyncError(RuntimeError):
+        """Thrown when the state of the storage and the state of the database are out of
+        sync."""
 
-    def __init__(self, *, upload_id: str):
-        self.upload_id = upload_id
-        self.possible_reason = (
-            "An ongoing part upload might be a reason. Please complete all part uploads"
-            + " and try to cancel again."
-        )
-        message = (
-            f"Failed to cancel the multi-part upload {upload_id}."
-            + self.possible_reason
-        )
-        super().__init__(message)
+        def __init__(self, *, problem: str):
+            self.problem = problem
+            message = f"The object storage and the database are out of sync: {problem}"
+            super().__init__(message)
 
+    class FileAlreadyInInboxError(StorageAndDatabaseOutOfSyncError):
+        """Thrown when a file is unexpectedly already in the inbox."""
 
-class StorageAndDatabaseOutOfSyncError(RuntimeError):
-    """Thrown when the state of the storage and the state of the database are out of
-    sync."""
+        def __init__(self, *, file_id: str):
+            self.file_id = file_id
+            problem = f"The file with ID {file_id} is already in the inbox."
+            super().__init__(problem=problem)
 
-    def __init__(self, *, problem: str):
-        self.problem = problem
-        message = f"The object storage and the database are out of sync: {problem}"
-        super().__init__(message)
+    class FileNotInInboxError(StorageAndDatabaseOutOfSyncError):
+        """Thrown when a file is declared to be uploaded but was not found in the inbox."""
 
+        def __init__(self, *, file_id: str):
+            self.file_id = file_id
+            problem = f"The file with ID {file_id} not in the inbox."
+            super().__init__(problem=problem)
 
-class FileAlreadyInInboxError(StorageAndDatabaseOutOfSyncError):
-    """Thrown when a file is unexpectedly already in the inbox."""
+    class NoLatestUploadError(RuntimeError):
+        """Thrown when a latest upload is expected for a file but no one was found."""
 
-    def __init__(self, *, file_id: str):
-        self.file_id = file_id
-        problem = f"The file with ID {file_id} is already in the inbox."
-        super().__init__(problem=problem)
+        def __init__(self, *, file_id: str):
+            self.file_id = file_id
+            message = f"The file with ID {file_id} as no upload."
+            super().__init__(message)
 
-
-class FileNotInInboxError(StorageAndDatabaseOutOfSyncError):
-    """Thrown when a file is declared to be uploaded but was not found in the inbox."""
-
-    def __init__(self, *, file_id: str):
-        self.file_id = file_id
-        problem = f"The file with ID {file_id} not in the inbox."
-        super().__init__(problem=problem)
-
-
-class NoLatestUploadError(RuntimeError):
-    """Thrown when a latest upload is expected for a file but no one was found."""
-
-    def __init__(self, *, file_id: str):
-        self.file_id = file_id
-        message = f"The file with ID {file_id} as no upload."
-        super().__init__(message)
-
-
-class IUploadService(Protocol):
-    """Interface of a service handling uploads to the Inbox storage.
-
-    Raises:
-        - FileUnkownError
-        - FileAlreadyInInboxError
-        - FileNotInInboxError
-        - UploadNotPendingError
-        - ExistingActiveUploadError
-        - StorageAndDatabaseOutOfSyncError
-    """
-
+    @abstractmethod
     async def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
         """
         Initiates a new multi-part upload for the file with the given ID.
         """
         ...
 
+    @abstractmethod
     async def get_details(self, *, upload_id: str) -> models.UploadAttempt:
         """
         Get details on an existing multipart upload by specifing its ID.
         """
         ...
 
+    @abstractmethod
     async def create_part_url(self, *, upload_id: str, part_no: int) -> str:
         """
         Create and return a pre-signed URL to upload the bytes for the file part with
@@ -168,18 +153,21 @@ class IUploadService(Protocol):
         """
         ...
 
+    @abstractmethod
     async def complete(self, *, upload_id: str) -> None:
         """
         Confirm the completion of the multi-part upload with the given ID.
         """
         ...
 
+    @abstractmethod
     async def cancel(self, *, upload_id: str) -> None:
         """
         Cancel the multi-part upload with the given ID.
         """
         ...
 
+    @abstractmethod
     async def accept_latest(self, *, file_id: str) -> None:
         """
         Accept the latest multi-part upload for the given file.
@@ -189,6 +177,7 @@ class IUploadService(Protocol):
         """
         ...
 
+    @abstractmethod
     async def reject_latest(self, *, file_id: str) -> None:
         """
         Accept the latest multi-part upload for the given file.

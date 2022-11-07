@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from hexkit.protocols.dao import DaoFactoryProtocol
 
 from ucs.core import models
-from ucs.ports.outbound.dao import DaoCollection
+from ucs.ports.outbound.dao import DaoCollectionPort
 
 
 @dataclass
@@ -41,6 +41,6 @@ class DaoCollectionConstructor:
             name="upload_attempts", dto_model=models.UploadAttempt, id_field="upload_id"
         )
 
-        return DaoCollection(
+        return DaoCollectionPort(
             file_metadata=file_metadata, upload_attempts=upload_attempts
         )

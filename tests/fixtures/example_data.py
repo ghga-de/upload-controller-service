@@ -18,9 +18,9 @@
 from datetime import datetime
 
 from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
+from hexkit.providers.s3.testutils import FileObject
 
 from tests.fixtures.config import DEFAULT_CONFIG
-from tests.fixtures.s3 import FileObject
 from ucs.core import models
 
 # Example metadata on a single file:

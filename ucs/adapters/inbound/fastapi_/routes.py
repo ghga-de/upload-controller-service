@@ -24,15 +24,8 @@ from fastapi import APIRouter, Depends, Path, status
 
 from ucs.adapters.inbound.fastapi_ import http_exceptions, rest_models
 from ucs.container import Container
-from ucs.ports.inbound.file_service import FileMetadataPort, FileUnkownError
-from ucs.ports.inbound.upload_service import (
-    ExistingActiveUploadError,
-    IUploadService,
-    UploadCancelError,
-    UploadCompletionError,
-    UploadStatusMissmatchError,
-    UploadUnkownError,
-)
+from ucs.ports.inbound.file_service import FileMetadataServicePort
+from ucs.ports.inbound.upload_service import UploadServicePort
 
 router = APIRouter()
 
@@ -88,7 +81,7 @@ async def health():
 @inject
 async def get_file_metadata(
     file_id: str,
-    file_metadata_service: FileMetadataPort = Depends(
+    file_metadata_service: FileMetadataServicePort = Depends(
         Provide[Container.file_metadata_service]
     ),
 ):
@@ -96,7 +89,7 @@ async def get_file_metadata(
 
     try:
         return await file_metadata_service.get_by_id(file_id)
-    except FileUnkownError as error:
+    except FileMetadataServicePort.FileUnkownError as error:
         raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
 
 
@@ -133,18 +126,18 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
 @inject
 async def create_upload(
     upload_creation: rest_models.UploadAttemptCreation,
-    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
 ):
     """Initiate a new mutli-part upload for the given file."""
 
     try:
         return await upload_service.initiate_new(file_id=upload_creation.file_id)
-    except ExistingActiveUploadError as error:
+    except UploadServicePort.ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,
             active_upload=error.active_upload,
         ) from error
-    except FileUnkownError as error:
+    except FileMetadataServicePort.FileUnkownError as error:
         raise HttpFileNotFoundUploadError(
             file_id=upload_creation.file_id, status_code=400
         ) from error
@@ -165,7 +158,7 @@ async def create_upload(
 @inject
 async def get_upload(
     upload_id: str,
-    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
 ):
     """
     Get details on a specific upload.
@@ -173,7 +166,7 @@ async def get_upload(
 
     try:
         return await upload_service.get_details(upload_id=upload_id)
-    except UploadUnkownError as error:
+    except UploadServicePort.UploadUnkownError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
@@ -209,7 +202,7 @@ async def get_upload(
 async def update_upload_status(
     upload_id: str,
     update: rest_models.UploadAttemptUpdate,
-    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
 ):
     """
     Declare a multi-part upload as complete by setting its status to "uploaded".
@@ -221,23 +214,23 @@ async def update_upload_status(
             await upload_service.complete(upload_id=upload_id)
         else:
             await upload_service.cancel(upload_id=upload_id)
-    except UploadStatusMissmatchError as error:
+    except UploadServicePort.UploadStatusMissmatchError as error:
         raise http_exceptions.HttpUploadNotPendingError(
             upload_id=upload_id, current_status=error.current_status
         ) from error
-    except UploadCompletionError as error:
+    except UploadServicePort.UploadCompletionError as error:
         raise http_exceptions.HttpUploadStatusChangeError(
             upload_id=upload_id,
             target_status=rest_models.UploadStatus.UPLOADED,
             reason=error.reason,
         )
-    except UploadCancelError as error:
+    except UploadServicePort.UploadCancelError as error:
         raise http_exceptions.HttpUploadStatusChangeError(
             upload_id=upload_id,
             target_status=rest_models.UploadStatus.CANCELLED,
             reason=error.possible_reason,
         )
-    except UploadUnkownError as error:
+    except UploadServicePort.UploadUnkownError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
@@ -257,7 +250,7 @@ async def update_upload_status(
 async def create_presigned_url(
     upload_id: str,
     part_no: int = Path(..., ge=1, le=10000),
-    upload_service: IUploadService = Depends(Provide[Container.upload_service]),
+    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
 ):
     """
     Create a pre-signed URL for the specified part number of the specified multi-part
@@ -268,7 +261,7 @@ async def create_presigned_url(
         presigned_url = await upload_service.create_part_url(
             upload_id=upload_id, part_no=part_no
         )
-    except UploadUnkownError as error:
+    except UploadServicePort.UploadUnkownError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
     return rest_models.PartUploadDetails(url=presigned_url)

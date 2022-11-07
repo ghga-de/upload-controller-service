@@ -20,7 +20,7 @@ from typing import Protocol
 from ucs.core import models
 
 
-class EventPublisher(Protocol):
+class EventPublisherPort(Protocol):
     """An interface for an adapter that publishes events happening to this service."""
 
     def publish_upload_received(

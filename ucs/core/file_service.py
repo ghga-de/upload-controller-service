@@ -21,11 +21,9 @@ from typing import Sequence
 from ucs.core import models
 from ucs.ports.inbound.file_service import (
     UPDATABLE_METADATA_FIELDS,
-    FileMetadataPort,
-    FileUnkownError,
-    InvalidFileMetadatUpdateError,
+    FileMetadataServicePort,
 )
-from ucs.ports.outbound.dao import DaoCollection, ResourceNotFoundError
+from ucs.ports.outbound.dao import DaoCollectionPort, ResourceNotFoundError
 
 
 def _get_metadata_diff(
@@ -39,27 +37,30 @@ def _get_metadata_diff(
     return {field for field in a_dict if a_dict[field] != b_dict[field]}
 
 
-def _assert_update_allowed(
-    *, updated_metadata: models.FileMetadata, existing_metadata: models.FileMetadata
-) -> None:
-    """Checks whether only fields that are allowed to be changed are affected by the
-    proposed update. Raises an InvalidFileMetadatUpdateError otherwise."""
-
-    affected_fields = _get_metadata_diff(updated_metadata, existing_metadata)
-    not_allowed_field = affected_fields.difference(UPDATABLE_METADATA_FIELDS)
-
-    if not_allowed_field:
-        raise InvalidFileMetadatUpdateError(
-            file_id=existing_metadata.file_id, invalid_fields=not_allowed_field
-        )
-
-
-class FileMetadataServive(FileMetadataPort):
+class FileMetadataServive(FileMetadataServicePort):
     """Implementation of a service handling file metata."""
 
-    def __init__(self, *, daos: DaoCollection):
+    def __init__(self, *, daos: DaoCollectionPort):
         """Ininitalize class instance with configs and outbound adapter objects."""
         self._daos = daos
+
+    @classmethod
+    def _assert_update_allowed(
+        cls,
+        *,
+        updated_metadata: models.FileMetadata,
+        existing_metadata: models.FileMetadata
+    ) -> None:
+        """Checks whether only fields that are allowed to be changed are affected by the
+        proposed update. Raises an InvalidFileMetadatUpdateError otherwise."""
+
+        affected_fields = _get_metadata_diff(updated_metadata, existing_metadata)
+        not_allowed_field = affected_fields.difference(UPDATABLE_METADATA_FIELDS)
+
+        if not_allowed_field:
+            raise cls.InvalidFileMetadatUpdateError(
+                file_id=existing_metadata.file_id, invalid_fields=not_allowed_field
+            )
 
     async def _insert_new(self, file: models.FileMetadataUpsert) -> None:
         """Create a metadata entry for a new file."""
@@ -83,7 +84,7 @@ class FileMetadataServive(FileMetadataPort):
             **update.dict(), latest_upload_id=existing_metadata.latest_upload_id
         )
 
-        _assert_update_allowed(
+        self._assert_update_allowed(
             updated_metadata=full_metadata, existing_metadata=existing_metadata
         )
 
@@ -137,4 +138,4 @@ class FileMetadataServive(FileMetadataPort):
         try:
             return await self._daos.file_metadata.get_by_id(file_id)
         except ResourceNotFoundError as error:
-            raise FileUnkownError(file_id=file_id) from error
+            raise self.FileUnkownError(file_id=file_id) from error

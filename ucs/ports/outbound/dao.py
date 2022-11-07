@@ -29,7 +29,7 @@ from ucs.core import models
 
 
 @dataclass
-class DaoCollection:
+class DaoCollectionPort:
     """A collection of DAOs for interacting with the database."""
 
     file_metadata: DaoNaturalId[models.FileMetadata]
