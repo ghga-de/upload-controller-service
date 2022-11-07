@@ -58,7 +58,7 @@ class FileMetadataServive(FileMetadataServicePort):
         not_allowed_field = affected_fields.difference(UPDATABLE_METADATA_FIELDS)
 
         if not_allowed_field:
-            raise cls.InvalidFileMetadatUpdateError(
+            raise cls.InvalidFileMetadataUpdateError(
                 file_id=existing_metadata.file_id, invalid_fields=not_allowed_field
             )
 
