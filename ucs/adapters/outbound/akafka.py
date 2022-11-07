@@ -15,11 +15,20 @@
 
 """Kafka-based event publishing adapters and the exception they may throw."""
 
+from hexkit.protocols.eventpub import EventPublisherProtocol
+
 from ucs.ports.outbound.event_pub import EventPublisherPort
+from ucs.core import models
 
 
-class EventPublisherPort(EventPublisherPort):
-    """An interface for an adapter that publishes events happening to this service."""
+class EventPublisher(EventPublisherPort):
+    """A translator (according to the triple hexagonal architecture) for publishing
+    events using the EventPublisherProtocol."""
+
+    def __init__(self, *, provider: EventPublisherProtocol):
+        """Initialize with a suitable protocol provider."""
+
+        self._provider = provider
 
     def publish_upload_received(
         self,
