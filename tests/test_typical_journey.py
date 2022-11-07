@@ -137,8 +137,8 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     associated_files = [
         {
             "file_id": file.file_id,
-            "md5_checksum": file.md5_checksum,
-            "size": file.size,
+            "md5_checksum": file.decrypted_sha256,
+            "size": file.decrypted_size,
             "file_name": file.file_name,
             "creation_date": file.creation_date.isoformat(),
             "update_date": file.update_date.isoformat(),
@@ -189,8 +189,8 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         # publish an event to mark the file as accepted:
         file_accepted_event = {
             "file_id": upserted_file.file_id,
-            "md5_checksum": upserted_file.md5_checksum,
-            "size": upserted_file.size,
+            "md5_checksum": upserted_file.decrypted_sha256,
+            "size": upserted_file.decrypted_size,
             "creation_date": upserted_file.creation_date.isoformat(),
             "update_date": upserted_file.update_date.isoformat(),
             "format": upserted_file.format,

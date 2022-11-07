@@ -242,7 +242,7 @@ class UploadService(UploadServicePort):
         upload_id = await self._init_multipart_upload(file_id=file_id)
 
         # get the recommended part size:
-        part_size = self._part_size_calculator(file.size)
+        part_size = self._part_size_calculator(file.decrypted_size)
 
         # assemble the upload attempts details:
         upload = models.UploadAttempt(
@@ -250,7 +250,7 @@ class UploadService(UploadServicePort):
             file_id=file_id,
             status=models.UploadStatus.PENDING,
             part_size=part_size,
-            datetime_created=datetime.utcnow(),
+            creation_date=datetime.utcnow(),
         )
 
         await self._insert_upload(upload=upload)

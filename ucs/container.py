@@ -19,7 +19,7 @@ from hexkit.inject import ContainerBase, get_configurator, get_constructor
 from hexkit.providers.mongodb import MongoDbDaoFactory
 
 from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
-from ucs.adapters.outbound.dao import DaoCollectionConstructor
+from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.config import Config
@@ -36,7 +36,7 @@ class Container(ContainerBase):
     dao_factory = get_constructor(MongoDbDaoFactory, config=config)
 
     # outbound translators:
-    dao_collection = get_constructor(DaoCollectionConstructor, dao_factory=dao_factory)
+    dao_collection = get_constructor(DaoCollectionTranslator, dao_factory=dao_factory)
 
     # outbound adapters:
 

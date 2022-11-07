@@ -23,7 +23,7 @@ from ucs.core import models
 class EventPublisherPort(Protocol):
     """An interface for an adapter that publishes events happening to this service."""
 
-    def publish_upload_received(
+    async def publish_upload_received(
         self,
         *,
         file_metadata: models.FileMetadata,

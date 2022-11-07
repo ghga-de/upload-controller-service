@@ -33,7 +33,7 @@ HERE = Path(__file__).parent.resolve()
 class RMQConsumerConfig(PubSubConfigBase):
     """Config parameters and their defaults."""
 
-    topic_file_accepted: str = "file_internally_registered"
+    file_accepted_event_topic: str = "file_internally_registered"
     topic_new_study: str = "new_study_created"
 
 
@@ -52,7 +52,7 @@ class RabbitMQEventConsumer:
 
         self._config = config
         self._topic_new_study = config.topic_new_study
-        self._topic_file_accepted = config.topic_file_accepted
+        self._topic_file_accepted = config.file_accepted_event_topic
         self._file_metadata_service = file_metadata_service
         self._upload_service = upload_service
 
@@ -69,8 +69,8 @@ class RabbitMQEventConsumer:
             models.FileMetadataUpsert(
                 file_id=file["file_id"],
                 grouping_label=grouping_label,
-                md5_checksum=file["md5_checksum"],
-                size=file["size"],
+                decrypted_sha256=file["md5_checksum"],
+                decrypted_size=file["size"],
                 file_name=file["file_name"],
                 creation_date=file["creation_date"],
                 update_date=file["update_date"],

@@ -57,7 +57,7 @@ class UploadAttempt(BaseModel):
     part_size: int = Field(
         ..., description="Part size to be used for upload. Specified in bytes."
     )
-    datetime_created: datetime = Field(
+    creation_date: datetime = Field(
         ..., description="Datetime when the upload attempt was created."
     )
 
@@ -75,10 +75,9 @@ class FileMetadataUpsert(BaseModel):
 
     file_id: str
     file_name: str
-    md5_checksum: str
-    size: int
+    decrypted_sha256: str
+    decrypted_size: int
     grouping_label: str
-    creation_date: datetime
     update_date: datetime
     format: str
 
