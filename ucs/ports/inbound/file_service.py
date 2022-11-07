@@ -16,38 +16,38 @@
 """Interfaces for the main upload handling logic of this service."""
 
 
-from typing import Iterable, Protocol, Sequence
+from abc import ABC, abstractmethod
+from typing import Iterable, Sequence
 
 from ucs.core import models
 
 UPDATABLE_METADATA_FIELDS = {"status"}
 
 
-class FileUnkownError(RuntimeError):
-    """Thrown when a file with the given ID is not known."""
-
-    def __init__(self, *, file_id: str):
-        self.file_id = file_id
-        message = f"The file with ID {file_id} is unkown."
-        super().__init__(message)
-
-
-class InvalidFileMetadatUpdateError(RuntimeError):
-    """Thrown when trying to update a metadata field of a file that is not allowed to
-    change (i.e. not in the UPDATABLE_METADATA_FIELDS set)."""
-
-    def __init__(self, *, file_id: str, invalid_fields: Iterable[str]):
-        self.file_id = file_id
-        message = (
-            f"Following fields for the with ID {file_id} cannot be updated: "
-            + ", ".join(invalid_fields)
-        )
-        super().__init__(message)
-
-
-class FileMetadataPort(Protocol):
+class FileMetadataServicePort(ABC):
     """Interface of a service handling file metata."""
 
+    class FileUnkownError(RuntimeError):
+        """Thrown when a file with the given ID is not known."""
+
+        def __init__(self, *, file_id: str):
+            self.file_id = file_id
+            message = f"The file with ID {file_id} is unkown."
+            super().__init__(message)
+
+    class InvalidFileMetadataUpdateError(RuntimeError):
+        """Thrown when trying to update a metadata field of a file that is not allowed to
+        change (i.e. not in the UPDATABLE_METADATA_FIELDS set)."""
+
+        def __init__(self, *, file_id: str, invalid_fields: Iterable[str]):
+            self.file_id = file_id
+            message = (
+                f"Following fields for the with ID {file_id} cannot be updated: "
+                + ", ".join(invalid_fields)
+            )
+            super().__init__(message)
+
+    @abstractmethod
     async def upsert_one(self, file: models.FileMetadataUpsert) -> None:
         """Register a new file or update the metadata for an existing one.
 
@@ -58,6 +58,7 @@ class FileMetadataPort(Protocol):
         """
         ...
 
+    @abstractmethod
     async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
         """Registeres new files or updates existing ones.
 
@@ -68,6 +69,7 @@ class FileMetadataPort(Protocol):
         """
         ...
 
+    @abstractmethod
     async def get_by_id(
         self,
         file_id: str,

@@ -24,8 +24,8 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
 from ucs.core import models
-from ucs.ports.inbound.file_service import FileMetadataPort
-from ucs.ports.inbound.upload_service import IUploadService
+from ucs.ports.inbound.file_service import FileMetadataServicePort
+from ucs.ports.inbound.upload_service import UploadServicePort
 
 HERE = Path(__file__).parent.resolve()
 
@@ -45,8 +45,8 @@ class RabbitMQEventConsumer:
         self,
         *,
         config: RMQConsumerConfig,
-        file_metadata_service: FileMetadataPort,
-        upload_service: IUploadService
+        file_metadata_service: FileMetadataServicePort,
+        upload_service: UploadServicePort
     ):
         """Ininitalize class instance with config and inbound adapter objects."""
 

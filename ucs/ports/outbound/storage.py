@@ -16,18 +16,6 @@
 """Interfaces for object storage adapters and the exception they may throw."""
 
 # pylint: disable=unused-import
-from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
-    MultiPartUploadAbortError,
-    MultiPartUploadAlreadyExistsError,
-    MultiPartUploadConfirmError,
-    MultiPartUploadNotFoundError,
-    ObjectAlreadyExistsError,
-    ObjectIdValidationError,
-    ObjectNotFoundError,
-)
-from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
-    ObjectStorageDao as IObjectStorage,
-)
-from ghga_service_chassis_lib.object_storage_dao import (  # noqa: F401
-    ObjectStorageDaoError,
+from hexkit.protocols.objstorage import (  # noqa: F401
+    ObjectStorageProtocol as ObjectStoragePort,
 )

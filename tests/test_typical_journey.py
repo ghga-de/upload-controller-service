@@ -25,10 +25,10 @@ import pytest
 from fastapi import status
 from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.utils import exec_with_timeout
+from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import EXAMPLE_FILES
 from tests.fixtures.joint import *  # noqa: 403
-from tests.fixtures.s3 import upload_part_via_url
 from ucs.core import models
 
 # this is a temporary solution to run an event loop within another event loop
@@ -120,6 +120,9 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         topic_name=joint_fixture.config.topic_upload_received,
         message_schema=schemas.SCHEMAS["file_upload_received"],
     )
+
+    # populate s3 storage:
+    await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
 
     # # register a new file (later this be done via an event):
     upserted_files = [

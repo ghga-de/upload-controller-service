@@ -21,7 +21,7 @@ from ghga_message_schemas import schemas
 from ghga_service_chassis_lib.pubsub import AmqpTopic, PubSubConfigBase
 
 from ucs.core import models
-from ucs.ports.outbound.event_pub import EventPublisher
+from ucs.ports.outbound.event_pub import EventPublisherPort
 
 
 class RMQPublisherConfig(PubSubConfigBase):
@@ -30,7 +30,7 @@ class RMQPublisherConfig(PubSubConfigBase):
     topic_upload_received: str = "file_upload_received"
 
 
-class RabbitMQEventPublisher(EventPublisher):
+class RabbitMQEventPublisher(EventPublisherPort):
     """A RabbitMQ-based implementation of the EventPublisher interface."""
 
     # pylint: disable=super-init-not-called

@@ -30,10 +30,10 @@ from typing import AsyncGenerator
 import httpx
 import pytest_asyncio
 from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
+from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
 
 from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
-from tests.fixtures.s3 import S3Fixture, s3_fixture
 from ucs.config import Config
 from ucs.container import Container
 from ucs.main import get_configured_container, get_rest_api

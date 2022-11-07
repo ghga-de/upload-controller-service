@@ -17,8 +17,8 @@
 
 from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
-from ghga_service_chassis_lib.s3 import S3ConfigBase
 from hexkit.providers.mongodb import MongoDbConfig
+from hexkit.providers.s3.testutils import S3Config
 
 from ucs.adapters.inbound.rabbitmq_consume import RMQConsumerConfig
 from ucs.adapters.outbound.rabbitmq_produce import RMQPublisherConfig
@@ -32,7 +32,7 @@ class Config(  # pylint: disable=too-many-ancestors
     UploadServiceConfig,
     RMQPublisherConfig,
     RMQConsumerConfig,
-    S3ConfigBase,
+    S3Config,
 ):
     """Config parameters and their defaults."""
 
