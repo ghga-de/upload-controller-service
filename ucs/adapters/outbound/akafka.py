@@ -15,6 +15,8 @@
 
 """Kafka-based event publishing adapters and the exception they may throw."""
 
+from datetime import datetime
+
 from pydantic import BaseSettings, Field
 from hexkit.protocols.eventpub import EventPublisherProtocol
 from ghga_event_schemas import pydantic_ as event_schemas
@@ -59,14 +61,14 @@ class EventPubTranslator(EventPublisherPort):
 
         event_payload = event_schemas.FileUploadReceived(
             file_id=file_metadata.file_id,
-            upload_date=file_metadata.update_date,
+            upload_date=datetime.utcnow(),
             decrypted_size=file_metadata.decrypted_size,
             expected_decrypted_sha256=file_metadata.decrypted_sha256,
         )
 
         await self._provider.publish(
             payload=event_payload.dict(),
-            type_=self._config.upload_received_type,
+            type_=self._config.upload_received_event_type,
             topic=self._config.upload_received_event_topic,
             key=file_metadata.file_id,
         )

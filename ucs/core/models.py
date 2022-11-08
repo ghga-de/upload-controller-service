@@ -77,9 +77,6 @@ class FileMetadataUpsert(BaseModel):
     file_name: str
     decrypted_sha256: str
     decrypted_size: int
-    grouping_label: str
-    update_date: datetime
-    format: str
 
     class Config:
         """Additional Model Config."""
