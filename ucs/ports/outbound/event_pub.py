@@ -15,6 +15,7 @@
 
 """Interfaces for event publishing adapters and the exception they may throw."""
 
+from datetime import datetime
 from typing import Protocol
 
 from ucs.core import models
@@ -27,6 +28,7 @@ class EventPublisherPort(Protocol):
         self,
         *,
         file_metadata: models.FileMetadata,
+        upload_date: datetime,
     ) -> None:
         """Publish event informing that a new upload was received."""
         ...

@@ -16,6 +16,5 @@
 """Interfaces for object storage adapters and the exception they may throw."""
 
 # pylint: disable=unused-import
-from hexkit.protocols.objstorage import (  # noqa: F401
-    ObjectStorageProtocol as ObjectStoragePort,
-)
+from hexkit.protocols.objstorage import \
+    ObjectStorageProtocol as ObjectStoragePort  # noqa: F401

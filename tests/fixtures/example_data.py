@@ -29,10 +29,6 @@ EXAMPLE_FILE = models.FileMetadata(
     file_name="Test File 001",
     decrypted_sha256="fake-checksum",
     decrypted_size=12345678,
-    grouping_label="test",
-    creation_date=datetime.now(),
-    update_date=datetime.now(),
-    format="txt",
     latest_upload_id="testUpload001",
 )
 

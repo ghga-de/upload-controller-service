@@ -17,10 +17,11 @@
 
 from hexkit.inject import ContainerBase, get_configurator, get_constructor
 from hexkit.providers.mongodb import MongoDbDaoFactory
+from hexkit.providers.akafka import KafkaEventPublisher, KafkaEventSubscriber
 
-from ucs.adapters.inbound.rabbitmq_consume import RabbitMQEventConsumer
+from ucs.adapters.inbound.akafka import EventSubTranslator
 from ucs.adapters.outbound.dao import DaoCollectionTranslator
-from ucs.adapters.outbound.rabbitmq_produce import RabbitMQEventPublisher
+from ucs.adapters.outbound.akafka import EventPubTranslator
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
@@ -34,33 +35,37 @@ class Container(ContainerBase):
 
     # outbound providers:
     dao_factory = get_constructor(MongoDbDaoFactory, config=config)
+    kafka_event_publisher = get_constructor(KafkaEventPublisher, config=config)
 
     # outbound translators:
     dao_collection = get_constructor(DaoCollectionTranslator, dao_factory=dao_factory)
+    event_pub_translator = get_constructor(
+        EventPubTranslator, config=config, provider=kafka_event_publisher
+    )
 
-    # outbound adapters:
-
+    # outbound adapters (not following the triple hexagonal translator/provider
+    # pattern):
     object_storage = get_constructor(S3ObjectStorage, config=config)
 
-    event_publisher = get_constructor(RabbitMQEventPublisher, config=config)
-
     # domain:
-
     file_metadata_service = get_constructor(FileMetadataServive, daos=dao_collection)
-
     upload_service = get_constructor(
         UploadService,
         daos=dao_collection,
         object_storage=object_storage,
-        event_publisher=event_publisher,
+        event_publisher=event_pub_translator,
         config=config,
     )
 
-    # inbound adapters:
-
-    event_subscriber = get_constructor(
-        RabbitMQEventConsumer,
+    # inbound translators:
+    event_sub_translator = get_constructor(
+        EventSubTranslator,
         file_metadata_service=file_metadata_service,
         upload_service=upload_service,
         config=config,
+    )
+
+    # inbound providers:
+    kafka_event_subscriber = get_constructor(
+        KafkaEventSubscriber, config=config, translator=event_sub_translator
     )

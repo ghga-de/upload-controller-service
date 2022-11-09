@@ -21,7 +21,8 @@ from pydantic import BaseModel, Field
 
 # shortcuts:
 # pylint: disable=unused-import
-from ucs.core.models import FileMetadata, UploadAttempt, UploadStatus  # noqa: F401
+from ucs.core.models import (FileMetadata, UploadAttempt,  # noqa: F401
+                             UploadStatus)
 
 
 class UploadAttemptCreation(BaseModel):

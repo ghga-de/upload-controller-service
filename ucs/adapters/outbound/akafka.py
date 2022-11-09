@@ -17,12 +17,12 @@
 
 from datetime import datetime
 
-from pydantic import BaseSettings, Field
-from hexkit.protocols.eventpub import EventPublisherProtocol
 from ghga_event_schemas import pydantic_ as event_schemas
+from hexkit.protocols.eventpub import EventPublisherProtocol
+from pydantic import BaseSettings, Field
 
-from ucs.ports.outbound.event_pub import EventPublisherPort
 from ucs.core import models
+from ucs.ports.outbound.event_pub import EventPublisherPort
 
 
 class EventPubTanslatorConfig(BaseSettings):
@@ -56,12 +56,13 @@ class EventPubTranslator(EventPublisherPort):
         self,
         *,
         file_metadata: models.FileMetadata,
+        upload_date: datetime,
     ) -> None:
         """Publish event informing that a new file upload was received."""
 
         event_payload = event_schemas.FileUploadReceived(
             file_id=file_metadata.file_id,
-            upload_date=datetime.utcnow(),
+            upload_date=upload_date,
             decrypted_size=file_metadata.decrypted_size,
             expected_decrypted_sha256=file_metadata.decrypted_sha256,
         )

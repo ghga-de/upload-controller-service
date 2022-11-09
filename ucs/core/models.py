@@ -60,6 +60,13 @@ class UploadAttempt(BaseModel):
     creation_date: datetime = Field(
         ..., description="Datetime when the upload attempt was created."
     )
+    completion_date: Optional[datetime] = Field(
+        None,
+        description=(
+            "Datetime when the upload attempt was declared as completed by the client."
+            + " `None` if the upload is ongoing."
+        ),
+    )
 
     class Config:
         """Additional Model Config."""

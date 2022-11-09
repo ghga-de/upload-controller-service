@@ -19,11 +19,9 @@ from dataclasses import dataclass
 
 # for convienience: forward errors that may be thrown by DAO instances:
 # pylint: disable=unused-import
-from hexkit.protocols.dao import (  # noqa: F401
-    DaoNaturalId,
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-)
+from hexkit.protocols.dao import (DaoNaturalId,  # noqa: F401
+                                  ResourceAlreadyExistsError,
+                                  ResourceNotFoundError)
 
 from ucs.core import models
 

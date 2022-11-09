@@ -322,12 +322,20 @@ class UploadService(UploadServicePort):
             ) from error
 
         # mark the upload as complete (uploaded) in the database:
-        updated_upload = upload.copy(update={"status": models.UploadStatus.UPLOADED})
+        completion_date = datetime.utcnow()
+        updated_upload = upload.copy(
+            update={
+                "status": models.UploadStatus.UPLOADED,
+                "completion_date": completion_date,
+            }
+        )
         await self._daos.upload_attempts.update(updated_upload)
 
         # publish an event, informing other services that a new upload was received:
         file = await self._daos.file_metadata.get_by_id(upload.file_id)
-        self._event_publisher.publish_upload_received(file_metadata=file)
+        await self._event_publisher.publish_upload_received(
+            file_metadata=file, upload_date=completion_date
+        )
 
     async def cancel(self, *, upload_id: str) -> None:
         """
