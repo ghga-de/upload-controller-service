@@ -40,12 +40,6 @@ services:
     volumes:
       - mongo_fs:/data/db
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    # useful ports:
-    # 5672 - broker
-    # 15672 - dashboard
-
   localstack:
     image: localstack/localstack
     environment:

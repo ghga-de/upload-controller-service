@@ -38,7 +38,7 @@ class Container(ContainerBase):
     kafka_event_publisher = get_constructor(KafkaEventPublisher, config=config)
 
     # outbound translators:
-    dao_collection = get_constructor(DaoCollectionTranslator, dao_factory=dao_factory)
+    dao_collection = get_constructor(DaoCollectionTranslator, provider=dao_factory)
     event_pub_translator = get_constructor(
         EventPubTranslator, config=config, provider=kafka_event_publisher
     )

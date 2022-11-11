@@ -19,7 +19,7 @@ __all__ = [
     "joint_fixture",
     "JointFixture",
     "mongodb_fixture",
-    "amqp_fixture",
+    "kafka_fixture",
     "s3_fixture",
 ]
 

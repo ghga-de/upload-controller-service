@@ -151,18 +151,30 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     )
 
     # publish an event to mark the upload as accepted:
-    acceptance_event = event_schemas.FileInternallyRegistered()
-
-    # receive the acceptance event:
-    exec_with_timeout(
-        func=lambda: event_subscriber.subscribe_file_accepted(run_forever=False),
-        timeout_after=2,
+    acceptance_event = event_schemas.FileInternallyRegistered(
+        file_id=file_to_register.file_id,
+        upload_date=datetime.utcnow(),
+        decrypted_sha256=file_to_register.decrypted_sha256,
+        decrypted_size=file_to_register.decrypted_size,
+        decryption_secret_id="some-secret",
+        content_offset=123456,
+        encrypted_part_size=123456,
+        encrypted_parts_md5=["somechecksum", "anotherchecksum"],
+        encrypted_parts_sha256=["somechecksum", "anotherchecksum"],
     )
+    await joint_fixture.kafka.publish_event(
+        payload=acceptance_event.dict(),
+        type_=joint_fixture.config.upload_accepted_event_type,
+        topic=joint_fixture.config.upload_accepted_event_topic,
+    )
+
+    # consume the acceptance event:
+    await event_subscriber.run(forever=False)
 
     # make sure that the latest upload of the corresponding file was marked as
     # accepted:
     # (first get the ID of the latest upload for that file:)
-    response = await joint_fixture.rest_client.get(f"/files/{upserted_file.file_id}")
+    response = await joint_fixture.rest_client.get(f"/files/{file_to_register.file_id}")
     assert response.status_code == status.HTTP_200_OK
     latest_upload_id = response.json()["latest_upload_id"]
 
