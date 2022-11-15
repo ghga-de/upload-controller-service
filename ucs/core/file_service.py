@@ -19,8 +19,10 @@
 from typing import Sequence
 
 from ucs.core import models
-from ucs.ports.inbound.file_service import (UPDATABLE_METADATA_FIELDS,
-                                            FileMetadataServicePort)
+from ucs.ports.inbound.file_service import (
+    UPDATABLE_METADATA_FIELDS,
+    FileMetadataServicePort,
+)
 from ucs.ports.outbound.dao import DaoCollectionPort, ResourceNotFoundError
 
 

@@ -71,7 +71,7 @@ class EventSubTranslator(EventSubscriberProtocol):
     def __init__(
         self,
         config: EventSubTranslatorConfig,
-        file_metadata_servive: FileMetadataServicePort,
+        file_metadata_service: FileMetadataServicePort,
         upload_service: UploadServicePort,
     ):
         """Initialize with config parameters and core dependencies."""
@@ -85,7 +85,7 @@ class EventSubTranslator(EventSubscriberProtocol):
             config.upload_accepted_event_type,
         ]
 
-        self._file_metadata_service = file_metadata_servive
+        self._file_metadata_service = file_metadata_service
         self._upload_service = upload_service
         self._config = config
 
@@ -118,9 +118,17 @@ class EventSubTranslator(EventSubscriberProtocol):
         await self._upload_service.accept_latest(file_id=validated_payload.file_id)
 
     async def _consume_validated(
-        self, *, payload: JsonObject, type_: Ascii, topic: Ascii
+        self,
+        *,
+        payload: JsonObject,
+        type_: Ascii,
+        topic: Ascii,  # pylint: disable=unused-argument
     ) -> None:
         """Consume events from the topics of interest."""
 
         if type_ == self._config.file_metadata_event_type:
             await self._consume_file_metadata(payload=payload)
+        elif type_ == self._config.upload_accepted_event_type:
+            await self._consume_upload_accepted(payload=payload)
+        else:
+            raise RuntimeError(f"Unexpected event of type: {type_}")

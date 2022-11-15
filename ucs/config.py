@@ -17,9 +17,9 @@
 
 from ghga_service_chassis_lib.api import ApiConfigBase
 from ghga_service_chassis_lib.config import config_from_yaml
+from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.s3 import S3Config
-from hexkit.providers.akafka import KafkaConfig
 
 from ucs.adapters.inbound.akafka import EventSubTranslatorConfig
 from ucs.adapters.outbound.akafka import EventPubTanslatorConfig

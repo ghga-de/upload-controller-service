@@ -29,9 +29,9 @@ from typing import AsyncGenerator
 
 import httpx
 import pytest_asyncio
+from hexkit.providers.akafka.testutils import KafkaFixture, kafka_fixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
 from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
-from hexkit.providers.akafka.testutils import kafka_fixture, KafkaFixture
 
 from tests.fixtures.config import get_config
 from ucs.config import Config

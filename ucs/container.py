@@ -16,12 +16,12 @@
 """Module hosting the dependency injection container."""
 
 from hexkit.inject import ContainerBase, get_configurator, get_constructor
-from hexkit.providers.mongodb import MongoDbDaoFactory
 from hexkit.providers.akafka import KafkaEventPublisher, KafkaEventSubscriber
+from hexkit.providers.mongodb import MongoDbDaoFactory
 
 from ucs.adapters.inbound.akafka import EventSubTranslator
-from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.adapters.outbound.akafka import EventPubTranslator
+from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive

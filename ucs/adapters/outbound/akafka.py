@@ -15,6 +15,7 @@
 
 """Kafka-based event publishing adapters and the exception they may throw."""
 
+import json
 from datetime import datetime
 
 from ghga_event_schemas import pydantic_ as event_schemas
@@ -68,7 +69,7 @@ class EventPubTranslator(EventPublisherPort):
         )
 
         await self._provider.publish(
-            payload=event_payload.dict(),
+            payload=json.loads(event_payload.json()),
             type_=self._config.upload_received_event_type,
             topic=self._config.upload_received_event_topic,
             key=file_metadata.file_id,

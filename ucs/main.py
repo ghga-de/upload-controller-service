@@ -15,8 +15,6 @@
 
 """In this module object construction and dependency injection is carried out."""
 
-from enum import Enum
-
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app, run_server
 

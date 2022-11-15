@@ -16,21 +16,18 @@
 """Simulate client behavior and test a typical journey through the APIs exposed by this
 service (incl. REST and event-driven APIs)."""
 
+import json
 from datetime import datetime
 from typing import Literal
 
 import nest_asyncio
 import pytest
 from fastapi import status
-from ghga_message_schemas import schemas
-from ghga_service_chassis_lib.utils import exec_with_timeout
-from hexkit.providers.s3.testutils import upload_part_via_url
-from hexkit.providers.akafka.testutils import ExpectedEvent
 from ghga_event_schemas import pydantic_ as event_schemas
+from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import EXAMPLE_FILE
 from tests.fixtures.joint import *  # noqa: 403
-from ucs.core import models
 
 # this is a temporary solution to run an event loop within another event loop
 # will be solved once transitioning to kafka:
@@ -146,9 +143,22 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     )
 
     # perform another upload and confirm it:
-    upload_id = await perform_upload(
-        joint_fixture, file_id=file_to_register.file_id, final_status="uploaded"
+    async with joint_fixture.kafka.record_events(
+        in_topic=joint_fixture.config.upload_received_event_topic
+    ) as recorder:
+        await perform_upload(
+            joint_fixture, file_id=file_to_register.file_id, final_status="uploaded"
+        )
+
+    # check for the  events:
+    assert len(recorder.recorded_events) == 1
+    assert (
+        recorder.recorded_events[0].type_
+        == joint_fixture.config.upload_received_event_type
     )
+    payload = event_schemas.FileUploadReceived(**recorder.recorded_events[0].payload)
+    assert payload.file_id == file_to_register.file_id
+    assert payload.expected_decrypted_sha256 == file_to_register.decrypted_sha256
 
     # publish an event to mark the upload as accepted:
     acceptance_event = event_schemas.FileInternallyRegistered(
@@ -163,7 +173,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         encrypted_parts_sha256=["somechecksum", "anotherchecksum"],
     )
     await joint_fixture.kafka.publish_event(
-        payload=acceptance_event.dict(),
+        payload=json.loads(acceptance_event.json()),
         type_=joint_fixture.config.upload_accepted_event_type,
         topic=joint_fixture.config.upload_accepted_event_topic,
     )
