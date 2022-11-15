@@ -27,7 +27,7 @@ from ucs.container import Container
 from ucs.ports.inbound.file_service import FileMetadataServicePort
 from ucs.ports.inbound.upload_service import UploadServicePort
 
-router = APIRouter()
+router = APIRouter(tags=["UploadControllerService"])
 
 
 ERROR_RESPONSES = {
@@ -63,7 +63,6 @@ ERROR_RESPONSES = {
     "/health",
     summary="health",
     status_code=status.HTTP_200_OK,
-    tags=["UploadControllerService"],
 )
 async def health():
     """Used to test if this service is alive"""
@@ -75,7 +74,6 @@ async def health():
     "/files/{file_id}",
     summary="Get file metadata including the current upload attempt.",
     operation_id="getFileMetadata",
-    tags=["UploadControllerService"],
     status_code=status.HTTP_200_OK,
     response_model=rest_models.FileMetadata,
     response_description="File metadata including the current upload attempt",
@@ -107,7 +105,6 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
     "/uploads",
     summary="Initiate a new multi-part upload.",
     operation_id="createUpload",
-    tags=["UploadControllerService"],
     response_model=rest_models.UploadAttempt,
     status_code=status.HTTP_200_OK,
     response_description="Details on the newly created upload.",
@@ -154,7 +151,6 @@ async def create_upload(
     "/uploads/{upload_id}",
     summary="Get details on a specific upload.",
     operation_id="getUploadDetails",
-    tags=["UploadControllerService"],
     status_code=status.HTTP_200_OK,
     response_model=rest_models.UploadAttempt,
     response_description="Details on a specific upload.",
@@ -182,7 +178,6 @@ async def get_upload(
     "/uploads/{upload_id}",
     summary="Update the status of an existing multi-part upload.",
     operation_id="updateUploadStatus",
-    tags=["UploadControllerService"],
     status_code=status.HTTP_204_NO_CONTENT,
     response_description="Multi-part upload successfully updated.",
     responses={
@@ -247,7 +242,6 @@ async def update_upload_status(
     "/uploads/{upload_id}/parts/{part_no}/signed_urls",
     summary="Create new pre-signed URL for a specific part.",
     operation_id="createPreSignedURL",
-    tags=["UploadControllerService"],
     status_code=status.HTTP_200_OK,
     response_model=rest_models.PartUploadDetails,
     response_description="The newly created pre-signed URL.",
