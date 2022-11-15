@@ -31,7 +31,7 @@ def get_openapi_schema(api) -> Dict[str, Any]:
     """Generates a custom openapi schema for the service"""
 
     return get_openapi(
-        title="Download Controller Service",
+        title="Upload Controller Service",
         version=__version__,
         description="A service managing uploads of file objects to"
         + " an S3-compatible Object Storage.",

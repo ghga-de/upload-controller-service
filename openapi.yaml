@@ -390,7 +390,7 @@ components:
 info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
-  title: Download Controller Service
+  title: Upload Controller Service
   version: 0.3.0
 openapi: 3.0.2
 paths:
