@@ -27,7 +27,7 @@ from ucs.container import Container
 from ucs.ports.inbound.file_service import FileMetadataServicePort
 from ucs.ports.inbound.upload_service import UploadServicePort
 
-router = APIRouter()
+router = APIRouter(tags=["UploadControllerService"])
 
 
 ERROR_RESPONSES = {
@@ -59,7 +59,11 @@ ERROR_RESPONSES = {
 }
 
 
-@router.get("/health", summary="health", status_code=status.HTTP_200_OK)
+@router.get(
+    "/health",
+    summary="health",
+    status_code=status.HTTP_200_OK,
+)
 async def health():
     """Used to test if this service is alive"""
 

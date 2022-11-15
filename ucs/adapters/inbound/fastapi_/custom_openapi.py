@@ -12,28 +12,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-"""Used to define the location of the main FastAPI app object."""
+"""
+Utils to customize openAPI script
+"""
+from typing import Any, Dict
 
-# flake8: noqa
-# pylint: skip-file
+from fastapi.openapi.utils import get_openapi
 
-from fastapi import FastAPI
+from ucs import __version__
+from ucs.config import Config
 
-from ucs.adapters.inbound.fastapi_.custom_openapi import get_openapi_schema
-from ucs.adapters.inbound.fastapi_.routes import router
-
-app = FastAPI()
-app.include_router(router)
+config = Config()
 
 
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi_schema(app)
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
+def get_openapi_schema(api) -> Dict[str, Any]:
 
+    """Generates a custom openapi schema for the service"""
 
-app.openapi = custom_openapi  # type: ignore [assignment]
+    return get_openapi(
+        title="Upload Controller Service",
+        version=__version__,
+        description="A service managing uploads of file objects to"
+        + " an S3-compatible Object Storage.",
+        servers=[{"url": config.api_root_path}],
+        tags=[{"name": "UploadControllerService"}],
+        routes=api.routes,
+    )
