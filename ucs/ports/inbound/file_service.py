@@ -35,7 +35,7 @@ class FileMetadataServicePort(ABC):
             message = f"The file with ID {file_id} is unkown."
             super().__init__(message)
 
-    class InvalidFileMetadatUpdateError(RuntimeError):
+    class InvalidFileMetadataUpdateError(RuntimeError):
         """Thrown when trying to update a metadata field of a file that is not allowed to
         change (i.e. not in the UPDATABLE_METADATA_FIELDS set)."""
 
@@ -52,7 +52,7 @@ class FileMetadataServicePort(ABC):
         """Register a new file or update the metadata for an existing one.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """
@@ -63,7 +63,7 @@ class FileMetadataServicePort(ABC):
         """Registeres new files or updates existing ones.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """

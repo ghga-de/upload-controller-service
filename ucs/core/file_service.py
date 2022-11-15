@@ -52,13 +52,13 @@ class FileMetadataServive(FileMetadataServicePort):
         existing_metadata: models.FileMetadata
     ) -> None:
         """Checks whether only fields that are allowed to be changed are affected by the
-        proposed update. Raises an InvalidFileMetadatUpdateError otherwise."""
+        proposed update. Raises an InvalidFileMetadataUpdateError otherwise."""
 
         affected_fields = _get_metadata_diff(updated_metadata, existing_metadata)
         not_allowed_field = affected_fields.difference(UPDATABLE_METADATA_FIELDS)
 
         if not_allowed_field:
-            raise cls.InvalidFileMetadatUpdateError(
+            raise cls.InvalidFileMetadataUpdateError(
                 file_id=existing_metadata.file_id, invalid_fields=not_allowed_field
             )
 
@@ -75,7 +75,7 @@ class FileMetadataServive(FileMetadataServicePort):
         Please note: not all metadata fields may be updated.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """
@@ -94,7 +94,7 @@ class FileMetadataServive(FileMetadataServicePort):
         """Register a new file or update the metadata for an existing one.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """
@@ -115,7 +115,7 @@ class FileMetadataServive(FileMetadataServicePort):
         """Registeres new files or updates the metadata for existing ones.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """
