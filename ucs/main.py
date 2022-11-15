@@ -20,6 +20,7 @@ from enum import Enum
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app, run_server
 
+from ucs.adapters.inbound.fastapi_.custom_openapi import get_openapi_schema
 from ucs.adapters.inbound.fastapi_.routes import router
 from ucs.config import Config
 from ucs.container import Container
@@ -44,6 +45,15 @@ def get_rest_api(*, config: Config) -> FastAPI:
     api = FastAPI()
     api.include_router(router)
     configure_app(api, config=config)
+
+    def custom_openapi():
+        if api.openapi_schema:
+            return api.openapi_schema
+        openapi_schema = get_openapi_schema(api)
+        api.openapi_schema = openapi_schema
+        return api.openapi_schema
+
+    api.openapi = custom_openapi  # type: ignore [assignment]
 
     return api
 
