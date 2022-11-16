@@ -94,6 +94,38 @@ async def test_create_upload_other_active(
     assert response_body["data"]["active_upload"] == json.loads(existing_upload.json())
 
 
+@pytest.mark.parametrize(
+    "existing_status",
+    [
+        models.UploadStatus.UPLOADED,
+        models.UploadStatus.ACCEPTED,
+    ],
+)
+@pytest.mark.asyncio
+async def test_create_upload_accepted(
+    existing_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
+):
+    """Test the create_upload endpoint when another update has already been accepted
+    or is currently being evaluated."""
+
+    existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
+
+    # insert the existing upload into the database:
+    daos = await joint_fixture.container.dao_collection()
+    await daos.file_metadata.insert(EXAMPLE_FILE)
+    await daos.upload_attempts.insert(existing_upload)
+
+    # try to create a new upload:
+    response = await joint_fixture.rest_client.post(
+        "/uploads", json={"file_id": EXAMPLE_FILE.file_id}
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response_body = response.json()
+    assert response_body["exception_id"] == "existingActiveUpload"
+    assert response_body["data"]["active_upload"] == json.loads(existing_upload.json())
+
+
 @pytest.mark.asyncio
 async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
     """Test the get_upload endpoint with non-existing upload ID."""

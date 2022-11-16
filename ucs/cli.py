@@ -19,7 +19,7 @@ import asyncio
 
 import typer
 
-from ucs.main import Topics, consume_events, run_rest
+from ucs.main import consume_events, run_rest
 
 cli = typer.Typer()
 
@@ -32,7 +32,7 @@ def sync_run_api():
 
 
 @cli.command(name="consume-events")
-def sync_consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
+def sync_consume_events(run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
 
-    asyncio.run(consume_events(topic=topic, run_forever=run_forever))
+    asyncio.run(consume_events(run_forever=run_forever))

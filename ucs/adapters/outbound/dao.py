@@ -24,20 +24,20 @@ from ucs.ports.outbound.dao import DaoCollectionPort
 
 
 @dataclass
-class DaoCollectionConstructor:
+class DaoCollectionTranslator:
     """Constructor compatible with the hexkit.inject.AsyncConstructable type. Used to
     construct a collection of DAOs for interacting with the database.
     """
 
     @staticmethod
-    async def construct(*, dao_factory: DaoFactoryProtocol):
+    async def construct(*, provider: DaoFactoryProtocol):
         """Setup a collection of DAOs using the specified provider of the
         DaoFactoryProtocol."""
 
-        file_metadata = await dao_factory.get_dao(
+        file_metadata = await provider.get_dao(
             name="file_metadata", dto_model=models.FileMetadata, id_field="file_id"
         )
-        upload_attempts = await dao_factory.get_dao(
+        upload_attempts = await provider.get_dao(
             name="upload_attempts", dto_model=models.UploadAttempt, id_field="upload_id"
         )
 

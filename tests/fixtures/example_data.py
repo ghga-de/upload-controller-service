@@ -27,12 +27,8 @@ from ucs.core import models
 EXAMPLE_FILE = models.FileMetadata(
     file_id="testFile001",
     file_name="Test File 001",
-    md5_checksum="fake-checksum",
-    size=12345678,
-    grouping_label="test",
-    creation_date=datetime.now(),
-    update_date=datetime.now(),
-    format="txt",
+    decrypted_sha256="fake-checksum",
+    decrypted_size=12345678,
     latest_upload_id="testUpload001",
 )
 
@@ -57,7 +53,7 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
     file_id="testFile001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
-    datetime_created=datetime.now(),
+    creation_date=datetime.now(),
 )
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:

@@ -15,8 +15,6 @@
 
 """In this module object construction and dependency injection is carried out."""
 
-from enum import Enum
-
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app, run_server
 
@@ -58,13 +56,6 @@ def get_rest_api(*, config: Config) -> FastAPI:
     return api
 
 
-class Topics(str, Enum):
-    """Supported topics"""
-
-    NEW_STUDY = "new_study"
-    FILE_ACCEPTED = "file_accepted"
-
-
 async def run_rest():
     """Run the HTTP REST API."""
 
@@ -76,15 +67,11 @@ async def run_rest():
         await run_server(app=api, config=config)
 
 
-async def consume_events(topic: Topics = Topics.NEW_STUDY, run_forever: bool = True):
+async def consume_events(run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
 
     config = Config()
 
     async with get_configured_container(config=config) as container:
-        event_consumer = container.event_subscriber()
-
-        if topic == topic.NEW_STUDY:
-            event_consumer.subscribe_new_study(run_forever=run_forever)
-        else:
-            raise NotImplementedError()
+        event_consumer = await container.kafka_event_subscriber()
+        await event_consumer.run(forever=run_forever)

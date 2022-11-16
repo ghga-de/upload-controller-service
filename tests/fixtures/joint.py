@@ -19,7 +19,7 @@ __all__ = [
     "joint_fixture",
     "JointFixture",
     "mongodb_fixture",
-    "amqp_fixture",
+    "kafka_fixture",
     "s3_fixture",
 ]
 
@@ -29,10 +29,10 @@ from typing import AsyncGenerator
 
 import httpx
 import pytest_asyncio
+from hexkit.providers.akafka.testutils import KafkaFixture, kafka_fixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
 from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
 
-from tests.fixtures.amqp import AmqpFixture, amqp_fixture
 from tests.fixtures.config import get_config
 from ucs.config import Config
 from ucs.container import Container
@@ -53,20 +53,20 @@ class JointFixture:
     config: Config
     container: Container
     mongodb: MongoDbFixture
-    amqp: AmqpFixture
+    kafka: KafkaFixture
     rest_client: httpx.AsyncClient
     s3: S3Fixture
 
 
 @pytest_asyncio.fixture
 async def joint_fixture(
-    mongodb_fixture: MongoDbFixture, amqp_fixture: AmqpFixture, s3_fixture: S3Fixture
+    mongodb_fixture: MongoDbFixture, kafka_fixture: KafkaFixture, s3_fixture: S3Fixture
 ) -> AsyncGenerator[JointFixture, None]:
     """A fixture that embeds all other fixtures for API-level integration testing"""
 
     # merge configs from different sources with the default one:
     config = get_config(
-        sources=[mongodb_fixture.config, amqp_fixture.config, s3_fixture.config]
+        sources=[mongodb_fixture.config, kafka_fixture.config, s3_fixture.config]
     )
 
     # create a DI container instance:translators
@@ -84,7 +84,7 @@ async def joint_fixture(
                 config=config,
                 container=container,
                 mongodb=mongodb_fixture,
-                amqp=amqp_fixture,
+                kafka=kafka_fixture,
                 rest_client=rest_client,
                 s3=s3_fixture,
             )

@@ -52,7 +52,7 @@ class FileMetadataServicePort(ABC):
         """Register a new file or update the metadata for an existing one.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """
@@ -63,7 +63,7 @@ class FileMetadataServicePort(ABC):
         """Registeres new files or updates existing ones.
 
         Raises:
-            InvalidFileMetadatUpdateError:
+            InvalidFileMetadataUpdateError:
                 When trying to update a metadata field, that can only be set on
                 creation.
         """

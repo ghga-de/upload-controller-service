@@ -242,7 +242,7 @@ class UploadService(UploadServicePort):
         upload_id = await self._init_multipart_upload(file_id=file_id)
 
         # get the recommended part size:
-        part_size = self._part_size_calculator(file.size)
+        part_size = self._part_size_calculator(file.decrypted_size)
 
         # assemble the upload attempts details:
         upload = models.UploadAttempt(
@@ -250,7 +250,7 @@ class UploadService(UploadServicePort):
             file_id=file_id,
             status=models.UploadStatus.PENDING,
             part_size=part_size,
-            datetime_created=datetime.utcnow(),
+            creation_date=datetime.utcnow(),
         )
 
         await self._insert_upload(upload=upload)
@@ -322,12 +322,20 @@ class UploadService(UploadServicePort):
             ) from error
 
         # mark the upload as complete (uploaded) in the database:
-        updated_upload = upload.copy(update={"status": models.UploadStatus.UPLOADED})
+        completion_date = datetime.utcnow()
+        updated_upload = upload.copy(
+            update={
+                "status": models.UploadStatus.UPLOADED,
+                "completion_date": completion_date,
+            }
+        )
         await self._daos.upload_attempts.update(updated_upload)
 
         # publish an event, informing other services that a new upload was received:
         file = await self._daos.file_metadata.get_by_id(upload.file_id)
-        self._event_publisher.publish_upload_received(file_metadata=file)
+        await self._event_publisher.publish_upload_received(
+            file_metadata=file, upload_date=completion_date
+        )
 
     async def cancel(self, *, upload_id: str) -> None:
         """

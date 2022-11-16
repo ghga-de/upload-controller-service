@@ -57,8 +57,15 @@ class UploadAttempt(BaseModel):
     part_size: int = Field(
         ..., description="Part size to be used for upload. Specified in bytes."
     )
-    datetime_created: datetime = Field(
+    creation_date: datetime = Field(
         ..., description="Datetime when the upload attempt was created."
+    )
+    completion_date: Optional[datetime] = Field(
+        None,
+        description=(
+            "Datetime when the upload attempt was declared as completed by the client."
+            + " `None` if the upload is ongoing."
+        ),
     )
 
     class Config:
@@ -75,12 +82,8 @@ class FileMetadataUpsert(BaseModel):
 
     file_id: str
     file_name: str
-    md5_checksum: str
-    size: int
-    grouping_label: str
-    creation_date: datetime
-    update_date: datetime
-    format: str
+    decrypted_sha256: str
+    decrypted_size: int
 
     class Config:
         """Additional Model Config."""
