@@ -105,7 +105,7 @@ async def test_create_upload_other_active(
 async def test_create_upload_accepted(
     existing_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
 ):
-    """Test the create_upload endpoint when another update has already been accepted 
+    """Test the create_upload endpoint when another update has already been accepted
     or is currently being evaluated."""
 
     existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
