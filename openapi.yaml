@@ -56,7 +56,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpExistingActiveUploadError
       type: object
     HttpExistingActiveUploadErrorData:
       description: Model for exception data
@@ -69,7 +69,7 @@ components:
       required:
       - file_id
       - active_upload
-      title: HttpUploadStatusChangeErrorData
+      title: HttpExistingActiveUploadErrorData
       type: object
     HttpFileNotFoundError:
       additionalProperties: false
@@ -91,7 +91,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpFileNotFoundError
       type: object
     HttpFileNotFoundErrorData:
       description: Model for exception data
@@ -101,7 +101,7 @@ components:
           type: string
       required:
       - file_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpFileNotFoundErrorData
       type: object
     HttpFileNotFoundUploadError:
       additionalProperties: false
@@ -123,7 +123,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpFileNotFoundUploadError
       type: object
     HttpFileNotFoundUploadErrorData:
       description: Model for exception data
@@ -133,7 +133,7 @@ components:
           type: string
       required:
       - file_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpFileNotFoundUploadErrorData
       type: object
     HttpNoFileAccessError:
       additionalProperties: false
@@ -155,7 +155,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpNoFileAccessError
       type: object
     HttpNoFileAccessErrorData:
       description: Model for exception data
@@ -165,7 +165,7 @@ components:
           type: string
       required:
       - file_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpNoFileAccessErrorData
       type: object
     HttpUploadNotFoundError:
       additionalProperties: false
@@ -187,7 +187,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpUploadNotFoundError
       type: object
     HttpUploadNotFoundErrorData:
       description: Model for exception data
@@ -197,7 +197,7 @@ components:
           type: string
       required:
       - upload_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpUploadNotFoundErrorData
       type: object
     HttpUploadNotPendingError:
       additionalProperties: false
@@ -219,7 +219,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpUploadNotPendingError
       type: object
     HttpUploadNotPendingErrorData:
       description: Model for exception data
@@ -232,7 +232,7 @@ components:
       required:
       - upload_id
       - current_upload_status
-      title: HttpUploadStatusChangeErrorData
+      title: HttpUploadNotPendingErrorData
       type: object
     HttpUploadStatusChangeError:
       additionalProperties: false
@@ -254,7 +254,7 @@ components:
       - data
       - description
       - exception_id
-      title: HttpUploadStatusChangeErrorData
+      title: HttpUploadStatusChangeError
       type: object
     HttpUploadStatusChangeErrorData:
       description: Model for exception data
@@ -279,7 +279,7 @@ components:
           type: string
       required:
       - url
-      title: HttpUploadStatusChangeErrorData
+      title: PartUploadDetails
       type: object
     UploadAttempt:
       description: A model containing details on an upload attempt for a specific
@@ -379,7 +379,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 0.3.0
+  version: 0.3.1
 openapi: 3.0.2
 paths:
   /files/{file_id}:
