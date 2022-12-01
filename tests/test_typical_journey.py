@@ -163,7 +163,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     # publish an event to mark the upload as accepted:
     acceptance_event = event_schemas.FileInternallyRegistered(
         file_id=file_to_register.file_id,
-        upload_date=datetime.utcnow(),
+        upload_date=datetime.utcnow().isoformat(),
         decrypted_sha256=file_to_register.decrypted_sha256,
         decrypted_size=file_to_register.decrypted_size,
         decryption_secret_id="some-secret",
