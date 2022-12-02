@@ -63,7 +63,8 @@ class EventPubTranslator(EventPublisherPort):
 
         event_payload = event_schemas.FileUploadReceived(
             file_id=file_metadata.file_id,
-            upload_date=upload_date,
+            upload_date=upload_date.isoformat(),
+            submitter_public_key="dummy_pubkey",
             decrypted_size=file_metadata.decrypted_size,
             expected_decrypted_sha256=file_metadata.decrypted_sha256,
         )
