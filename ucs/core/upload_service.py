@@ -50,7 +50,7 @@ class UploadService(UploadServicePort):
             file_size=file_size
         ),
     ):
-        """Ininitalize class instance with configs and outbound adapter objects."""
+        """Initialize class instance with configs and outbound adapter objects."""
 
         self._inbox_bucket = config.inbox_bucket
         self._daos = daos
@@ -227,7 +227,9 @@ class UploadService(UploadServicePort):
             await self._daos.upload_attempts.delete(id_=new_upload_id)
             raise
 
-    async def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
+    async def initiate_new(
+        self, *, file_id: str, submitter_public_key: str
+    ) -> models.UploadAttempt:
         """
         Initiates a new multi-part upload for the file with the given ID.
         """
@@ -251,6 +253,7 @@ class UploadService(UploadServicePort):
             status=models.UploadStatus.PENDING,
             part_size=part_size,
             creation_date=datetime.utcnow(),
+            submitter_public_key=submitter_public_key,
         )
 
         await self._insert_upload(upload=upload)
@@ -334,7 +337,9 @@ class UploadService(UploadServicePort):
         # publish an event, informing other services that a new upload was received:
         file = await self._daos.file_metadata.get_by_id(upload.file_id)
         await self._event_publisher.publish_upload_received(
-            file_metadata=file, upload_date=completion_date
+            file_metadata=file,
+            upload_date=completion_date,
+            submitter_public_key=updated_upload.submitter_public_key,
         )
 
     async def cancel(self, *, upload_id: str) -> None:

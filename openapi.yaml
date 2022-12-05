@@ -306,6 +306,10 @@ components:
           type: integer
         status:
           $ref: '#/components/schemas/UploadStatus'
+        submitter_public_key:
+          description: The public key used by the submittter to encrypt the file.
+          title: Submitter Public Key
+          type: string
         upload_id:
           title: Upload Id
           type: string
@@ -315,6 +319,7 @@ components:
       - status
       - part_size
       - creation_date
+      - submitter_public_key
       title: Multi-Part Upload Details
       type: object
     UploadAttemptCreation:
@@ -324,8 +329,13 @@ components:
           description: The ID of the file corresponding to this upload.
           title: File Id
           type: string
+        submitter_public_key:
+          description: The public key used by the submittter to encrypt the file.
+          title: Submitter Public Key
+          type: string
       required:
       - file_id
+      - submitter_public_key
       title: Properties required to create a new upload
       type: object
     UploadAttemptUpdate:

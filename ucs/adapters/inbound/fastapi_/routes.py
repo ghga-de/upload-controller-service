@@ -135,7 +135,10 @@ async def create_upload(
     """Initiate a new mutli-part upload for the given file."""
 
     try:
-        return await upload_service.initiate_new(file_id=upload_creation.file_id)
+        return await upload_service.initiate_new(
+            file_id=upload_creation.file_id,
+            submitter_public_key=upload_creation.submitter_public_key,
+        )
     except UploadServicePort.ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,

@@ -54,6 +54,7 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
     status=models.UploadStatus.PENDING,
     part_size=1234,
     creation_date=datetime.now(),
+    submitter_public_key="test-key",
 )
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:

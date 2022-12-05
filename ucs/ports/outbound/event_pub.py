@@ -29,6 +29,7 @@ class EventPublisherPort(Protocol):
         *,
         file_metadata: models.FileMetadata,
         upload_date: datetime,
+        submitter_public_key: str,
     ) -> None:
         """Publish event informing that a new upload was received."""
         ...

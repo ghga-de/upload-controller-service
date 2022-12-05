@@ -52,7 +52,7 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F4
 
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.post(
-        "/uploads", json={"file_id": file_id}
+        "/uploads", json={"file_id": file_id, "submitter_public_key": "test-key"}
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -85,7 +85,8 @@ async def test_create_upload_other_active(
     await daos.upload_attempts.insert(existing_upload)
 
     response = await joint_fixture.rest_client.post(
-        "/uploads", json={"file_id": EXAMPLE_FILE.file_id}
+        "/uploads",
+        json={"file_id": EXAMPLE_FILE.file_id, "submitter_public_key": "test-key"},
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -117,7 +118,8 @@ async def test_create_upload_accepted(
 
     # try to create a new upload:
     response = await joint_fixture.rest_client.post(
-        "/uploads", json={"file_id": EXAMPLE_FILE.file_id}
+        "/uploads",
+        json={"file_id": EXAMPLE_FILE.file_id, "submitter_public_key": "test-key"},
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
