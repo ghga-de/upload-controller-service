@@ -67,6 +67,9 @@ class UploadAttempt(BaseModel):
             + " `None` if the upload is ongoing."
         ),
     )
+    submitter_public_key: str = Field(
+        ..., description="The public key used by the submittter to encrypt the file."
+    )
 
     class Config:
         """Additional Model Config."""

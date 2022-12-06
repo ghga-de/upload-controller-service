@@ -49,7 +49,7 @@ async def perform_upload(
 
     # initiate new upload:
     response = await joint_fixture.rest_client.post(
-        "/uploads", json={"file_id": file_id}
+        "/uploads", json={"file_id": file_id, "submitter_public_key": "test-key"}
     )
     assert response.status_code == status.HTTP_200_OK
     upload_details = response.json()

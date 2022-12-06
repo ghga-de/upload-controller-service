@@ -132,7 +132,9 @@ class UploadServicePort(ABC):
             super().__init__(message)
 
     @abstractmethod
-    async def initiate_new(self, *, file_id: str) -> models.UploadAttempt:
+    async def initiate_new(
+        self, *, file_id: str, submitter_public_key: str
+    ) -> models.UploadAttempt:
         """
         Initiates a new multi-part upload for the file with the given ID.
         """

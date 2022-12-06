@@ -58,13 +58,14 @@ class EventPubTranslator(EventPublisherPort):
         *,
         file_metadata: models.FileMetadata,
         upload_date: datetime,
+        submitter_public_key: str,
     ) -> None:
         """Publish event informing that a new file upload was received."""
 
         event_payload = event_schemas.FileUploadReceived(
             file_id=file_metadata.file_id,
             upload_date=upload_date.isoformat(),
-            submitter_public_key="dummy_pubkey",
+            submitter_public_key=submitter_public_key,
             decrypted_size=file_metadata.decrypted_size,
             expected_decrypted_sha256=file_metadata.decrypted_sha256,
         )
