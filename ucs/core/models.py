@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 
 
 # fmt: off
-class UploadStatus(Enum):
+class UploadStatus(str, Enum):
 
     """
     The current upload state. Can be one of:

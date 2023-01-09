@@ -366,6 +366,7 @@ components:
       - accepted
       - rejected
       title: UploadStatus
+      type: string
     ValidationError:
       properties:
         loc:
@@ -389,7 +390,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 0.4.1
+  version: 0.4.2
 openapi: 3.0.2
 paths:
   /files/{file_id}:
