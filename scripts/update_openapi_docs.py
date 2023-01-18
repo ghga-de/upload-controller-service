@@ -65,9 +65,11 @@ def check_docs():
         openapi_observed = openapi_file.read()
 
     if openapi_expected != openapi_observed:
+        observed = openapi_observed.split("\n")
+        should_be = openapi_expected.split("\n")
         raise ValidationError(
             f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date.\n\n"
-            + f"Diff:\n{''.join(difflib.ndiff([openapi_expected], [openapi_observed]))}"
+            + f"Diff:\n{''.join(difflib.ndiff(should_be, observed))}"
         )
 
 
