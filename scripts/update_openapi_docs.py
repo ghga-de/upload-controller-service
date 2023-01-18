@@ -17,6 +17,7 @@
 
 """Udates OpenAPI-based documentation"""
 
+import difflib
 import sys
 from pathlib import Path
 
@@ -65,7 +66,8 @@ def check_docs():
 
     if openapi_expected != openapi_observed:
         raise ValidationError(
-            f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date."
+            f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date.\n\n"
+            + f"Diff:\n{''.join(difflib.ndiff([openapi_expected], [openapi_observed]))}"
         )
 
 
