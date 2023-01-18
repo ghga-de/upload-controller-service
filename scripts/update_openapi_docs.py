@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 """Udates OpenAPI-based documentation"""
 
+import difflib
 import sys
 from pathlib import Path
 
@@ -64,8 +65,11 @@ def check_docs():
         openapi_observed = openapi_file.read()
 
     if openapi_expected != openapi_observed:
+        observed = openapi_observed.split("\n")
+        should_be = openapi_expected.split("\n")
         raise ValidationError(
-            f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date."
+            f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date.\n\n"
+            + f"Diff:\n{''.join(difflib.ndiff(should_be, observed))}"
         )
 
 
