@@ -352,12 +352,12 @@ components:
       title: Multi-Part Upload Update
       type: object
     UploadStatus:
-      description: "\n    The current upload state. Can be one of:\n        - PENDING\
-        \ (the user has requested an upload url)\n        - CANCELLED (the user has\
-        \ canceled the upload)\n        - UPLOADED (the user has confirmed the upload)\n\
-        \        - FAILED (the upload has failed for a technical reason)\n       \
-        \ - ACCEPTED (the upload was accepted by a downstream service)\n        -\
-        \ REJECTED (the upload was rejected by a downstream service)\n    "
+      description: "The current upload state. Can be one of:\n    - PENDING (the user\
+        \ has requested an upload url)\n    - CANCELLED (the user has canceled the\
+        \ upload)\n    - UPLOADED (the user has confirmed the upload)\n    - FAILED\
+        \ (the upload has failed for a technical reason)\n    - ACCEPTED (the upload\
+        \ was accepted by a downstream service)\n    - REJECTED (the upload was rejected\
+        \ by a downstream service)"
       enum:
       - pending
       - cancelled
@@ -371,7 +371,9 @@ components:
       properties:
         loc:
           items:
-            type: string
+            anyOf:
+            - type: string
+            - type: integer
           title: Location
           type: array
         msg:
@@ -475,7 +477,7 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/HttpExistingActiveUploadError'
                 - $ref: '#/components/schemas/HttpFileNotFoundUploadError'
-                title: Response 400 Create Upload Uploads Post
+                title: Response 400 Createupload
           description: 'Exceptions by ID:
 
             - existingActiveUpload: Imposible to create a new upload for the file
@@ -576,7 +578,7 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/HttpUploadNotPendingError'
                 - $ref: '#/components/schemas/HttpUploadStatusChangeError'
-                title: Response 400 Update Upload Status Uploads  Upload Id  Patch
+                title: Response 400 Updateuploadstatus
           description: 'Exceptions by ID:
 
             - uploadNotPending: The corresponding upload is not in ''pending'' state.
