@@ -6,7 +6,7 @@
     "upload_received_event_topic": {
       "title": "Upload Received Event Topic",
       "description": "Name of the topic to publish event that inform about new file uploads.",
-      "default": "file_uploads",
+      "example": "file_uploads",
       "env_names": [
         "ucs_upload_received_event_topic"
       ],
@@ -15,7 +15,7 @@
     "upload_received_event_type": {
       "title": "Upload Received Event Type",
       "description": "The type to use for event that inform about new file uploads.",
-      "default": "file_upload_received",
+      "example": "file_upload_received",
       "env_names": [
         "ucs_upload_received_event_type"
       ],
@@ -42,7 +42,7 @@
     "upload_accepted_event_topic": {
       "title": "Upload Accepted Event Topic",
       "description": "Name of the topic to receive event that indicate that an upload was by downstream services.",
-      "example": "file_ingestion",
+      "example": "internal_file_registry",
       "env_names": [
         "ucs_upload_accepted_event_topic"
       ],
@@ -51,9 +51,27 @@
     "upload_accepted_event_type": {
       "title": "Upload Accepted Event Type",
       "description": "The type used for event that indicate that an upload was by downstream services.",
-      "example": "file_upload_accepted",
+      "example": "file_registered",
       "env_names": [
         "ucs_upload_accepted_event_type"
+      ],
+      "type": "string"
+    },
+    "validation_failure_event_topic": {
+      "title": "Validation Failure Event Topic",
+      "description": "Name of the topic used for events informing about the outcome of file validations.",
+      "example": "file_interrogation",
+      "env_names": [
+        "ucs_validation_failure_event_topic"
+      ],
+      "type": "string"
+    },
+    "validation_failure_event_type": {
+      "title": "Validation Failure Event Type",
+      "description": "The type used for events informing about the failure of a file validation.",
+      "example": "file_validation_failure",
+      "env_names": [
+        "ucs_validation_failure_event_type"
       ],
       "type": "string"
     },
@@ -301,10 +319,14 @@
     }
   },
   "required": [
+    "upload_received_event_topic",
+    "upload_received_event_type",
     "file_metadata_event_topic",
     "file_metadata_event_type",
     "upload_accepted_event_topic",
     "upload_accepted_event_type",
+    "validation_failure_event_topic",
+    "validation_failure_event_type",
     "service_instance_id",
     "kafka_servers",
     "s3_endpoint_url",
