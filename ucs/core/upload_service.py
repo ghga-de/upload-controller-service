@@ -365,7 +365,7 @@ class UploadService(UploadServicePort):
 
     async def reject_latest(self, *, file_id: str) -> None:
         """
-        Accept the latest multi-part upload for the given file.
+        Reject the latest multi-part upload for the given file.
 
         Here the file ID is used, as this method is triggered by downstream services
         that only know the file ID not the upload attempt.
