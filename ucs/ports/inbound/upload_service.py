@@ -1,4 +1,4 @@
-# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -182,7 +182,7 @@ class UploadServicePort(ABC):
     @abstractmethod
     async def reject_latest(self, *, file_id: str) -> None:
         """
-        Accept the latest multi-part upload for the given file.
+        Reject the latest multi-part upload for the given file.
 
         Here the file ID is used, as this method is triggered by downstream services
         that only know the file ID not the upload attempt.

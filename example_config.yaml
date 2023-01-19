@@ -23,8 +23,10 @@ s3_secret_access_key: '**********'
 s3_session_token: null
 service_instance_id: '1'
 service_name: upload_controller_service
-upload_accepted_event_topic: file_ingestion
-upload_accepted_event_type: upload_accepted
+upload_accepted_event_topic: internal_file_registry
+upload_accepted_event_type: file_registered
 upload_received_event_topic: file_uploads
 upload_received_event_type: file_upload_received
+upload_rejected_event_topic: file_interrogation
+upload_rejected_event_type: file_validation_failure
 workers: 1

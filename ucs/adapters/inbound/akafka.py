@@ -1,4 +1,4 @@
-# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,7 +52,7 @@ class EventSubTranslatorConfig(BaseSettings):
             "Name of the topic to receive event that indicate that an upload was"
             + " by downstream services."
         ),
-        example="file_ingestion",
+        example="internal_file_registry",
     )
     upload_accepted_event_type: str = Field(
         ...,
@@ -60,7 +60,18 @@ class EventSubTranslatorConfig(BaseSettings):
             "The type used for event that indicate that an upload was by downstream"
             + " services."
         ),
-        example="file_upload_accepted",
+        example="file_registered",
+    )
+    upload_rejected_event_topic: str = Field(
+        ...,
+        description="Name of the topic used for events informing about rejection of an "
+        + "upload by downstream services due to validation failure.",
+        example="file_interrogation",
+    )
+    upload_rejected_event_type: str = Field(
+        ...,
+        description="The type used for events informing about the failure of a file validation.",
+        example="file_validation_failure",
     )
 
 
@@ -79,10 +90,12 @@ class EventSubTranslator(EventSubscriberProtocol):
         self.topics_of_interest = [
             config.file_metadata_event_topic,
             config.upload_accepted_event_topic,
+            config.upload_rejected_event_topic,
         ]
         self.types_of_interest = [
             config.file_metadata_event_type,
             config.upload_accepted_event_type,
+            config.upload_rejected_event_type,
         ]
 
         self._file_metadata_service = file_metadata_service
@@ -117,6 +130,15 @@ class EventSubTranslator(EventSubscriberProtocol):
 
         await self._upload_service.accept_latest(file_id=validated_payload.file_id)
 
+    async def _consume_validation_failure(self, *, payload: JsonObject) -> None:
+        "Consume file validation failure events."
+
+        validated_payload = get_validated_payload(
+            payload=payload, schema=event_schemas.FileUploadValidationFailure
+        )
+
+        await self._upload_service.reject_latest(file_id=validated_payload.file_id)
+
     async def _consume_validated(
         self,
         *,
@@ -130,5 +152,7 @@ class EventSubTranslator(EventSubscriberProtocol):
             await self._consume_file_metadata(payload=payload)
         elif type_ == self._config.upload_accepted_event_type:
             await self._consume_upload_accepted(payload=payload)
+        elif type_ == self._config.upload_rejected_event_type:
+            await self._consume_validation_failure(payload=payload)
         else:
             raise RuntimeError(f"Unexpected event of type: {type_}")

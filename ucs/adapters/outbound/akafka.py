@@ -1,4 +1,4 @@
-# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,14 +30,15 @@ class EventPubTanslatorConfig(BaseSettings):
     """Config for publishing file upload-related events."""
 
     upload_received_event_topic: str = Field(
-        "file_uploads",
-        description=(
-            "Name of the topic to publish event that inform about new file uploads."
-        ),
+        ...,
+        description="Name of the topic to publish events that inform about new file "
+        + "uploads.",
+        example="file_uploads",
     )
     upload_received_event_type: str = Field(
-        "file_upload_received",
+        ...,
         description="The type to use for event that inform about new file uploads.",
+        example="file_upload_received",
     )
 
 

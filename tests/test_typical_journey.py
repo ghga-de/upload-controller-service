@@ -1,4 +1,4 @@
-# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,68 @@ from tests.fixtures.joint import *  # noqa: 403
 # this is a temporary solution to run an event loop within another event loop
 # will be solved once transitioning to kafka:
 nest_asyncio.apply()
+
+
+async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
+    """Run steps until uploaded data has been received and the upload attempt has been
+    marked as uploaded"""
+
+    # populate s3 storage:
+    await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
+
+    # publish event to register a new file for uplaod:
+    file_to_register = event_schemas.MetadataSubmissionFiles(
+        file_id=EXAMPLE_FILE.file_id,
+        file_name=EXAMPLE_FILE.file_name,
+        decrypted_size=EXAMPLE_FILE.decrypted_size,
+        decrypted_sha256=EXAMPLE_FILE.decrypted_sha256,
+    )
+    file_metadata_event = event_schemas.MetadataSubmissionUpserted(
+        associated_files=[file_to_register]
+    )
+    await joint_fixture.kafka.publish_event(
+        payload=file_metadata_event.dict(),
+        type_=joint_fixture.config.file_metadata_event_type,
+        topic=joint_fixture.config.file_metadata_event_topic,
+    )
+
+    # consume the event:
+    event_subscriber = await joint_fixture.container.kafka_event_subscriber()
+    await event_subscriber.run(forever=False)
+
+    # check that the new file has been registered:
+    response = await joint_fixture.rest_client.get(f"/files/{file_to_register.file_id}")
+    assert response.status_code == status.HTTP_200_OK
+    registered_file = response.json()
+    assert registered_file["file_name"] == file_to_register.file_name
+    assert registered_file["decrypted_sha256"] == file_to_register.decrypted_sha256
+    assert registered_file["decrypted_size"] == file_to_register.decrypted_size
+    assert registered_file["latest_upload_id"] is None
+
+    # perform an upload and cancel it:
+    _ = await perform_upload(
+        joint_fixture, file_id=file_to_register.file_id, final_status="cancelled"
+    )
+
+    # perform another upload and confirm it:
+    async with joint_fixture.kafka.record_events(
+        in_topic=joint_fixture.config.upload_received_event_topic
+    ) as recorder:
+        await perform_upload(
+            joint_fixture, file_id=file_to_register.file_id, final_status="uploaded"
+        )
+
+    # check for the  events:
+    assert len(recorder.recorded_events) == 1
+    assert (
+        recorder.recorded_events[0].type_
+        == joint_fixture.config.upload_received_event_type
+    )
+    payload = event_schemas.FileUploadReceived(**recorder.recorded_events[0].payload)
+    assert payload.file_id == file_to_register.file_id
+    assert payload.expected_decrypted_sha256 == file_to_register.decrypted_sha256
+
+    return file_to_register, event_subscriber
 
 
 async def perform_upload(
@@ -105,60 +167,9 @@ async def perform_upload(
 async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     """Test the typical anticipated/successful journey through the service's APIs."""
 
-    # populate s3 storage:
-    await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
-
-    # publish event to register a new file for uplaod:
-    file_to_register = event_schemas.MetadataSubmissionFiles(
-        file_id=EXAMPLE_FILE.file_id,
-        file_name=EXAMPLE_FILE.file_name,
-        decrypted_size=EXAMPLE_FILE.decrypted_size,
-        decrypted_sha256=EXAMPLE_FILE.decrypted_sha256,
+    file_to_register, event_subscriber = await run_until_uploaded(
+        joint_fixture=joint_fixture
     )
-    file_metadata_event = event_schemas.MetadataSubmissionUpserted(
-        associated_files=[file_to_register]
-    )
-    await joint_fixture.kafka.publish_event(
-        payload=file_metadata_event.dict(),
-        type_=joint_fixture.config.file_metadata_event_type,
-        topic=joint_fixture.config.file_metadata_event_topic,
-    )
-
-    # consume the event:
-    event_subscriber = await joint_fixture.container.kafka_event_subscriber()
-    await event_subscriber.run(forever=False)
-
-    # check that the new file has been registered:
-    response = await joint_fixture.rest_client.get(f"/files/{file_to_register.file_id}")
-    assert response.status_code == status.HTTP_200_OK
-    registered_file = response.json()
-    assert registered_file["file_name"] == file_to_register.file_name
-    assert registered_file["decrypted_sha256"] == file_to_register.decrypted_sha256
-    assert registered_file["decrypted_size"] == file_to_register.decrypted_size
-    assert registered_file["latest_upload_id"] is None
-
-    # perform an upload and cancel it:
-    _ = await perform_upload(
-        joint_fixture, file_id=file_to_register.file_id, final_status="cancelled"
-    )
-
-    # perform another upload and confirm it:
-    async with joint_fixture.kafka.record_events(
-        in_topic=joint_fixture.config.upload_received_event_topic
-    ) as recorder:
-        await perform_upload(
-            joint_fixture, file_id=file_to_register.file_id, final_status="uploaded"
-        )
-
-    # check for the  events:
-    assert len(recorder.recorded_events) == 1
-    assert (
-        recorder.recorded_events[0].type_
-        == joint_fixture.config.upload_received_event_type
-    )
-    payload = event_schemas.FileUploadReceived(**recorder.recorded_events[0].payload)
-    assert payload.file_id == file_to_register.file_id
-    assert payload.expected_decrypted_sha256 == file_to_register.decrypted_sha256
 
     # publish an event to mark the upload as accepted:
     acceptance_event = event_schemas.FileInternallyRegistered(
@@ -192,3 +203,40 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["status"] == "accepted"
+
+
+@pytest.mark.asyncio
+async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
+    """Test the typical journey through the service's APIs, but reject the upload
+    attempt due to a file validation error"""
+
+    file_to_register, event_subscriber = await run_until_uploaded(
+        joint_fixture=joint_fixture
+    )
+
+    # publish an event to mark the upload as rejected due to validation failure
+    failure_event = event_schemas.FileUploadValidationFailure(
+        file_id=file_to_register.file_id,
+        upload_date=datetime.utcnow().isoformat(),
+        reason="Sorry, but this has to fail.",
+    )
+
+    await joint_fixture.kafka.publish_event(
+        payload=json.loads(failure_event.json()),
+        type_=joint_fixture.config.upload_rejected_event_type,
+        topic=joint_fixture.config.upload_rejected_event_topic,
+    )
+
+    # consume the validation failure event:
+    await event_subscriber.run(forever=False)
+
+    # make sure that the latest upload of the corresponding file was marked as rejected:
+    # (first get the ID of the latest upload for that file:)
+    response = await joint_fixture.rest_client.get(f"/files/{file_to_register.file_id}")
+    assert response.status_code == status.HTTP_200_OK
+    latest_upload_id = response.json()["latest_upload_id"]
+
+    # (Then get details on that upload:)
+    response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "rejected"
