@@ -5,7 +5,7 @@
   "properties": {
     "upload_received_event_topic": {
       "title": "Upload Received Event Topic",
-      "description": "Name of the topic to publish event that inform about new file uploads.",
+      "description": "Name of the topic to publish events that inform about new file uploads.",
       "example": "file_uploads",
       "env_names": [
         "ucs_upload_received_event_topic"
@@ -57,21 +57,21 @@
       ],
       "type": "string"
     },
-    "validation_failure_event_topic": {
-      "title": "Validation Failure Event Topic",
-      "description": "Name of the topic used for events informing about the outcome of file validations.",
+    "upload_rejected_event_topic": {
+      "title": "Upload Rejected Event Topic",
+      "description": "Name of the topic used for events informing about rejection of an upload by downstream services due to validation failure.",
       "example": "file_interrogation",
       "env_names": [
-        "ucs_validation_failure_event_topic"
+        "ucs_upload_rejected_event_topic"
       ],
       "type": "string"
     },
-    "validation_failure_event_type": {
-      "title": "Validation Failure Event Type",
+    "upload_rejected_event_type": {
+      "title": "Upload Rejected Event Type",
       "description": "The type used for events informing about the failure of a file validation.",
       "example": "file_validation_failure",
       "env_names": [
-        "ucs_validation_failure_event_type"
+        "ucs_upload_rejected_event_type"
       ],
       "type": "string"
     },
@@ -325,8 +325,8 @@
     "file_metadata_event_type",
     "upload_accepted_event_topic",
     "upload_accepted_event_type",
-    "validation_failure_event_topic",
-    "validation_failure_event_type",
+    "upload_rejected_event_topic",
+    "upload_rejected_event_type",
     "service_instance_id",
     "kafka_servers",
     "s3_endpoint_url",

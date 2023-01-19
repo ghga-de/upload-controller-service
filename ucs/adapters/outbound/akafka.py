@@ -31,7 +31,7 @@ class EventPubTanslatorConfig(BaseSettings):
 
     upload_received_event_topic: str = Field(
         ...,
-        description="Name of the topic to publish event that inform about new file "
+        description="Name of the topic to publish events that inform about new file "
         + "uploads.",
         example="file_uploads",
     )

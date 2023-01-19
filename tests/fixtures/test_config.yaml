@@ -9,7 +9,7 @@ upload_accepted_event_topic: internal_file_registry
 upload_accepted_event_type: file_registered
 upload_received_event_topic: file_uploads
 upload_received_event_type: file_upload_received
-validation_failure_event_topic: file_interrogation
-validation_failure_event_type: file_validation_failure
+upload_rejected_event_topic: file_interrogation
+upload_rejected_event_type: file_validation_failure
 service_instance_id: 001
 kafka_servers: ["kafka:9092"]

@@ -35,8 +35,8 @@ nest_asyncio.apply()
 
 
 async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
-    """Run steps until uploaded data has been received, the upload attempt marked as
-    uploaded and"""
+    """Run steps until uploaded data has been received and the upload attempt has been
+    marked as uploaded"""
 
     # populate s3 storage:
     await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
@@ -223,8 +223,8 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
 
     await joint_fixture.kafka.publish_event(
         payload=json.loads(failure_event.json()),
-        type_=joint_fixture.config.validation_failure_event_type,
-        topic=joint_fixture.config.validation_failure_event_topic,
+        type_=joint_fixture.config.upload_rejected_event_type,
+        topic=joint_fixture.config.upload_rejected_event_topic,
     )
 
     # consume the validation failure event:
