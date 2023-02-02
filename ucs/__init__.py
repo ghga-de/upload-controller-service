@@ -15,4 +15,4 @@
 
 """The package implements a service that manages uploads to a S3 inbox bucket."""
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
