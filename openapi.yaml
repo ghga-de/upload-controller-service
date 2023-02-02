@@ -392,7 +392,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 0.5.1
+  version: 0.5.2
 openapi: 3.0.2
 paths:
   /files/{file_id}:
