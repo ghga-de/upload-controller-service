@@ -3,14 +3,14 @@
 
 cd /workspace
 
+# upgrade pip
+python -m pip install --upgrade pip
 
-# install in edit mode
-# use-feature way of installing packages
-# install with testing dependencies
-pip install \
-    --use-feature=in-tree-build \
-    -e \
-    ".[all]"
+# install with all extras in editable mode
+pip install -r requirements.txt
 
-# install pre-commit hooks to git:
+# install or upgrade dependencies for development and testing
+pip install --upgrade -r requirements-dev.txt
+
+# install pre-commit hooks to git
 pre-commit install
