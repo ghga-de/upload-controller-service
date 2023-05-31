@@ -17,8 +17,7 @@
 
 from datetime import datetime
 
-from ghga_service_chassis_lib.utils import TEST_FILE_PATHS
-from hexkit.providers.s3.testutils import FileObject
+from hexkit.providers.s3.testutils import TEST_FILE_PATHS, FileObject
 
 from tests.fixtures.config import DEFAULT_CONFIG
 from ucs.core import models

@@ -18,7 +18,11 @@ service (incl. REST and event-driven APIs)."""
 
 import json
 from datetime import datetime
-from typing import Literal
+
+try:  # workaround for https://github.com/pydantic/pydantic/issues/5821
+    from typing_extensions import Literal
+except ImportError:
+    from typing import Literal  # type: ignore
 
 import nest_asyncio
 import pytest
