@@ -355,6 +355,7 @@ class UploadService(UploadServicePort):
             file_metadata=file,
             upload_date=completion_date,
             submitter_public_key=updated_upload.submitter_public_key,
+            bucket_id=self._inbox_bucket,
         )
 
     async def cancel(self, *, upload_id: str) -> None:
