@@ -262,7 +262,6 @@ class UploadService(UploadServicePort):
             upload_id=upload_id,
             file_id=file_id,
             object_id=object_id,
-            bucket_id=self._inbox_bucket,
             status=models.UploadStatus.PENDING,
             part_size=part_size,
             creation_date=datetime.utcnow(),
