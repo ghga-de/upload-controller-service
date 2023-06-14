@@ -20,6 +20,10 @@ components:
             has been initiated, yet.
           title: Latest Upload Id
           type: string
+        object_id:
+          description: Object ID assigned during latest upload attempt.
+          title: Object Id
+          type: string
       required:
       - file_id
       - file_name
@@ -300,6 +304,10 @@ components:
           description: The ID of the file corresponding to this upload.
           title: File Id
           type: string
+        object_id:
+          description: The bucket-specific ID used within the S3 object storage.
+          title: Object Id
+          type: string
         part_size:
           description: Part size to be used for upload. Specified in bytes.
           title: Part Size
@@ -316,6 +324,7 @@ components:
       required:
       - upload_id
       - file_id
+      - object_id
       - status
       - part_size
       - creation_date
@@ -392,7 +401,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 0.5.5
+  version: 0.6.0
 openapi: 3.0.2
 paths:
   /files/{file_id}:
