@@ -178,6 +178,8 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
     # publish an event to mark the upload as accepted:
     acceptance_event = event_schemas.FileInternallyRegistered(
         file_id=file_to_register.file_id,
+        object_id="objectid",
+        bucket_id="test-permanent",
         upload_date=datetime.utcnow().isoformat(),
         decrypted_sha256=file_to_register.decrypted_sha256,
         decrypted_size=file_to_register.decrypted_size,
@@ -221,6 +223,8 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
     # publish an event to mark the upload as rejected due to validation failure
     failure_event = event_schemas.FileUploadValidationFailure(
         file_id=file_to_register.file_id,
+        object_id="objectid",
+        bucket_id="test-staging",
         upload_date=datetime.utcnow().isoformat(),
         reason="Sorry, but this has to fail.",
     )

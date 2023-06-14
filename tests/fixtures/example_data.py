@@ -50,6 +50,7 @@ EXAMPLE_STORAGE_OBJECT = FileObject(
 EXAMPLE_UPLOAD = models.UploadAttempt(
     upload_id="testUpload001",
     file_id="testFile001",
+    object_id="object001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
     creation_date=datetime.now(),
