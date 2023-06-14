@@ -107,6 +107,9 @@ class FileMetadata(FileMetadataUpsert):
     A model containing the full metadata on a file.
     """
 
+    object_id: Optional[str] = Field(
+        None, description="Object ID assigned during latest upload attempt."
+    )
     latest_upload_id: Optional[str] = Field(
         None,
         description=(
