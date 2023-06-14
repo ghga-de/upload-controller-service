@@ -56,10 +56,6 @@ class UploadAttempt(BaseModel):
     object_id: str = Field(
         ..., description="The bucket-specific ID used within the S3 object storage."
     )
-    bucket_id: str = Field(
-        ...,
-        description="The name of the S3 object storage bucket used to store the file.",
-    )
     status: UploadStatus
     part_size: int = Field(
         ..., description="Part size to be used for upload. Specified in bytes."
