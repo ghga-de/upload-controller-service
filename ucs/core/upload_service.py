@@ -16,6 +16,7 @@
 
 """The main upload handling logic."""
 
+import uuid
 from datetime import datetime
 from typing import Callable
 
@@ -62,8 +63,8 @@ class UploadService(UploadServicePort):
         self, upload_id: str, status: models.UploadStatus
     ) -> models.UploadAttempt:
         """Makes sure that the upload with the given ID exists and that its current
-        status matches the specified status. If that is the case, the upload is return. Otherwise
-        an UploadStatusMissmatchError is raised."""
+        status matches the specified status. If that is the case, the upload is returned.
+        Otherwise an UploadStatusMissmatchError is raised."""
 
         upload = await self.get_details(upload_id=upload_id)
 
@@ -93,7 +94,7 @@ class UploadService(UploadServicePort):
             await self._object_storage.abort_multipart_upload(
                 upload_id=upload_id,
                 bucket_id=self._inbox_bucket,
-                object_id=upload.file_id,
+                object_id=upload.object_id,
             )
         except ObjectStoragePort.MultiPartUploadAbortError as error:
             raise self.UploadCancelError(upload_id=upload_id) from error
@@ -135,7 +136,7 @@ class UploadService(UploadServicePort):
         try:
             await self._object_storage.delete_object(
                 bucket_id=self._inbox_bucket,
-                object_id=latest_upload.file_id,
+                object_id=latest_upload.object_id,
             )
         except ObjectStoragePort.ObjectNotFoundError as error:
             # This is unexpected. Thus setting the status of the upload attempt to
@@ -147,8 +148,9 @@ class UploadService(UploadServicePort):
             raise self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"Trying to clear the upload with ID {latest_upload.upload_id}"
-                    + f" (final status: {final_status}), however, the corresponding"
-                    + f" file with id {file_id} could not be found in the database."
+                    + f" for file with file ID {file_id} (final status: {final_status}),"
+                    + " however, the corresponding file with object ID"
+                    + f" {latest_upload.object_id} could not be found in object storage."
                 )
             ) from error
 
@@ -171,13 +173,13 @@ class UploadService(UploadServicePort):
             ):
                 raise self.ExistingActiveUploadError(active_upload=attempt)
 
-    async def _init_multipart_upload(self, *, file_id: str) -> str:
+    async def _init_multipart_upload(self, *, file_id: str, object_id: str) -> str:
         """Initialize a new multipart upload and returns the upload ID.
         This will only interact with the object storage but not update the database."""
 
         try:
             return await self._object_storage.init_multipart_upload(
-                bucket_id=self._inbox_bucket, object_id=file_id
+                bucket_id=self._inbox_bucket, object_id=object_id
             )
         except ObjectStoragePort.MultiPartUploadAlreadyExistsError as error:
             raise self.FileAlreadyInInboxError(file_id=file_id) from error
@@ -186,7 +188,7 @@ class UploadService(UploadServicePort):
         """Insert a new upload attempt to the database assuming a corresponding
         multipart upload has already been initiated at the object storage.
         If that operation fails unexpectedly, the initiation of the upload at
-        the object storage is roled back.
+        the object storage is rolled back.
         """
 
         try:
@@ -199,22 +201,26 @@ class UploadService(UploadServicePort):
             await self._object_storage.abort_multipart_upload(
                 upload_id=upload.upload_id,
                 bucket_id=self._inbox_bucket,
-                object_id=upload.file_id,
+                object_id=upload.object_id,
             )
             raise
 
     async def _set_latest_upload_for_file(
-        self, *, file: models.FileMetadata, new_upload_id: str
+        self, *, file: models.FileMetadata, new_upload_id: str, object_id: str
     ) -> None:
         """Sets the `latest_upload_id` metadata field of the specified file in the
         database to the provided new_upload_id.
+        Also sets the object_id metadata field to match the object_id generated for the
+        latest upload attempt.
         It is assumed that a multipart upload has already been initiated at the object
         storage and that a new upload entry was persisted to the database.
         If this operation fails unexpectedly, both the database and the object storage
         are roled back by eliminating any traces of this new upload.
         """
 
-        updated_file = file.copy(update={"latest_upload_id": new_upload_id})
+        updated_file = file.copy(
+            update={"latest_upload_id": new_upload_id, "object_id": object_id}
+        )
         try:
             await self._daos.file_metadata.update(updated_file)
         except:
@@ -222,7 +228,7 @@ class UploadService(UploadServicePort):
             await self._object_storage.abort_multipart_upload(
                 upload_id=new_upload_id,
                 bucket_id=self._inbox_bucket,
-                object_id=file.file_id,
+                object_id=object_id,
             )
             await self._daos.upload_attempts.delete(id_=new_upload_id)
             raise
@@ -241,7 +247,12 @@ class UploadService(UploadServicePort):
 
         await self._assert_no_active_upload(file_id=file_id)
 
-        upload_id = await self._init_multipart_upload(file_id=file_id)
+        # Generate the new object ID for the file
+        object_id = str(uuid.uuid4())
+
+        upload_id = await self._init_multipart_upload(
+            file_id=file_id, object_id=object_id
+        )
 
         # get the recommended part size:
         part_size = self._part_size_calculator(file.decrypted_size)
@@ -250,6 +261,8 @@ class UploadService(UploadServicePort):
         upload = models.UploadAttempt(
             upload_id=upload_id,
             file_id=file_id,
+            object_id=object_id,
+            bucket_id=self._inbox_bucket,
             status=models.UploadStatus.PENDING,
             part_size=part_size,
             creation_date=datetime.utcnow(),
@@ -257,7 +270,9 @@ class UploadService(UploadServicePort):
         )
 
         await self._insert_upload(upload=upload)
-        await self._set_latest_upload_for_file(file=file, new_upload_id=upload_id)
+        await self._set_latest_upload_for_file(
+            file=file, new_upload_id=upload_id, object_id=object_id
+        )
 
         return upload
 
@@ -285,7 +300,7 @@ class UploadService(UploadServicePort):
             return await self._object_storage.get_part_upload_url(
                 upload_id=upload_id,
                 bucket_id=self._inbox_bucket,
-                object_id=upload.file_id,
+                object_id=upload.object_id,
                 part_number=part_no,
             )
         except ObjectStoragePort.MultiPartUploadNotFoundError as error:
@@ -311,7 +326,7 @@ class UploadService(UploadServicePort):
             await self._object_storage.complete_multipart_upload(
                 upload_id=upload_id,
                 bucket_id=self._inbox_bucket,
-                object_id=upload.file_id,
+                object_id=upload.object_id,
             )
         except ObjectStoragePort.MultiPartUploadConfirmError as error:
             # This can typically not be repaired, so aborting the upload attempt
