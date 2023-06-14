@@ -23,12 +23,12 @@ __all__ = [
     "s3_fixture",
 ]
 
-import socket
 from dataclasses import dataclass
 from typing import AsyncGenerator
 
 import httpx
 import pytest_asyncio
+from ghga_service_commons.api.testing import get_free_port
 from hexkit.providers.akafka.testutils import KafkaFixture, kafka_fixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
 from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
@@ -37,13 +37,6 @@ from tests.fixtures.config import get_config
 from ucs.config import Config
 from ucs.container import Container
 from ucs.main import get_configured_container, get_rest_api
-
-
-def get_free_port() -> int:
-    """Finds and returns a free port on localhost."""
-    sock = socket.socket()
-    sock.bind(("", 0))
-    return int(sock.getsockname()[1])
 
 
 @dataclass
