@@ -21,8 +21,8 @@ from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.s3 import S3Config
 
-from ucs.adapters.inbound.akafka import EventSubTranslatorConfig
-from ucs.adapters.outbound.akafka import EventPubTanslatorConfig
+from ucs.adapters.inbound.event_sub import EventSubTranslatorConfig
+from ucs.adapters.outbound.event_pub import EventPubTanslatorConfig
 from ucs.core.upload_service import UploadServiceConfig
 
 
