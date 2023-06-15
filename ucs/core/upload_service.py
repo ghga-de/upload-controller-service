@@ -354,6 +354,7 @@ class UploadService(UploadServicePort):
             file_metadata=file,
             upload_date=completion_date,
             submitter_public_key=updated_upload.submitter_public_key,
+            object_id=upload.object_id,
             bucket_id=self._inbox_bucket,
         )
 
