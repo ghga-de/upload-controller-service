@@ -65,9 +65,7 @@ class FileMetadataServive(FileMetadataServicePort):
     async def _insert_new(self, file: models.FileMetadataUpsert) -> None:
         """Create a metadata entry for a new file."""
 
-        full_metadata = models.FileMetadata(
-            **file.dict(), latest_upload_id=None, object_id=None
-        )
+        full_metadata = models.FileMetadata(**file.dict(), latest_upload_id=None)
         await self._daos.file_metadata.insert(full_metadata)
 
     async def _update_existing(
