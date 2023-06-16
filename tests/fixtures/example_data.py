@@ -43,17 +43,19 @@ EXAMPLE_FILES = [
 EXAMPLE_STORAGE_OBJECT = FileObject(
     file_path=TEST_FILE_PATHS[0],
     bucket_id=DEFAULT_CONFIG.inbox_bucket,
-    object_id=EXAMPLE_FILE.file_id,
+    object_id="object001",
 )
 
 # An details on an example upload corresponding to the EXAMPLE_FILE:
 EXAMPLE_UPLOAD = models.UploadAttempt(
     upload_id="testUpload001",
     file_id="testFile001",
+    object_id="object001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
     creation_date=datetime.now(),
     submitter_public_key="test-key",
+    completion_date=None,
 )
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:
