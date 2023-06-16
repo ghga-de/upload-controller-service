@@ -210,17 +210,13 @@ class UploadService(UploadServicePort):
     ) -> None:
         """Sets the `latest_upload_id` metadata field of the specified file in the
         database to the provided new_upload_id.
-        Also sets the object_id metadata field to match the object_id generated for the
-        latest upload attempt.
         It is assumed that a multipart upload has already been initiated at the object
         storage and that a new upload entry was persisted to the database.
         If this operation fails unexpectedly, both the database and the object storage
         are roled back by eliminating any traces of this new upload.
         """
 
-        updated_file = file.copy(
-            update={"latest_upload_id": new_upload_id, "object_id": object_id}
-        )
+        updated_file = file.copy(update={"latest_upload_id": new_upload_id})
         try:
             await self._daos.file_metadata.update(updated_file)
         except:

@@ -26,7 +26,6 @@ from ucs.core import models
 EXAMPLE_FILE = models.FileMetadata(
     file_id="testFile001",
     file_name="Test File 001",
-    object_id=None,
     decrypted_sha256="fake-checksum",
     decrypted_size=12345678,
     latest_upload_id="testUpload001",
@@ -44,7 +43,7 @@ EXAMPLE_FILES = [
 EXAMPLE_STORAGE_OBJECT = FileObject(
     file_path=TEST_FILE_PATHS[0],
     bucket_id=DEFAULT_CONFIG.inbox_bucket,
-    object_id=EXAMPLE_FILE.file_id,
+    object_id="object001",
 )
 
 # An details on an example upload corresponding to the EXAMPLE_FILE:

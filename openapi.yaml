@@ -20,10 +20,6 @@ components:
             has been initiated, yet.
           title: Latest Upload Id
           type: string
-        object_id:
-          description: Object ID assigned during latest upload attempt.
-          title: Object Id
-          type: string
       required:
       - file_id
       - file_name
