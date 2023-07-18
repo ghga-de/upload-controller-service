@@ -18,27 +18,27 @@ service (incl. REST and event-driven APIs)."""
 
 import json
 from datetime import datetime
+from typing import Literal
 
-try:  # workaround for https://github.com/pydantic/pydantic/issues/5821
-    from typing_extensions import Literal
-except ImportError:
-    from typing import Literal  # type: ignore
-
-import nest_asyncio
 import pytest
 from fastapi import status
 from ghga_event_schemas import pydantic_ as event_schemas
 from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import EXAMPLE_FILE
-from tests.fixtures.joint import *  # noqa: 403
+from tests.fixtures.joint import (  # noqa: F401
+    JointFixture,
+    joint_fixture,
+    kafka_fixture,
+    mongodb_fixture,
+    s3_fixture,
+)
 
 # this is a temporary solution to run an event loop within another event loop
 # will be solved once transitioning to kafka:
-nest_asyncio.apply()
 
 
-async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
+async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
     """Run steps until uploaded data has been received and the upload attempt has been
     marked as uploaded"""
 
@@ -101,7 +101,7 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
 
 
 async def perform_upload(
-    joint_fixture: JointFixture,  # noqa: F405
+    joint_fixture: JointFixture,  # noqa: F811
     *,
     file_id: str,
     final_status: Literal["cancelled", "uploaded"],
@@ -168,7 +168,7 @@ async def perform_upload(
 
 
 @pytest.mark.asyncio
-async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
+async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
 
     file_to_register, event_subscriber = await run_until_uploaded(
@@ -212,7 +212,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
 
 
 @pytest.mark.asyncio
-async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
+async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical journey through the service's APIs, but reject the upload
     attempt due to a file validation error"""
 
