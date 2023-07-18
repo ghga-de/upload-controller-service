@@ -21,12 +21,20 @@ import pytest
 from fastapi import status
 
 from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOADS
-from tests.fixtures.joint import *  # noqa: 403
+from tests.fixtures.module_scope import (  # noqa: F401
+    JointFixture,
+    event_loop,
+    joint_fixture,
+    kafka_fixture,
+    mongodb_fixture,
+    reset_state,
+    s3_fixture,
+)
 from ucs.core import models
 
 
 @pytest.mark.asyncio
-async def test_get_health(joint_fixture: JointFixture):  # noqa: F405
+async def test_get_health(joint_fixture: JointFixture):  # noqa: F811
     """Test the GET /health endpoint"""
 
     response = await joint_fixture.rest_client.get("/health")
@@ -36,7 +44,9 @@ async def test_get_health(joint_fixture: JointFixture):  # noqa: F405
 
 
 @pytest.mark.asyncio
-async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa: F405
+async def test_get_file_metadata_not_found(
+    joint_fixture: JointFixture, reset_state  # noqa: F811
+):
     """Test the get_file_metadata endpoint with an non-existing file id."""
 
     file_id = "myNonExistingFile001"
@@ -47,7 +57,9 @@ async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa
 
 
 @pytest.mark.asyncio
-async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
+async def test_create_upload_not_found(
+    joint_fixture: JointFixture, reset_state  # noqa: F811
+):
     """Test the create_upload endpoint with an non-existing file id."""
 
     file_id = "myNonExistingFile001"
@@ -72,7 +84,9 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F4
 )
 @pytest.mark.asyncio
 async def test_create_upload_other_active(
-    existing_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
+    existing_status: models.UploadStatus,
+    joint_fixture: JointFixture,  # noqa: F811
+    reset_state,  # noqa: F811
 ):
     """Test the create_upload endpoint when there is another active update already
     existing."""
@@ -104,7 +118,9 @@ async def test_create_upload_other_active(
 )
 @pytest.mark.asyncio
 async def test_create_upload_accepted(
-    existing_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
+    existing_status: models.UploadStatus,
+    joint_fixture: JointFixture,  # noqa: F811
+    reset_state,  # noqa: F811
 ):
     """Test the create_upload endpoint when another update has already been accepted
     or is currently being evaluated."""
@@ -129,7 +145,9 @@ async def test_create_upload_accepted(
 
 
 @pytest.mark.asyncio
-async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
+async def test_get_upload_not_found(
+    joint_fixture: JointFixture, reset_state  # noqa: F811
+):
     """Test the get_upload endpoint with non-existing upload ID."""
 
     upload_id = "myNonExistingUpload001"
@@ -141,7 +159,7 @@ async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F405
 
 @pytest.mark.asyncio
 async def test_update_upload_status_not_found(
-    joint_fixture: JointFixture,  # noqa: F405
+    joint_fixture: JointFixture, reset_state  # noqa: F811
 ):
     """Test the update_upload_status endpoint with non existing upload ID."""
 
@@ -165,7 +183,9 @@ async def test_update_upload_status_not_found(
 )
 @pytest.mark.asyncio
 async def test_update_upload_status_invalid_new_status(
-    new_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
+    new_status: models.UploadStatus,
+    joint_fixture: JointFixture,  # noqa: F811
+    reset_state,  # noqa: F811
 ):
     """Test the update_upload_status endpoint with invalid new status values."""
 
@@ -190,7 +210,9 @@ async def test_update_upload_status_invalid_new_status(
 )
 @pytest.mark.asyncio
 async def test_update_upload_status_non_pending(
-    old_status: models.UploadStatus, joint_fixture: JointFixture  # noqa: F405
+    old_status: models.UploadStatus,
+    joint_fixture: JointFixture,  # noqa: F811
+    reset_state,  # noqa: F811
 ):
     """Test the update_upload_status endpoint on non pending upload."""
 
@@ -214,7 +236,7 @@ async def test_update_upload_status_non_pending(
 
 @pytest.mark.asyncio
 async def test_create_presigned_url_not_found(
-    joint_fixture: JointFixture,  # noqa: F405
+    joint_fixture: JointFixture, reset_state  # noqa: F811
 ):
     """Test the create_presigned_url endpoint with non existing upload ID."""
 
