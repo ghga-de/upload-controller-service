@@ -39,7 +39,7 @@ def event_loop():
 
 @pytest_asyncio.fixture()
 async def reset_state(joint_fixture: JointFixture):
-    """Reset joint_fixture state before and after the beginning of the test function"""
+    """Reset joint_fixture state before and after the test function"""
     await joint_fixture.clear_state()
     yield
     await joint_fixture.clear_state()

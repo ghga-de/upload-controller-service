@@ -64,7 +64,8 @@ class JointFixture:
 async def joint_fixture_function(
     mongodb_fixture: MongoDbFixture, kafka_fixture: KafkaFixture, s3_fixture: S3Fixture
 ) -> AsyncGenerator[JointFixture, None]:
-    """A fixture that embeds all other fixtures for API-level integration testing"""
+    """A fixture that embeds all other fixtures for API-level integration testing.
+    Produced by calling get_joint_fixture()"""
 
     # merge configs from different sources with the default one:
     config = get_config(
