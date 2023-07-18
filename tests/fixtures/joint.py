@@ -21,17 +21,21 @@ __all__ = [
     "mongodb_fixture",
     "kafka_fixture",
     "s3_fixture",
+    "get_joint_fixture",
 ]
 
 from dataclasses import dataclass
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
 
 import httpx
 import pytest_asyncio
 from ghga_service_commons.api.testing import get_free_port
-from hexkit.providers.akafka.testutils import KafkaFixture, kafka_fixture
-from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
-from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
+from hexkit.providers.testing.fixtures import (
+    KafkaFixture,
+    MongoDbFixture,
+    S3Fixture,
+    get_fixture,
+)
 
 from tests.fixtures.config import get_config
 from ucs.config import Config
@@ -50,9 +54,14 @@ class JointFixture:
     rest_client: httpx.AsyncClient
     s3: S3Fixture
 
+    async def clear_state(self):
+        """Reset fixture state"""
+        self.mongodb.empty_collections()
+        self.kafka.delete_topics()
+        await self.s3.empty_buckets()
 
-@pytest_asyncio.fixture
-async def joint_fixture(
+
+async def joint_fixture_function(
     mongodb_fixture: MongoDbFixture, kafka_fixture: KafkaFixture, s3_fixture: S3Fixture
 ) -> AsyncGenerator[JointFixture, None]:
     """A fixture that embeds all other fixtures for API-level integration testing"""
@@ -80,3 +89,17 @@ async def joint_fixture(
                 rest_client=rest_client,
                 s3=s3_fixture,
             )
+
+
+def get_joint_fixture(
+    scope: Literal["session", "package", "module", "class", "function"] = "function"
+):
+    """Return a JointFixture with specified scope"""
+    return pytest_asyncio.fixture(joint_fixture_function, scope=scope)
+
+
+# defaults (function level)
+kafka_fixture = get_fixture(KafkaFixture)
+mongodb_fixture = get_fixture(MongoDbFixture)
+s3_fixture = get_fixture(S3Fixture)
+joint_fixture = get_joint_fixture()
