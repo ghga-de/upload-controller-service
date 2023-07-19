@@ -30,10 +30,7 @@ import httpx
 import pytest_asyncio
 from ghga_service_commons.api.testing import get_free_port
 from hexkit.providers.akafka.testutils import KafkaFixture, get_kafka_fixture
-from hexkit.providers.mongodb.testutils import (  # F401
-    MongoDbFixture,
-    get_mongodb_fixture,
-)
+from hexkit.providers.mongodb.testutils import MongoDbFixture, get_mongodb_fixture
 from hexkit.providers.s3.testutils import S3Fixture, get_s3_fixture
 from pytest_asyncio.plugin import _ScopeName
 
@@ -53,6 +50,12 @@ class JointFixture:
     kafka: KafkaFixture
     rest_client: httpx.AsyncClient
     s3: S3Fixture
+
+    async def reset_state(self):
+        """Completely reset fixture states"""
+        await self.s3.empty_buckets()
+        self.mongodb.empty_collections()
+        self.kafka.delete_topics()
 
 
 async def joint_fixture_function(

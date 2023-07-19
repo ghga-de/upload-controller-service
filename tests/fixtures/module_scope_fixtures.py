@@ -14,18 +14,29 @@
 # limitations under the License.
 
 """Contains module-scoped fixtures"""
-
+import pytest_asyncio
 from hexkit.providers.akafka.testutils import get_kafka_fixture
 from hexkit.providers.mongodb.testutils import get_mongodb_fixture
 from hexkit.providers.s3.testutils import get_s3_fixture
 from hexkit.providers.testing.utils import get_event_loop
 
-from tests.fixtures.joint import get_joint_fixture
+from tests.fixtures.joint import JointFixture, get_joint_fixture
 
 SCOPE = "module"
 
-event_loop = get_event_loop(SCOPE)
 
+@pytest_asyncio.fixture
+async def reset_state(joint_fixture: JointFixture):  # noqa: F811
+    """Clear joint_fixture state before and after tests that use this fixture.
+
+    This is a function-level fixture because it needs to run in each test.
+    """
+    await joint_fixture.reset_state()
+    yield
+    await joint_fixture.reset_state()
+
+
+event_loop = get_event_loop(SCOPE)
 mongodb_fixture = get_mongodb_fixture(SCOPE)
 kafka_fixture = get_kafka_fixture(SCOPE)
 s3_fixture = get_s3_fixture(SCOPE)
