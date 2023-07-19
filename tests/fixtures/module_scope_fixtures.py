@@ -14,6 +14,7 @@
 # limitations under the License.
 
 """Contains module-scoped fixtures"""
+
 import pytest_asyncio
 from hexkit.providers.akafka.testutils import get_kafka_fixture
 from hexkit.providers.mongodb.testutils import get_mongodb_fixture
@@ -21,8 +22,6 @@ from hexkit.providers.s3.testutils import get_s3_fixture
 from hexkit.providers.testing.utils import get_event_loop
 
 from tests.fixtures.joint import JointFixture, get_joint_fixture
-
-SCOPE = "module"
 
 
 @pytest_asyncio.fixture
@@ -36,8 +35,8 @@ async def reset_state(joint_fixture: JointFixture):  # noqa: F811
     await joint_fixture.reset_state()
 
 
-event_loop = get_event_loop(SCOPE)
-mongodb_fixture = get_mongodb_fixture(SCOPE)
-kafka_fixture = get_kafka_fixture(SCOPE)
-s3_fixture = get_s3_fixture(SCOPE)
-joint_fixture = get_joint_fixture(SCOPE)
+event_loop = get_event_loop("module")
+mongodb_fixture = get_mongodb_fixture("module")
+kafka_fixture = get_kafka_fixture("module")
+s3_fixture = get_s3_fixture("module")
+joint_fixture = get_joint_fixture("module")
