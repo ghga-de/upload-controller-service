@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Simulate client behavior and test a typical journey through the APIs exposed by this
-service (incl. REST and event-driven APIs)."""
+"""Test happy/unhappy journey.
+
+Simulate client behavior and test a typical journey through the APIs exposed by this
+service (incl. REST and event-driven APIs).
+"""
 
 import json
 from datetime import datetime

@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test edge cases of interacting with the services API."""
+"""Test edge cases of interacting with the services API.
+
+Note: This test module uses the module-scoped fixtures.
+"""
 
 import json
 
