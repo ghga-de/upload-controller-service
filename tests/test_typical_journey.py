@@ -20,12 +20,12 @@ service (incl. REST and event-driven APIs).
 """
 
 import json
-from datetime import datetime
 from typing import Literal
 
 import pytest
 from fastapi import status
 from ghga_event_schemas import pydantic_ as event_schemas
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import EXAMPLE_FILE
@@ -185,7 +185,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-permanent",
-        upload_date=datetime.utcnow().isoformat(),
+        upload_date=now_as_utc().isoformat(),
         decrypted_sha256=file_to_register.decrypted_sha256,
         decrypted_size=file_to_register.decrypted_size,
         decryption_secret_id="some-secret",
@@ -233,7 +233,7 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-staging",
-        upload_date=datetime.utcnow().isoformat(),
+        upload_date=now_as_utc().isoformat(),
         reason="Sorry, but this has to fail.",
     )
 
