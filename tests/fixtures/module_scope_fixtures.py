@@ -24,14 +24,12 @@ from hexkit.providers.testing.utils import get_event_loop
 from tests.fixtures.joint import JointFixture, get_joint_fixture
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(autouse=True)
 async def reset_state(joint_fixture: JointFixture):  # noqa: F811
     """Clear joint_fixture state before and after tests that use this fixture.
 
     This is a function-level fixture because it needs to run in each test.
     """
-    await joint_fixture.reset_state()
-    yield
     await joint_fixture.reset_state()
 
 
