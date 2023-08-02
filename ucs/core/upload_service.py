@@ -17,9 +17,9 @@
 """The main upload handling logic."""
 
 import uuid
-from datetime import datetime
 from typing import Callable
 
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.utils import calc_part_size
 from pydantic import BaseSettings
 
@@ -260,7 +260,7 @@ class UploadService(UploadServicePort):
             object_id=object_id,
             status=models.UploadStatus.PENDING,
             part_size=part_size,
-            creation_date=datetime.utcnow(),
+            creation_date=now_as_utc(),
             submitter_public_key=submitter_public_key,
         )
 
@@ -335,7 +335,7 @@ class UploadService(UploadServicePort):
             ) from error
 
         # mark the upload as complete (uploaded) in the database:
-        completion_date = datetime.utcnow()
+        completion_date = now_as_utc()
         updated_upload = upload.copy(
             update={
                 "status": models.UploadStatus.UPLOADED,

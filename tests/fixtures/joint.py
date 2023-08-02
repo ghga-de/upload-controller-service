@@ -29,9 +29,10 @@ from typing import AsyncGenerator
 import httpx
 import pytest_asyncio
 from ghga_service_commons.api.testing import get_free_port
-from hexkit.providers.akafka.testutils import KafkaFixture, kafka_fixture
-from hexkit.providers.mongodb.testutils import MongoDbFixture, mongodb_fixture  # F401
-from hexkit.providers.s3.testutils import S3Fixture, s3_fixture
+from hexkit.providers.akafka.testutils import KafkaFixture, get_kafka_fixture
+from hexkit.providers.mongodb.testutils import MongoDbFixture, get_mongodb_fixture
+from hexkit.providers.s3.testutils import S3Fixture, get_s3_fixture
+from pytest_asyncio.plugin import _ScopeName
 
 from tests.fixtures.config import get_config
 from ucs.config import Config
@@ -50,12 +51,20 @@ class JointFixture:
     rest_client: httpx.AsyncClient
     s3: S3Fixture
 
+    async def reset_state(self):
+        """Completely reset fixture states"""
+        await self.s3.empty_buckets()
+        self.mongodb.empty_collections()
+        self.kafka.delete_topics()
 
-@pytest_asyncio.fixture
-async def joint_fixture(
+
+async def joint_fixture_function(
     mongodb_fixture: MongoDbFixture, kafka_fixture: KafkaFixture, s3_fixture: S3Fixture
 ) -> AsyncGenerator[JointFixture, None]:
-    """A fixture that embeds all other fixtures for API-level integration testing"""
+    """A fixture that embeds all other fixtures for API-level integration testing.
+
+    **Do not call directly** Instead, use get_joint_fixture().
+    """
 
     # merge configs from different sources with the default one:
     config = get_config(
@@ -80,3 +89,14 @@ async def joint_fixture(
                 rest_client=rest_client,
                 s3=s3_fixture,
             )
+
+
+def get_joint_fixture(scope: _ScopeName = "function"):
+    """Produce a joint fixture with desired scope"""
+    return pytest_asyncio.fixture(joint_fixture_function, scope=scope)
+
+
+joint_fixture = get_joint_fixture()
+mongodb_fixture = get_mongodb_fixture()
+kafka_fixture = get_kafka_fixture()
+s3_fixture = get_s3_fixture()

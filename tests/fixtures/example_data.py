@@ -15,8 +15,7 @@
 
 """Example data used for testing."""
 
-from datetime import datetime
-
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.s3.testutils import TEST_FILE_PATHS, FileObject
 
 from tests.fixtures.config import DEFAULT_CONFIG
@@ -53,7 +52,7 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
     object_id="object001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
-    creation_date=datetime.now(),
+    creation_date=now_as_utc(),
     submitter_public_key="test-key",
     completion_date=None,
 )

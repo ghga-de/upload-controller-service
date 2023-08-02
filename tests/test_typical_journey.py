@@ -13,34 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Simulate client behavior and test a typical journey through the APIs exposed by this
-service (incl. REST and event-driven APIs)."""
+"""Test happy/unhappy journey.
+
+Simulate client behavior and test a typical journey through the APIs exposed by this
+service (incl. REST and event-driven APIs).
+"""
 
 import json
-from datetime import datetime
+from typing import Literal
 
-try:  # workaround for https://github.com/pydantic/pydantic/issues/5821
-    from typing_extensions import Literal
-except ImportError:
-    from typing import Literal  # type: ignore
-
-import nest_asyncio
 import pytest
 from fastapi import status
 from ghga_event_schemas import pydantic_ as event_schemas
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import EXAMPLE_FILE
-from tests.fixtures.joint import *  # noqa: 403
+from tests.fixtures.joint import (  # noqa: F401
+    JointFixture,
+    joint_fixture,
+    kafka_fixture,
+    mongodb_fixture,
+    s3_fixture,
+)
 
-# this is a temporary solution to run an event loop within another event loop
-# will be solved once transitioning to kafka:
-nest_asyncio.apply()
 
+async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
+    """Utility function to process kafka events related to the upload.
 
-async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
-    """Run steps until uploaded data has been received and the upload attempt has been
-    marked as uploaded"""
+    Run steps until uploaded data has been received and the upload attempt has been
+    marked as uploaded
+    """
 
     # populate s3 storage:
     await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
@@ -101,12 +104,14 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F405
 
 
 async def perform_upload(
-    joint_fixture: JointFixture,  # noqa: F405
+    joint_fixture: JointFixture,  # noqa: F811
     *,
     file_id: str,
     final_status: Literal["cancelled", "uploaded"],
 ) -> str:
-    """Initialize a new upload for the file with the given ID. Upload some parts.
+    """Process an upload with a specific status.
+
+    Initialize a new upload for the file with the given ID. Upload some parts.
     Finally either confirm the upload (final_status="uploaded") or cancel it
     (final_status="cancelled").
 
@@ -168,7 +173,7 @@ async def perform_upload(
 
 
 @pytest.mark.asyncio
-async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
+async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
 
     file_to_register, event_subscriber = await run_until_uploaded(
@@ -180,7 +185,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-permanent",
-        upload_date=datetime.utcnow().isoformat(),
+        upload_date=now_as_utc().isoformat(),
         decrypted_sha256=file_to_register.decrypted_sha256,
         decrypted_size=file_to_register.decrypted_size,
         decryption_secret_id="some-secret",
@@ -212,9 +217,12 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F405
 
 
 @pytest.mark.asyncio
-async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
-    """Test the typical journey through the service's APIs, but reject the upload
-    attempt due to a file validation error"""
+async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
+    """Test the typical journey.
+
+    Work through the service's APIs, but reject the upload attempt due to a file
+    validation error.
+    """
 
     file_to_register, event_subscriber = await run_until_uploaded(
         joint_fixture=joint_fixture
@@ -225,7 +233,7 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F405
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-staging",
-        upload_date=datetime.utcnow().isoformat(),
+        upload_date=now_as_utc().isoformat(),
         reason="Sorry, but this has to fail.",
     )
 

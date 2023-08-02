@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-"""The package implements a service that manages uploads to a S3 inbox bucket."""
-
-__version__ = "0.6.1"
+"""Scripts and utils used during development or in CI pipelines."""
