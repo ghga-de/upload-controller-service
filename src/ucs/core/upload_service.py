@@ -251,6 +251,7 @@ class UploadService(UploadServicePort):
             status=models.UploadStatus.PENDING,
             part_size=part_size,
             creation_date=now_as_utc(),
+            completion_date=None,
             submitter_public_key=submitter_public_key,
         )
 

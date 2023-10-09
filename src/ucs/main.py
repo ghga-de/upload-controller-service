@@ -49,14 +49,14 @@ def get_rest_api(*, config: Config) -> FastAPI:
         api.openapi_schema = openapi_schema
         return api.openapi_schema
 
-    api.openapi = custom_openapi  # type: ignore [assignment]
+    api.openapi = custom_openapi  # type: ignore
 
     return api
 
 
 async def run_rest():
     """Run the HTTP REST API."""
-    config = Config()
+    config = Config()  # type: ignore [call-arg]
 
     async with get_configured_container(config=config) as container:
         container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
@@ -66,7 +66,7 @@ async def run_rest():
 
 async def consume_events(run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
-    config = Config()
+    config = Config()  # type: ignore [call-arg]
 
     async with get_configured_container(config=config) as container:
         event_consumer = await container.kafka_event_subscriber()
