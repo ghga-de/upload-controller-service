@@ -18,13 +18,13 @@ We recommend using the provided Docker container.
 
 A pre-build version is available at [docker hub](https://hub.docker.com/repository/docker/ghga/upload-controller-service):
 ```bash
-docker pull ghga/upload-controller-service:0.6.1
+docker pull ghga/upload-controller-service:0.6.2
 ```
 
 Or you can build the container yourself from the [`./Dockerfile`](./Dockerfile):
 ```bash
 # Execute in the repo's root dir:
-docker build -t ghga/upload-controller-service:0.6.1 .
+docker build -t ghga/upload-controller-service:0.6.2 .
 ```
 
 For production-ready deployment, we recommend using Kubernetes, however,
@@ -32,7 +32,7 @@ for simple use cases, you could execute the service using docker
 on a single server:
 ```bash
 # The entrypoint is preconfigured:
-docker run -p 8080:8080 ghga/upload-controller-service:0.6.1 --help
+docker run -p 8080:8080 ghga/upload-controller-service:0.6.2 --help
 ```
 
 If you prefer not to use containers, you may install the service from source:
@@ -64,9 +64,9 @@ The service requires the following configuration parameters:
 
 - **`upload_rejected_event_type`** *(string)*: The type used for events informing about the failure of a file validation.
 
-- **`inbox_bucket`** *(string)*: Default: `inbox`.
+- **`inbox_bucket`** *(string)*: Default: `"inbox"`.
 
-- **`service_name`** *(string)*: Default: `upload_controller_service`.
+- **`service_name`** *(string)*: Default: `"upload_controller_service"`.
 
 - **`service_instance_id`** *(string)*: A string that uniquely identifies this instance across all instances of this service. A globally unique Kafka client ID will be created by concatenating the service_name and the service_instance_id.
 
@@ -78,31 +78,31 @@ The service requires the following configuration parameters:
 
 - **`s3_access_key_id`** *(string)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
-- **`s3_secret_access_key`** *(string)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
+- **`s3_secret_access_key`** *(string, format: password)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
-- **`s3_session_token`** *(string)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
+- **`s3_session_token`** *(string, format: password)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
-- **`aws_config_ini`** *(string)*: Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file.
+- **`aws_config_ini`** *(string, format: path)*: Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file.
 
-- **`db_connection_str`** *(string)*: MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/.
+- **`db_connection_str`** *(string, format: password)*: MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/.
 
 - **`db_name`** *(string)*: Name of the database located on the MongoDB server.
 
-- **`host`** *(string)*: IP of the host. Default: `127.0.0.1`.
+- **`host`** *(string)*: IP of the host. Default: `"127.0.0.1"`.
 
 - **`port`** *(integer)*: Port to expose the server on the specified host. Default: `8080`.
 
-- **`log_level`** *(string)*: Controls the verbosity of the log. Must be one of: `['critical', 'error', 'warning', 'info', 'debug', 'trace']`. Default: `info`.
+- **`log_level`** *(string)*: Controls the verbosity of the log. Must be one of: `["critical", "error", "warning", "info", "debug", "trace"]`. Default: `"info"`.
 
-- **`auto_reload`** *(boolean)*: A development feature. Set to `True` to automatically reload the server upon code changes. Default: `False`.
+- **`auto_reload`** *(boolean)*: A development feature. Set to `True` to automatically reload the server upon code changes. Default: `false`.
 
 - **`workers`** *(integer)*: Number of workers processes to run. Default: `1`.
 
-- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `/`.
+- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `"/"`.
 
-- **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `/openapi.json`.
+- **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `"/openapi.json"`.
 
-- **`docs_url`** *(string)*: Path to host the swagger documentation. This is relative to the specified host and port. Default: `/docs`.
+- **`docs_url`** *(string)*: Path to host the swagger documentation. This is relative to the specified host and port. Default: `"/docs"`.
 
 - **`cors_allowed_origins`** *(array)*: A list of origins that should be permitted to make cross-origin requests. By default, cross-origin requests are not allowed. You can use ['*'] to allow any origin.
 
@@ -177,7 +177,7 @@ Moreover, inside the devcontainer, a convenience commands `dev_install` is avail
 It installs the service with all development dependencies, installs pre-commit.
 
 The installation is performed automatically when you build the devcontainer. However,
-if you update dependencies in the [`./setup.cfg`](./setup.cfg) or the
+if you update dependencies in the [`./pyproject.toml`](./pyproject.toml) or the
 [`./requirements-dev.txt`](./requirements-dev.txt), please run it again.
 
 ## License

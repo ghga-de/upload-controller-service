@@ -42,7 +42,6 @@ async def test_get_health(joint_fixture: JointFixture):  # noqa: F811
 
     reset_state fixture isn't needed because the test is unaffected by state.
     """
-
     response = await joint_fixture.rest_client.get("/health")
 
     assert response.status_code == status.HTTP_200_OK
@@ -52,7 +51,6 @@ async def test_get_health(joint_fixture: JointFixture):  # noqa: F811
 @pytest.mark.asyncio
 async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the get_file_metadata endpoint with an non-existing file id."""
-
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.get(f"/files/{file_id}")
 
@@ -63,7 +61,6 @@ async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa
 @pytest.mark.asyncio
 async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the create_upload endpoint with an non-existing file id."""
-
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.post(
         "/uploads", json={"file_id": file_id, "submitter_public_key": "test-key"}
@@ -90,8 +87,8 @@ async def test_create_upload_other_active(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the create_upload endpoint when there is another active update already
-    existing."""
-
+    existing.
+    """
     existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
 
     # insert a pending upload into the database:
@@ -123,8 +120,8 @@ async def test_create_upload_accepted(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the create_upload endpoint when another update has already been accepted
-    or is currently being evaluated."""
-
+    or is currently being evaluated.
+    """
     existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
 
     # insert the existing upload into the database:
@@ -147,7 +144,6 @@ async def test_create_upload_accepted(
 @pytest.mark.asyncio
 async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the get_upload endpoint with non-existing upload ID."""
-
     upload_id = "myNonExistingUpload001"
     response = await joint_fixture.rest_client.get(f"/uploads/{upload_id}")
 
@@ -160,7 +156,6 @@ async def test_update_upload_status_not_found(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the update_upload_status endpoint with non existing upload ID."""
-
     upload_id = "myNonExistingUpload001"
 
     response = await joint_fixture.rest_client.patch(
@@ -185,7 +180,6 @@ async def test_update_upload_status_invalid_new_status(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the update_upload_status endpoint with invalid new status values."""
-
     upload_id = "myNonExistingUpload001"
     # (Input data validation should happen before checking the existence of the
     # specified resource, thus a non existing upload ID can be used here.)
@@ -211,7 +205,6 @@ async def test_update_upload_status_non_pending(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the update_upload_status endpoint on non pending upload."""
-
     target_upload = EXAMPLE_UPLOADS[0].copy(update={"status": old_status})
 
     # insert a pending and non_pending upload into the database:
@@ -235,7 +228,6 @@ async def test_create_presigned_url_not_found(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the create_presigned_url endpoint with non existing upload ID."""
-
     upload_id = "myNonExistingUpload001"
 
     response = await joint_fixture.rest_client.post(

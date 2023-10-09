@@ -23,8 +23,8 @@ __all__ = [
     "s3_fixture",
 ]
 
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import AsyncGenerator
 
 import httpx
 import pytest_asyncio
@@ -65,7 +65,6 @@ async def joint_fixture_function(
 
     **Do not call directly** Instead, use get_joint_fixture().
     """
-
     # merge configs from different sources with the default one:
     config = get_config(
         sources=[mongodb_fixture.config, kafka_fixture.config, s3_fixture.config]
