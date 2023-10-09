@@ -44,7 +44,6 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
     Run steps until uploaded data has been received and the upload attempt has been
     marked as uploaded
     """
-
     # populate s3 storage:
     await joint_fixture.s3.populate_buckets([joint_fixture.config.inbox_bucket])
 
@@ -117,7 +116,6 @@ async def perform_upload(
 
     Returns: The ID of the created upload.
     """
-
     # initiate new upload:
     response = await joint_fixture.rest_client.post(
         "/uploads", json={"file_id": file_id, "submitter_public_key": "test-key"}
@@ -175,7 +173,6 @@ async def perform_upload(
 @pytest.mark.asyncio
 async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
-
     file_to_register, event_subscriber = await run_until_uploaded(
         joint_fixture=joint_fixture
     )
@@ -223,7 +220,6 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     Work through the service's APIs, but reject the upload attempt due to a file
     validation error.
     """
-
     file_to_register, event_subscriber = await run_until_uploaded(
         joint_fixture=joint_fixture
     )
