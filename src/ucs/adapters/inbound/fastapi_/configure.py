@@ -25,26 +25,19 @@ from ucs import __version__
 from ucs.adapters.inbound.fastapi_.routes import router
 
 
-class DrsApiConfig(ApiConfigBase):
-    """Configuration parameters for the DRS API."""
-
-    api_route: str = "/ga4gh/drs/v1"
-
-
-def get_openapi_schema(app: FastAPI, *, config: DrsApiConfig) -> dict[str, Any]:
+def get_openapi_schema(app: FastAPI) -> dict[str, Any]:
     """Generates a custom openapi schema for the service"""
     return get_openapi(
         title="Upload Controller Service",
         version=__version__,
         description="A service managing uploads of file objects to"
         + " an S3-compatible Object Storage.",
-        servers=[{"url": config.api_root_path}],
         tags=[{"name": "UploadControllerService"}],
         routes=app.routes,
     )
 
 
-def get_configured_app(*, config: DrsApiConfig) -> FastAPI:
+def get_configured_app(*, config: ApiConfigBase) -> FastAPI:
     """Create and configure a REST API application."""
     app = FastAPI()
     app.include_router(router)
@@ -53,7 +46,7 @@ def get_configured_app(*, config: DrsApiConfig) -> FastAPI:
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
-        openapi_schema = get_openapi_schema(app, config=config)
+        openapi_schema = get_openapi_schema(app)
         app.openapi_schema = openapi_schema
         return app.openapi_schema
 

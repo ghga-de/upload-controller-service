@@ -27,13 +27,12 @@ from ucs.config import Config
 
 app = FastAPI()
 app.include_router(router)
-CONFIG = Config()  # type: ignore
 
 
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
-    openapi_schema = get_openapi_schema(app, config=CONFIG)
+    openapi_schema = get_openapi_schema(app)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

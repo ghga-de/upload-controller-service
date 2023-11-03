@@ -649,7 +649,5 @@ paths:
       summary: Create new pre-signed URL for a specific part.
       tags:
       - UploadControllerService
-servers:
-- url: /
 tags:
 - name: UploadControllerService
