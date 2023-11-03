@@ -58,7 +58,7 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
         associated_files=[file_to_register]
     )
     await joint_fixture.kafka.publish_event(
-        payload=file_metadata_event.dict(),
+        payload=file_metadata_event.model_dump(),
         type_=joint_fixture.config.file_metadata_event_type,
         topic=joint_fixture.config.file_metadata_event_topic,
     )

@@ -27,7 +27,7 @@ from ucs.config import Config
 
 app = FastAPI()
 app.include_router(router)
-CONFIG = Config()
+CONFIG = Config()  # type: ignore
 
 
 def custom_openapi():
