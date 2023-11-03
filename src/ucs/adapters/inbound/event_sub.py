@@ -19,7 +19,8 @@ from ghga_event_schemas import pydantic_ as event_schemas
 from ghga_event_schemas.validation import get_validated_payload
 from hexkit.custom_types import Ascii, JsonObject
 from hexkit.protocols.eventsub import EventSubscriberProtocol
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from ucs.core import models
 from ucs.ports.inbound.file_service import FileMetadataServicePort
@@ -35,7 +36,7 @@ class EventSubTranslatorConfig(BaseSettings):
             "Name of the topic to receive new or changed metadata on files that shall"
             + " be registered for uploaded."
         ),
-        example="metadata",
+        examples=["metadata"],
     )
     file_metadata_event_type: str = Field(
         ...,
@@ -43,7 +44,7 @@ class EventSubTranslatorConfig(BaseSettings):
             "The type used for events to receive new or changed metadata on files that"
             + " are expected to be uploaded."
         ),
-        example="file_metadata_upserts",
+        examples=["file_metadata_upserts"],
     )
 
     upload_accepted_event_topic: str = Field(
@@ -52,7 +53,7 @@ class EventSubTranslatorConfig(BaseSettings):
             "Name of the topic to receive event that indicate that an upload was"
             + " by downstream services."
         ),
-        example="internal_file_registry",
+        examples=["internal_file_registry"],
     )
     upload_accepted_event_type: str = Field(
         ...,
@@ -60,18 +61,18 @@ class EventSubTranslatorConfig(BaseSettings):
             "The type used for event that indicate that an upload was by downstream"
             + " services."
         ),
-        example="file_registered",
+        examples=["file_registered"],
     )
     upload_rejected_event_topic: str = Field(
         ...,
         description="Name of the topic used for events informing about rejection of an "
         + "upload by downstream services due to validation failure.",
-        example="file_interrogation",
+        examples=["file_interrogation"],
     )
     upload_rejected_event_type: str = Field(
         ...,
         description="The type used for events informing about the failure of a file validation.",
-        example="file_validation_failure",
+        examples=["file_validation_failure"],
     )
 
 

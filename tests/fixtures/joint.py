@@ -28,16 +28,20 @@ from dataclasses import dataclass
 
 import httpx
 import pytest_asyncio
-from ghga_service_commons.api.testing import get_free_port
+from ghga_service_commons.api.testing import AsyncTestClient
+from hexkit.providers.akafka import KafkaEventSubscriber
 from hexkit.providers.akafka.testutils import KafkaFixture, get_kafka_fixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture, get_mongodb_fixture
 from hexkit.providers.s3.testutils import S3Fixture, get_s3_fixture
 from pytest_asyncio.plugin import _ScopeName
 
 from tests.fixtures.config import get_config
+from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.config import Config
-from ucs.container import Container
-from ucs.main import get_configured_container, get_rest_api
+from ucs.inject import prepare_core, prepare_event_subscriber, prepare_rest_app
+from ucs.ports.inbound.file_service import FileMetadataServicePort
+from ucs.ports.inbound.upload_service import UploadServicePort
+from ucs.ports.outbound.dao import DaoCollectionPort
 
 
 @dataclass
@@ -45,10 +49,13 @@ class JointFixture:
     """Returned by the `joint_fixture`."""
 
     config: Config
-    container: Container
+    daos: DaoCollectionPort
+    upload_service: UploadServicePort
+    file_metadata_service: FileMetadataServicePort
+    rest_client: httpx.AsyncClient
+    event_subscriber: KafkaEventSubscriber
     mongodb: MongoDbFixture
     kafka: KafkaFixture
-    rest_client: httpx.AsyncClient
     s3: S3Fixture
 
     async def reset_state(self):
@@ -70,24 +77,30 @@ async def joint_fixture_function(
         sources=[mongodb_fixture.config, kafka_fixture.config, s3_fixture.config]
     )
 
-    # create a DI container instance:translators
-    async with get_configured_container(config=config) as container:
-        container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
+    daos = await DaoCollectionTranslator.construct(provider=mongodb_fixture.dao_factory)
 
-        # setup an API test client:
-        api = get_rest_api(config=config)
-        port = get_free_port()
-        async with httpx.AsyncClient(
-            app=api, base_url=f"http://localhost:{port}"
-        ) as rest_client:
-            yield JointFixture(
-                config=config,
-                container=container,
-                mongodb=mongodb_fixture,
-                kafka=kafka_fixture,
-                rest_client=rest_client,
-                s3=s3_fixture,
-            )
+    # create a DI container instance:translators
+    async with prepare_core(config=config) as (upload_service, file_metadata_service):
+        async with (
+            prepare_rest_app(
+                config=config, core_override=(upload_service, file_metadata_service)
+            ) as app,
+            prepare_event_subscriber(
+                config=config, core_override=(upload_service, file_metadata_service)
+            ) as event_subscriber,
+        ):
+            async with AsyncTestClient(app=app) as rest_client:
+                yield JointFixture(
+                    config=config,
+                    daos=daos,
+                    upload_service=upload_service,
+                    file_metadata_service=file_metadata_service,
+                    rest_client=rest_client,
+                    event_subscriber=event_subscriber,
+                    mongodb=mongodb_fixture,
+                    s3=s3_fixture,
+                    kafka=kafka_fixture,
+                )
 
 
 def get_joint_fixture(scope: _ScopeName = "function"):

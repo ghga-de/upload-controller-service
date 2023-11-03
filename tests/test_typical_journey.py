@@ -64,8 +64,7 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
     )
 
     # consume the event:
-    event_subscriber = await joint_fixture.container.kafka_event_subscriber()
-    await event_subscriber.run(forever=False)
+    await joint_fixture.event_subscriber.run(forever=False)
 
     # check that the new file has been registered:
     response = await joint_fixture.rest_client.get(f"/files/{file_to_register.file_id}")
@@ -99,7 +98,7 @@ async def run_until_uploaded(joint_fixture: JointFixture):  # noqa: F811
     assert payload.file_id == file_to_register.file_id
     assert payload.expected_decrypted_sha256 == file_to_register.decrypted_sha256
 
-    return file_to_register, event_subscriber
+    return file_to_register
 
 
 async def perform_upload(
@@ -173,12 +172,11 @@ async def perform_upload(
 @pytest.mark.asyncio
 async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
-    file_to_register, event_subscriber = await run_until_uploaded(
-        joint_fixture=joint_fixture
-    )
+    file_to_register = await run_until_uploaded(joint_fixture=joint_fixture)
 
     # publish an event to mark the upload as accepted:
     acceptance_event = event_schemas.FileInternallyRegistered(
+        s3_endpoint_alias="test",
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-permanent",
@@ -198,7 +196,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     )
 
     # consume the acceptance event:
-    await event_subscriber.run(forever=False)
+    await joint_fixture.event_subscriber.run(forever=False)
 
     # make sure that the latest upload of the corresponding file was marked as
     # accepted:
@@ -220,12 +218,11 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     Work through the service's APIs, but reject the upload attempt due to a file
     validation error.
     """
-    file_to_register, event_subscriber = await run_until_uploaded(
-        joint_fixture=joint_fixture
-    )
+    file_to_register = await run_until_uploaded(joint_fixture=joint_fixture)
 
     # publish an event to mark the upload as rejected due to validation failure
     failure_event = event_schemas.FileUploadValidationFailure(
+        s3_endpoint_alias="test",
         file_id=file_to_register.file_id,
         object_id="objectid",
         bucket_id="test-staging",
@@ -240,7 +237,7 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     )
 
     # consume the validation failure event:
-    await event_subscriber.run(forever=False)
+    await joint_fixture.event_subscriber.run(forever=False)
 
     # make sure that the latest upload of the corresponding file was marked as rejected:
     # (first get the ID of the latest upload for that file:)

@@ -20,7 +20,8 @@ from datetime import datetime
 
 from ghga_event_schemas import pydantic_ as event_schemas
 from hexkit.protocols.eventpub import EventPublisherProtocol
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 from ucs.core import models
 from ucs.ports.outbound.event_pub import EventPublisherPort
@@ -33,12 +34,12 @@ class EventPubTanslatorConfig(BaseSettings):
         ...,
         description="Name of the topic to publish events that inform about new file "
         + "uploads.",
-        example="file_uploads",
+        examples=["file_uploads"],
     )
     upload_received_event_type: str = Field(
         ...,
         description="The type to use for event that inform about new file uploads.",
-        example="file_upload_received",
+        examples=["file_upload_received"],
     )
 
 
@@ -65,6 +66,7 @@ class EventPubTranslator(EventPublisherPort):
     ) -> None:
         """Publish event informing that a new file upload was received."""
         event_payload = event_schemas.FileUploadReceived(
+            s3_endpoint_alias="test",
             file_id=file_metadata.file_id,
             object_id=object_id,
             bucket_id=bucket_id,

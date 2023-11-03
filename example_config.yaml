@@ -21,7 +21,7 @@ s3_access_key_id: test
 s3_endpoint_url: http://localstack:4566
 s3_secret_access_key: '**********'
 s3_session_token: null
-service_instance_id: '1'
+service_instance_id: '001'
 service_name: upload_controller_service
 upload_accepted_event_topic: internal_file_registry
 upload_accepted_event_type: file_registered

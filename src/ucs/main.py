@@ -15,59 +15,26 @@
 
 """In this module object construction and dependency injection is carried out."""
 
-from fastapi import FastAPI
-from ghga_service_commons.api import configure_app, run_server
+from ghga_service_commons.api import run_server
 
-from ucs.adapters.inbound.fastapi_.custom_openapi import get_openapi_schema
-from ucs.adapters.inbound.fastapi_.routes import router
 from ucs.config import Config
-from ucs.container import Container
+from ucs.inject import (
+    prepare_event_subscriber,
+    prepare_rest_app,
+)
 
 
-def get_configured_container(*, config: Config) -> Container:
-    """Create and configure a DI container."""
-    container = Container()
-    container.config.load_config(config)
-
-    return container
-
-
-def get_rest_api(*, config: Config) -> FastAPI:
-    """Creates a FastAPI app.
-
-    For full functionality of the api, run in the context of an CI container with
-    correct wireing and initialized resources (see the run_api function below).
-    """
-    api = FastAPI()
-    api.include_router(router)
-    configure_app(api, config=config)
-
-    def custom_openapi():
-        if api.openapi_schema:
-            return api.openapi_schema
-        openapi_schema = get_openapi_schema(api)
-        api.openapi_schema = openapi_schema
-        return api.openapi_schema
-
-    api.openapi = custom_openapi  # type: ignore
-
-    return api
-
-
-async def run_rest():
+async def run_rest_app():
     """Run the HTTP REST API."""
-    config = Config()  # type: ignore [call-arg]
+    config = Config()  # type: ignore
 
-    async with get_configured_container(config=config) as container:
-        container.wire(modules=["ucs.adapters.inbound.fastapi_.routes"])
-        api = get_rest_api(config=config)
-        await run_server(app=api, config=config)
+    async with prepare_rest_app(config=config) as app:
+        await run_server(app=app, config=config)
 
 
 async def consume_events(run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
-    config = Config()  # type: ignore [call-arg]
+    config = Config()  # type: ignore
 
-    async with get_configured_container(config=config) as container:
-        event_consumer = await container.kafka_event_subscriber()
-        await event_consumer.run(forever=run_forever)
+    async with prepare_event_subscriber(config=config) as event_subscriber:
+        await event_subscriber.run(forever=run_forever)
