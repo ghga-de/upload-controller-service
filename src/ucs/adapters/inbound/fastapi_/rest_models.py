@@ -14,6 +14,7 @@
 # limitations under the License.
 
 """REST API-specific data models (not used by core package)"""
+from pydantic import ConfigDict
 
 try:  # workaround for https://github.com/pydantic/pydantic/issues/5821
     from typing_extensions import Literal
@@ -36,22 +37,14 @@ class UploadAttemptCreation(BaseModel):
     submitter_public_key: str = Field(
         ..., description="The public key used by the submittter to encrypt the file."
     )
-
-    class Config:
-        """Additional Model Config."""
-
-        title = "Properties required to create a new upload"
+    model_config = ConfigDict(title="Properties required to create a new upload")
 
 
 class UploadAttemptUpdate(BaseModel):
     """Request body to update an existing mutli-part upload."""
 
     status: Literal["uploaded", "cancelled"]
-
-    class Config:
-        """Additional Model Config."""
-
-        title = "Multi-Part Upload Update"
+    model_config = ConfigDict(title="Multi-Part Upload Update")
 
 
 class PartUploadDetails(BaseModel):

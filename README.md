@@ -1,5 +1,5 @@
 
-[![tests](https://github.com/ghga-de/upload-controller-service/actions/workflows/unit_and_int_tests.yaml/badge.svg)](https://github.com/ghga-de/upload-controller-service/actions/workflows/unit_and_int_tests.yaml)
+[![tests](https://github.com/ghga-de/upload-controller-service/actions/workflows/tests.yaml/badge.svg)](https://github.com/ghga-de/upload-controller-service/actions/workflows/unit_and_int_tests.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/ghga-de/upload-controller-service/badge.svg?branch=main)](https://coveralls.io/github/ghga-de/upload-controller-service?branch=main)
 
 # Upload Controller Service
@@ -14,17 +14,18 @@ An extensive documentation can be found [here](...) (coming soon).
 
 
 ## Installation
+
 We recommend using the provided Docker container.
 
 A pre-build version is available at [docker hub](https://hub.docker.com/repository/docker/ghga/upload-controller-service):
 ```bash
-docker pull ghga/upload-controller-service:0.6.2
+docker pull ghga/upload-controller-service:1.0.0
 ```
 
 Or you can build the container yourself from the [`./Dockerfile`](./Dockerfile):
 ```bash
 # Execute in the repo's root dir:
-docker build -t ghga/upload-controller-service:0.6.2 .
+docker build -t ghga/upload-controller-service:1.0.0 .
 ```
 
 For production-ready deployment, we recommend using Kubernetes, however,
@@ -32,7 +33,7 @@ for simple use cases, you could execute the service using docker
 on a single server:
 ```bash
 # The entrypoint is preconfigured:
-docker run -p 8080:8080 ghga/upload-controller-service:0.6.2 --help
+docker run -p 8080:8080 ghga/upload-controller-service:1.0.0 --help
 ```
 
 If you prefer not to use containers, you may install the service from source:
@@ -45,24 +46,89 @@ ucs --help
 ```
 
 ## Configuration
+
 ### Parameters
 
 The service requires the following configuration parameters:
 - **`upload_received_event_topic`** *(string)*: Name of the topic to publish events that inform about new file uploads.
 
+
+  Examples:
+
+  ```json
+  "file_uploads"
+  ```
+
+
 - **`upload_received_event_type`** *(string)*: The type to use for event that inform about new file uploads.
+
+
+  Examples:
+
+  ```json
+  "file_upload_received"
+  ```
+
 
 - **`file_metadata_event_topic`** *(string)*: Name of the topic to receive new or changed metadata on files that shall be registered for uploaded.
 
+
+  Examples:
+
+  ```json
+  "metadata"
+  ```
+
+
 - **`file_metadata_event_type`** *(string)*: The type used for events to receive new or changed metadata on files that are expected to be uploaded.
+
+
+  Examples:
+
+  ```json
+  "file_metadata_upserts"
+  ```
+
 
 - **`upload_accepted_event_topic`** *(string)*: Name of the topic to receive event that indicate that an upload was by downstream services.
 
+
+  Examples:
+
+  ```json
+  "internal_file_registry"
+  ```
+
+
 - **`upload_accepted_event_type`** *(string)*: The type used for event that indicate that an upload was by downstream services.
+
+
+  Examples:
+
+  ```json
+  "file_registered"
+  ```
+
 
 - **`upload_rejected_event_topic`** *(string)*: Name of the topic used for events informing about rejection of an upload by downstream services due to validation failure.
 
+
+  Examples:
+
+  ```json
+  "file_interrogation"
+  ```
+
+
 - **`upload_rejected_event_type`** *(string)*: The type used for events informing about the failure of a file validation.
+
+
+  Examples:
+
+  ```json
+  "file_validation_failure"
+  ```
+
 
 - **`inbox_bucket`** *(string)*: Default: `"inbox"`.
 
@@ -70,23 +136,109 @@ The service requires the following configuration parameters:
 
 - **`service_instance_id`** *(string)*: A string that uniquely identifies this instance across all instances of this service. A globally unique Kafka client ID will be created by concatenating the service_name and the service_instance_id.
 
+
+  Examples:
+
+  ```json
+  "germany-bw-instance-001"
+  ```
+
+
 - **`kafka_servers`** *(array)*: A list of connection strings to connect to Kafka bootstrap servers.
 
   - **Items** *(string)*
 
+
+  Examples:
+
+  ```json
+  [
+      "localhost:9092"
+  ]
+  ```
+
+
 - **`s3_endpoint_url`** *(string)*: URL to the S3 API.
+
+
+  Examples:
+
+  ```json
+  "http://localhost:4566"
+  ```
+
 
 - **`s3_access_key_id`** *(string)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
+
+  Examples:
+
+  ```json
+  "my-access-key-id"
+  ```
+
+
 - **`s3_secret_access_key`** *(string, format: password)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
-- **`s3_session_token`** *(string, format: password)*: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html.
 
-- **`aws_config_ini`** *(string, format: path)*: Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file.
+  Examples:
+
+  ```json
+  "my-secret-access-key"
+  ```
+
+
+- **`s3_session_token`**: Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html. Default: `null`.
+
+  - **Any of**
+
+    - *string, format: password*
+
+    - *null*
+
+
+  Examples:
+
+  ```json
+  "my-session-token"
+  ```
+
+
+- **`aws_config_ini`**: Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file. Default: `null`.
+
+  - **Any of**
+
+    - *string, format: path*
+
+    - *null*
+
+
+  Examples:
+
+  ```json
+  "~/.aws/config"
+  ```
+
 
 - **`db_connection_str`** *(string, format: password)*: MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/.
 
+
+  Examples:
+
+  ```json
+  "mongodb://localhost:27017"
+  ```
+
+
 - **`db_name`** *(string)*: Name of the database located on the MongoDB server.
+
+
+  Examples:
+
+  ```json
+  "my-database"
+  ```
+
 
 - **`host`** *(string)*: IP of the host. Default: `"127.0.0.1"`.
 
@@ -104,19 +256,83 @@ The service requires the following configuration parameters:
 
 - **`docs_url`** *(string)*: Path to host the swagger documentation. This is relative to the specified host and port. Default: `"/docs"`.
 
-- **`cors_allowed_origins`** *(array)*: A list of origins that should be permitted to make cross-origin requests. By default, cross-origin requests are not allowed. You can use ['*'] to allow any origin.
+- **`cors_allowed_origins`**: A list of origins that should be permitted to make cross-origin requests. By default, cross-origin requests are not allowed. You can use ['*'] to allow any origin. Default: `null`.
 
-  - **Items** *(string)*
+  - **Any of**
 
-- **`cors_allow_credentials`** *(boolean)*: Indicate that cookies should be supported for cross-origin requests. Defaults to False. Also, cors_allowed_origins cannot be set to ['*'] for credentials to be allowed. The origins must be explicitly specified.
+    - *array*
 
-- **`cors_allowed_methods`** *(array)*: A list of HTTP methods that should be allowed for cross-origin requests. Defaults to ['GET']. You can use ['*'] to allow all standard methods.
+      - **Items** *(string)*
 
-  - **Items** *(string)*
+    - *null*
 
-- **`cors_allowed_headers`** *(array)*: A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests.
 
-  - **Items** *(string)*
+  Examples:
+
+  ```json
+  [
+      "https://example.org",
+      "https://www.example.org"
+  ]
+  ```
+
+
+- **`cors_allow_credentials`**: Indicate that cookies should be supported for cross-origin requests. Defaults to False. Also, cors_allowed_origins cannot be set to ['*'] for credentials to be allowed. The origins must be explicitly specified. Default: `null`.
+
+  - **Any of**
+
+    - *boolean*
+
+    - *null*
+
+
+  Examples:
+
+  ```json
+  [
+      "https://example.org",
+      "https://www.example.org"
+  ]
+  ```
+
+
+- **`cors_allowed_methods`**: A list of HTTP methods that should be allowed for cross-origin requests. Defaults to ['GET']. You can use ['*'] to allow all standard methods. Default: `null`.
+
+  - **Any of**
+
+    - *array*
+
+      - **Items** *(string)*
+
+    - *null*
+
+
+  Examples:
+
+  ```json
+  [
+      "*"
+  ]
+  ```
+
+
+- **`cors_allowed_headers`**: A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests. Default: `null`.
+
+  - **Any of**
+
+    - *array*
+
+      - **Items** *(string)*
+
+    - *null*
+
+
+  Examples:
+
+  ```json
+  []
+  ```
+
 
 
 ### Usage:
@@ -157,19 +373,20 @@ It uses protocol/provider pairs and dependency injection mechanisms provided by 
 
 
 ## Development
+
 For setting up the development environment, we rely on the
-[devcontainer feature](https://code.visualstudio.com/docs/remote/containers) of vscode
+[devcontainer feature](https://code.visualstudio.com/docs/remote/containers) of VS Code
 in combination with Docker Compose.
 
-To use it, you have to have Docker Compose as well as vscode with its "Remote - Containers"
+To use it, you have to have Docker Compose as well as VS Code with its "Remote - Containers"
 extension (`ms-vscode-remote.remote-containers`) installed.
-Then open this repository in vscode and run the command
-`Remote-Containers: Reopen in Container` from the vscode "Command Palette".
+Then open this repository in VS Code and run the command
+`Remote-Containers: Reopen in Container` from the VS Code "Command Palette".
 
 This will give you a full-fledged, pre-configured development environment including:
 - infrastructural dependencies of the service (databases, etc.)
-- all relevant vscode extensions pre-installed
-- pre-configured linting and auto-formating
+- all relevant VS Code extensions pre-installed
+- pre-configured linting and auto-formatting
 - a pre-configured debugger
 - automatic license-header insertion
 
@@ -181,9 +398,11 @@ if you update dependencies in the [`./pyproject.toml`](./pyproject.toml) or the
 [`./requirements-dev.txt`](./requirements-dev.txt), please run it again.
 
 ## License
+
 This repository is free to use and modify according to the
 [Apache 2.0 License](./LICENSE).
 
-## Readme Generation
-This readme is autogenerate, please see [`readme_generation.md`](./readme_generation.md)
+## README Generation
+
+This README file is auto-generated, please see [`readme_generation.md`](./readme_generation.md)
 for details.

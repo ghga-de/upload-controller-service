@@ -30,8 +30,8 @@ def _get_metadata_diff(
     a: models.FileMetadata, b: models.FileMetadata  # pylint: disable=invalid-name
 ) -> set[str]:
     """Check which fields differ between the metadata provided in a and b."""
-    a_dict = a.dict()
-    b_dict = b.dict()
+    a_dict = a.model_dump()
+    b_dict = b.model_dump()
 
     return {field for field in a_dict if a_dict[field] != b_dict[field]}
 
@@ -63,7 +63,7 @@ class FileMetadataServive(FileMetadataServicePort):
 
     async def _insert_new(self, file: models.FileMetadataUpsert) -> None:
         """Create a metadata entry for a new file."""
-        full_metadata = models.FileMetadata(**file.dict(), latest_upload_id=None)
+        full_metadata = models.FileMetadata(**file.model_dump(), latest_upload_id=None)
         await self._daos.file_metadata.insert(full_metadata)
 
     async def _update_existing(
@@ -78,7 +78,7 @@ class FileMetadataServive(FileMetadataServicePort):
                 creation.
         """
         full_metadata = models.FileMetadata(
-            **update.dict(), latest_upload_id=existing_metadata.latest_upload_id
+            **update.model_dump(), latest_upload_id=existing_metadata.latest_upload_id
         )
 
         self._assert_update_allowed(

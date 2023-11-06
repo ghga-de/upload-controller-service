@@ -16,10 +16,12 @@ components:
           title: File Name
           type: string
         latest_upload_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: ID of the latest upload (attempt). `Null/None` if no update
             has been initiated, yet.
           title: Latest Upload Id
-          type: string
       required:
       - file_id
       - file_name
@@ -38,7 +40,6 @@ components:
       type: object
     HttpExistingActiveUploadError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpExistingActiveUploadErrorData'
@@ -48,10 +49,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - existingActiveUpload
+          const: existingActiveUpload
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -59,7 +58,6 @@ components:
       title: HttpExistingActiveUploadError
       type: object
     HttpExistingActiveUploadErrorData:
-      description: Model for exception data
       properties:
         active_upload:
           $ref: '#/components/schemas/UploadAttempt'
@@ -73,7 +71,6 @@ components:
       type: object
     HttpFileNotFoundError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpFileNotFoundErrorData'
@@ -83,10 +80,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - fileNotRegistered
+          const: fileNotRegistered
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -94,7 +89,6 @@ components:
       title: HttpFileNotFoundError
       type: object
     HttpFileNotFoundErrorData:
-      description: Model for exception data
       properties:
         file_id:
           title: File Id
@@ -105,7 +99,6 @@ components:
       type: object
     HttpFileNotFoundUploadError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpFileNotFoundUploadErrorData'
@@ -115,10 +108,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - fileNotRegistered
+          const: fileNotRegistered
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -126,7 +117,6 @@ components:
       title: HttpFileNotFoundUploadError
       type: object
     HttpFileNotFoundUploadErrorData:
-      description: Model for exception data
       properties:
         file_id:
           title: File Id
@@ -137,7 +127,6 @@ components:
       type: object
     HttpNoFileAccessError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpNoFileAccessErrorData'
@@ -147,10 +136,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - noFileAccess
+          const: noFileAccess
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -158,7 +145,6 @@ components:
       title: HttpNoFileAccessError
       type: object
     HttpNoFileAccessErrorData:
-      description: Model for exception data
       properties:
         file_id:
           title: File Id
@@ -169,7 +155,6 @@ components:
       type: object
     HttpUploadNotFoundError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpUploadNotFoundErrorData'
@@ -179,10 +164,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - noSuchUpload
+          const: noSuchUpload
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -190,7 +173,6 @@ components:
       title: HttpUploadNotFoundError
       type: object
     HttpUploadNotFoundErrorData:
-      description: Model for exception data
       properties:
         upload_id:
           title: Upload Id
@@ -201,7 +183,6 @@ components:
       type: object
     HttpUploadNotPendingError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpUploadNotPendingErrorData'
@@ -211,10 +192,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - uploadNotPending
+          const: uploadNotPending
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -222,7 +201,6 @@ components:
       title: HttpUploadNotPendingError
       type: object
     HttpUploadNotPendingErrorData:
-      description: Model for exception data
       properties:
         current_upload_status:
           $ref: '#/components/schemas/UploadStatus'
@@ -236,7 +214,6 @@ components:
       type: object
     HttpUploadStatusChangeError:
       additionalProperties: false
-      description: A custom exception body model.
       properties:
         data:
           $ref: '#/components/schemas/HttpUploadStatusChangeErrorData'
@@ -246,10 +223,8 @@ components:
           title: Description
           type: string
         exception_id:
-          enum:
-          - uploadStatusChange
+          const: uploadStatusChange
           title: Exception Id
-          type: string
       required:
       - data
       - description
@@ -257,7 +232,6 @@ components:
       title: HttpUploadStatusChangeError
       type: object
     HttpUploadStatusChangeErrorData:
-      description: Model for exception data
       properties:
         target_status:
           $ref: '#/components/schemas/UploadStatus'
@@ -286,11 +260,13 @@ components:
         File.
       properties:
         completion_date:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
           description: Datetime when the upload attempt was declared as completed
             by the client. `None` if the upload is ongoing.
-          format: date-time
           title: Completion Date
-          type: string
         creation_date:
           description: Datetime when the upload attempt was created.
           format: date-time
@@ -397,8 +373,8 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 0.6.2
-openapi: 3.0.2
+  version: 1.0.0
+openapi: 3.1.0
 paths:
   /files/{file_id}:
     get:
@@ -636,8 +612,8 @@ paths:
         name: part_no
         required: true
         schema:
-          maximum: 10000.0
-          minimum: 1.0
+          maximum: 10000
+          minimum: 1
           title: Part No
           type: integer
       responses:
@@ -673,7 +649,5 @@ paths:
       summary: Create new pre-signed URL for a specific part.
       tags:
       - UploadControllerService
-servers:
-- url: /
 tags:
 - name: UploadControllerService

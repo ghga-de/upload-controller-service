@@ -30,7 +30,7 @@ class DaoCollectionTranslator:
     """
 
     @staticmethod
-    async def construct(*, provider: DaoFactoryProtocol):
+    async def construct(*, provider: DaoFactoryProtocol) -> DaoCollectionPort:
         """Setup a collection of DAOs using the specified provider of the
         DaoFactoryProtocol.
         """

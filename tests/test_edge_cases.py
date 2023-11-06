@@ -92,9 +92,8 @@ async def test_create_upload_other_active(
     existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
 
     # insert a pending upload into the database:
-    daos = await joint_fixture.container.dao_collection()
-    await daos.file_metadata.insert(EXAMPLE_FILE)
-    await daos.upload_attempts.insert(existing_upload)
+    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     response = await joint_fixture.rest_client.post(
         "/uploads",
@@ -125,9 +124,8 @@ async def test_create_upload_accepted(
     existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
 
     # insert the existing upload into the database:
-    daos = await joint_fixture.container.dao_collection()
-    await daos.file_metadata.insert(EXAMPLE_FILE)
-    await daos.upload_attempts.insert(existing_upload)
+    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     # try to create a new upload:
     response = await joint_fixture.rest_client.post(
@@ -208,9 +206,8 @@ async def test_update_upload_status_non_pending(
     target_upload = EXAMPLE_UPLOADS[0].copy(update={"status": old_status})
 
     # insert a pending and non_pending upload into the database:
-    daos = await joint_fixture.container.dao_collection()
-    await daos.file_metadata.insert(EXAMPLE_FILE)
-    await daos.upload_attempts.insert(target_upload)
+    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.upload_attempts.insert(target_upload)
 
     for new_status in [models.UploadStatus.CANCELLED, models.UploadStatus.UPLOADED]:
         response = await joint_fixture.rest_client.patch(

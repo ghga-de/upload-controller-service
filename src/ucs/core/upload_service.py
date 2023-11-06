@@ -21,7 +21,7 @@ from typing import Callable
 
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.utils import calc_part_size
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 from ucs.core import models
 from ucs.ports.inbound.upload_service import UploadServicePort

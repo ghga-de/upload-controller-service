@@ -21,7 +21,7 @@
 
 from fastapi import FastAPI
 
-from ucs.adapters.inbound.fastapi_.custom_openapi import get_openapi_schema
+from ucs.adapters.inbound.fastapi_.configure import get_openapi_schema
 from ucs.adapters.inbound.fastapi_.routes import router
 
 app = FastAPI()

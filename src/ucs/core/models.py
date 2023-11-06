@@ -19,7 +19,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # fmt: off
@@ -70,12 +70,7 @@ class UploadAttempt(BaseModel):
     submitter_public_key: str = Field(
         ..., description="The public key used by the submittter to encrypt the file."
     )
-
-    class Config:
-        """Additional Model Config."""
-
-        orm_mode = True
-        title = "Multi-Part Upload Details"
+    model_config = ConfigDict(from_attributes=True, title="Multi-Part Upload Details")
 
 
 class FileMetadataUpsert(BaseModel):
@@ -85,12 +80,7 @@ class FileMetadataUpsert(BaseModel):
     file_name: str
     decrypted_sha256: str
     decrypted_size: int
-
-    class Config:
-        """Additional Model Config."""
-
-        orm_mode = True
-        title = "File Metadata Creation"
+    model_config = ConfigDict(from_attributes=True, title="File Metadata Creation")
 
 
 class FileMetadata(FileMetadataUpsert):
@@ -103,9 +93,4 @@ class FileMetadata(FileMetadataUpsert):
             + " if no update has been initiated, yet."
         ),
     )
-
-    class Config:
-        """Additional Model Config."""
-
-        orm_mode = True
-        title = "File Metadata"
+    model_config = ConfigDict(from_attributes=True, title="File Metadata")

@@ -1,214 +1,196 @@
 {
-  "title": "ModSettings",
+  "additionalProperties": false,
   "description": "Modifies the orginal Settings class provided by the user",
-  "type": "object",
   "properties": {
     "upload_received_event_topic": {
-      "title": "Upload Received Event Topic",
       "description": "Name of the topic to publish events that inform about new file uploads.",
-      "example": "file_uploads",
-      "env_names": [
-        "ucs_upload_received_event_topic"
+      "examples": [
+        "file_uploads"
       ],
+      "title": "Upload Received Event Topic",
       "type": "string"
     },
     "upload_received_event_type": {
-      "title": "Upload Received Event Type",
       "description": "The type to use for event that inform about new file uploads.",
-      "example": "file_upload_received",
-      "env_names": [
-        "ucs_upload_received_event_type"
+      "examples": [
+        "file_upload_received"
       ],
+      "title": "Upload Received Event Type",
       "type": "string"
     },
     "file_metadata_event_topic": {
-      "title": "File Metadata Event Topic",
       "description": "Name of the topic to receive new or changed metadata on files that shall be registered for uploaded.",
-      "example": "metadata",
-      "env_names": [
-        "ucs_file_metadata_event_topic"
+      "examples": [
+        "metadata"
       ],
+      "title": "File Metadata Event Topic",
       "type": "string"
     },
     "file_metadata_event_type": {
-      "title": "File Metadata Event Type",
       "description": "The type used for events to receive new or changed metadata on files that are expected to be uploaded.",
-      "example": "file_metadata_upserts",
-      "env_names": [
-        "ucs_file_metadata_event_type"
+      "examples": [
+        "file_metadata_upserts"
       ],
+      "title": "File Metadata Event Type",
       "type": "string"
     },
     "upload_accepted_event_topic": {
-      "title": "Upload Accepted Event Topic",
       "description": "Name of the topic to receive event that indicate that an upload was by downstream services.",
-      "example": "internal_file_registry",
-      "env_names": [
-        "ucs_upload_accepted_event_topic"
+      "examples": [
+        "internal_file_registry"
       ],
+      "title": "Upload Accepted Event Topic",
       "type": "string"
     },
     "upload_accepted_event_type": {
-      "title": "Upload Accepted Event Type",
       "description": "The type used for event that indicate that an upload was by downstream services.",
-      "example": "file_registered",
-      "env_names": [
-        "ucs_upload_accepted_event_type"
+      "examples": [
+        "file_registered"
       ],
+      "title": "Upload Accepted Event Type",
       "type": "string"
     },
     "upload_rejected_event_topic": {
-      "title": "Upload Rejected Event Topic",
       "description": "Name of the topic used for events informing about rejection of an upload by downstream services due to validation failure.",
-      "example": "file_interrogation",
-      "env_names": [
-        "ucs_upload_rejected_event_topic"
+      "examples": [
+        "file_interrogation"
       ],
+      "title": "Upload Rejected Event Topic",
       "type": "string"
     },
     "upload_rejected_event_type": {
-      "title": "Upload Rejected Event Type",
       "description": "The type used for events informing about the failure of a file validation.",
-      "example": "file_validation_failure",
-      "env_names": [
-        "ucs_upload_rejected_event_type"
+      "examples": [
+        "file_validation_failure"
       ],
+      "title": "Upload Rejected Event Type",
       "type": "string"
     },
     "inbox_bucket": {
-      "title": "Inbox Bucket",
       "default": "inbox",
-      "env_names": [
-        "ucs_inbox_bucket"
-      ],
+      "title": "Inbox Bucket",
       "type": "string"
     },
     "service_name": {
-      "title": "Service Name",
       "default": "upload_controller_service",
-      "env_names": [
-        "ucs_service_name"
-      ],
+      "title": "Service Name",
       "type": "string"
     },
     "service_instance_id": {
-      "title": "Service Instance Id",
       "description": "A string that uniquely identifies this instance across all instances of this service. A globally unique Kafka client ID will be created by concatenating the service_name and the service_instance_id.",
-      "example": "germany-bw-instance-001",
-      "env_names": [
-        "ucs_service_instance_id"
+      "examples": [
+        "germany-bw-instance-001"
       ],
+      "title": "Service Instance Id",
       "type": "string"
     },
     "kafka_servers": {
-      "title": "Kafka Servers",
       "description": "A list of connection strings to connect to Kafka bootstrap servers.",
-      "example": [
-        "localhost:9092"
+      "examples": [
+        [
+          "localhost:9092"
+        ]
       ],
-      "env_names": [
-        "ucs_kafka_servers"
-      ],
-      "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "title": "Kafka Servers",
+      "type": "array"
     },
     "s3_endpoint_url": {
-      "title": "S3 Endpoint Url",
       "description": "URL to the S3 API.",
-      "example": "http://localhost:4566",
-      "env_names": [
-        "ucs_s3_endpoint_url"
+      "examples": [
+        "http://localhost:4566"
       ],
+      "title": "S3 Endpoint Url",
       "type": "string"
     },
     "s3_access_key_id": {
-      "title": "S3 Access Key Id",
       "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
-      "example": "my-access-key-id",
-      "env_names": [
-        "ucs_s3_access_key_id"
+      "examples": [
+        "my-access-key-id"
       ],
+      "title": "S3 Access Key Id",
       "type": "string"
     },
     "s3_secret_access_key": {
-      "title": "S3 Secret Access Key",
       "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
-      "example": "my-secret-access-key",
-      "env_names": [
-        "ucs_s3_secret_access_key"
+      "examples": [
+        "my-secret-access-key"
       ],
+      "format": "password",
+      "title": "S3 Secret Access Key",
       "type": "string",
-      "writeOnly": true,
-      "format": "password"
+      "writeOnly": true
     },
     "s3_session_token": {
-      "title": "S3 Session Token",
-      "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
-      "example": "my-session-token",
-      "env_names": [
-        "ucs_s3_session_token"
+      "anyOf": [
+        {
+          "format": "password",
+          "type": "string",
+          "writeOnly": true
+        },
+        {
+          "type": "null"
+        }
       ],
-      "type": "string",
-      "writeOnly": true,
-      "format": "password"
+      "default": null,
+      "description": "Part of credentials for login into the S3 service. See: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html",
+      "examples": [
+        "my-session-token"
+      ],
+      "title": "S3 Session Token"
     },
     "aws_config_ini": {
-      "title": "Aws Config Ini",
-      "description": "Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file",
-      "example": "~/.aws/config",
-      "env_names": [
-        "ucs_aws_config_ini"
+      "anyOf": [
+        {
+          "format": "path",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "type": "string",
-      "format": "path"
+      "default": null,
+      "description": "Path to a config file for specifying more advanced S3 parameters. This should follow the format described here: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-a-configuration-file",
+      "examples": [
+        "~/.aws/config"
+      ],
+      "title": "Aws Config Ini"
     },
     "db_connection_str": {
-      "title": "Db Connection Str",
       "description": "MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/",
-      "example": "mongodb://localhost:27017",
-      "env_names": [
-        "ucs_db_connection_str"
+      "examples": [
+        "mongodb://localhost:27017"
       ],
+      "format": "password",
+      "title": "Db Connection Str",
       "type": "string",
-      "writeOnly": true,
-      "format": "password"
+      "writeOnly": true
     },
     "db_name": {
-      "title": "Db Name",
       "description": "Name of the database located on the MongoDB server.",
-      "example": "my-database",
-      "env_names": [
-        "ucs_db_name"
+      "examples": [
+        "my-database"
       ],
+      "title": "Db Name",
       "type": "string"
     },
     "host": {
-      "title": "Host",
-      "description": "IP of the host.",
       "default": "127.0.0.1",
-      "env_names": [
-        "ucs_host"
-      ],
+      "description": "IP of the host.",
+      "title": "Host",
       "type": "string"
     },
     "port": {
-      "title": "Port",
-      "description": "Port to expose the server on the specified host",
       "default": 8080,
-      "env_names": [
-        "ucs_port"
-      ],
+      "description": "Port to expose the server on the specified host",
+      "title": "Port",
       "type": "integer"
     },
     "log_level": {
-      "title": "Log Level",
-      "description": "Controls the verbosity of the log.",
       "default": "info",
-      "env_names": [
-        "ucs_log_level"
-      ],
+      "description": "Controls the verbosity of the log.",
       "enum": [
         "critical",
         "error",
@@ -217,105 +199,119 @@
         "debug",
         "trace"
       ],
+      "title": "Log Level",
       "type": "string"
     },
     "auto_reload": {
-      "title": "Auto Reload",
-      "description": "A development feature. Set to `True` to automatically reload the server upon code changes",
       "default": false,
-      "env_names": [
-        "ucs_auto_reload"
-      ],
+      "description": "A development feature. Set to `True` to automatically reload the server upon code changes",
+      "title": "Auto Reload",
       "type": "boolean"
     },
     "workers": {
-      "title": "Workers",
-      "description": "Number of workers processes to run.",
       "default": 1,
-      "env_names": [
-        "ucs_workers"
-      ],
+      "description": "Number of workers processes to run.",
+      "title": "Workers",
       "type": "integer"
     },
     "api_root_path": {
-      "title": "Api Root Path",
-      "description": "Root path at which the API is reachable. This is relative to the specified host and port.",
       "default": "/",
-      "env_names": [
-        "ucs_api_root_path"
-      ],
+      "description": "Root path at which the API is reachable. This is relative to the specified host and port.",
+      "title": "Api Root Path",
       "type": "string"
     },
     "openapi_url": {
-      "title": "Openapi Url",
-      "description": "Path to get the openapi specification in JSON format. This is relative to the specified host and port.",
       "default": "/openapi.json",
-      "env_names": [
-        "ucs_openapi_url"
-      ],
+      "description": "Path to get the openapi specification in JSON format. This is relative to the specified host and port.",
+      "title": "Openapi Url",
       "type": "string"
     },
     "docs_url": {
-      "title": "Docs Url",
-      "description": "Path to host the swagger documentation. This is relative to the specified host and port.",
       "default": "/docs",
-      "env_names": [
-        "ucs_docs_url"
-      ],
+      "description": "Path to host the swagger documentation. This is relative to the specified host and port.",
+      "title": "Docs Url",
       "type": "string"
     },
     "cors_allowed_origins": {
-      "title": "Cors Allowed Origins",
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
       "description": "A list of origins that should be permitted to make cross-origin requests. By default, cross-origin requests are not allowed. You can use ['*'] to allow any origin.",
-      "example": [
-        "https://example.org",
-        "https://www.example.org"
+      "examples": [
+        [
+          "https://example.org",
+          "https://www.example.org"
+        ]
       ],
-      "env_names": [
-        "ucs_cors_allowed_origins"
-      ],
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "title": "Cors Allowed Origins"
     },
     "cors_allow_credentials": {
-      "title": "Cors Allow Credentials",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
       "description": "Indicate that cookies should be supported for cross-origin requests. Defaults to False. Also, cors_allowed_origins cannot be set to ['*'] for credentials to be allowed. The origins must be explicitly specified.",
-      "example": [
-        "https://example.org",
-        "https://www.example.org"
+      "examples": [
+        [
+          "https://example.org",
+          "https://www.example.org"
+        ]
       ],
-      "env_names": [
-        "ucs_cors_allow_credentials"
-      ],
-      "type": "boolean"
+      "title": "Cors Allow Credentials"
     },
     "cors_allowed_methods": {
-      "title": "Cors Allowed Methods",
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
       "description": "A list of HTTP methods that should be allowed for cross-origin requests. Defaults to ['GET']. You can use ['*'] to allow all standard methods.",
-      "example": [
-        "*"
+      "examples": [
+        [
+          "*"
+        ]
       ],
-      "env_names": [
-        "ucs_cors_allowed_methods"
-      ],
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "title": "Cors Allowed Methods"
     },
     "cors_allowed_headers": {
-      "title": "Cors Allowed Headers",
-      "description": "A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests.",
-      "example": [],
-      "env_names": [
-        "ucs_cors_allowed_headers"
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "default": null,
+      "description": "A list of HTTP request headers that should be supported for cross-origin requests. Defaults to []. You can use ['*'] to allow all headers. The Accept, Accept-Language, Content-Language and Content-Type headers are always allowed for CORS requests.",
+      "examples": [
+        []
+      ],
+      "title": "Cors Allowed Headers"
     }
   },
   "required": [
@@ -335,5 +331,6 @@
     "db_connection_str",
     "db_name"
   ],
-  "additionalProperties": false
+  "title": "ModSettings",
+  "type": "object"
 }

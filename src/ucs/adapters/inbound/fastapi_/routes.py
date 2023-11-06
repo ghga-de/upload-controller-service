@@ -15,13 +15,11 @@
 
 """Module containing the main FastAPI router and all route functions."""
 
-from typing import Union
+from typing import Annotated, Union
 
-from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Path, status
+from fastapi import APIRouter, Path, status
 
-from ucs.adapters.inbound.fastapi_ import http_exceptions, rest_models
-from ucs.container import Container
+from ucs.adapters.inbound.fastapi_ import dummies, http_exceptions, rest_models
 from ucs.ports.inbound.file_service import FileMetadataServicePort
 from ucs.ports.inbound.upload_service import UploadServicePort
 
@@ -79,12 +77,9 @@ async def health():
         status.HTTP_404_NOT_FOUND: ERROR_RESPONSES["fileNotRegistered"],
     },
 )
-@inject
 async def get_file_metadata(
     file_id: str,
-    file_metadata_service: FileMetadataServicePort = Depends(
-        Provide[Container.file_metadata_service]
-    ),
+    file_metadata_service: dummies.FileMetadataServiceDummy,
 ):
     """Get file metadata including the current upload attempt."""
     try:
@@ -123,10 +118,9 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
         status.HTTP_403_FORBIDDEN: ERROR_RESPONSES["noFileAccess"],
     },
 )
-@inject
 async def create_upload(
     upload_creation: rest_models.UploadAttemptCreation,
-    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
+    upload_service: dummies.UploadServiceDummy,
 ):
     """Initiate a new mutli-part upload for the given file."""
     try:
@@ -157,10 +151,9 @@ async def create_upload(
         status.HTTP_404_NOT_FOUND: ERROR_RESPONSES["noSuchUpload"],
     },
 )
-@inject
 async def get_upload(
     upload_id: str,
-    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
+    upload_service: dummies.UploadServiceDummy,
 ):
     """Get details on a specific upload."""
     try:
@@ -197,11 +190,10 @@ async def get_upload(
         status.HTTP_404_NOT_FOUND: ERROR_RESPONSES["noSuchUpload"],
     },
 )
-@inject
 async def update_upload_status(
     upload_id: str,
     update: rest_models.UploadAttemptUpdate,
-    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
+    upload_service: dummies.UploadServiceDummy,
 ):
     """
     Declare a multi-part upload as complete by setting its status to "uploaded".
@@ -244,11 +236,10 @@ async def update_upload_status(
         status.HTTP_404_NOT_FOUND: ERROR_RESPONSES["noSuchUpload"],
     },
 )
-@inject
 async def create_presigned_url(
     upload_id: str,
-    part_no: int = Path(..., ge=1, le=10000),
-    upload_service: UploadServicePort = Depends(Provide[Container.upload_service]),
+    part_no: Annotated[int, Path(..., ge=1, le=10000)],
+    upload_service: dummies.UploadServiceDummy,
 ):
     """
     Create a pre-signed URL for the specified part number of the specified multi-part

@@ -13,25 +13,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utils to customize openAPI script"""
+"""Utils to configure the FastAPI app"""
+
 from typing import Any
 
+from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from ghga_service_commons.api import ApiConfigBase, configure_app
 
 from ucs import __version__
-from ucs.config import Config
-
-config = Config()  # type: ignore [call-arg]
+from ucs.adapters.inbound.fastapi_.routes import router
 
 
-def get_openapi_schema(api) -> dict[str, Any]:
+def get_openapi_schema(app: FastAPI) -> dict[str, Any]:
     """Generates a custom openapi schema for the service"""
     return get_openapi(
         title="Upload Controller Service",
         version=__version__,
         description="A service managing uploads of file objects to"
         + " an S3-compatible Object Storage.",
-        servers=[{"url": config.api_root_path}],
         tags=[{"name": "UploadControllerService"}],
-        routes=api.routes,
+        routes=app.routes,
     )
+
+
+def get_configured_app(*, config: ApiConfigBase) -> FastAPI:
+    """Create and configure a REST API application."""
+    app = FastAPI()
+    app.include_router(router)
+    configure_app(app, config=config)
+
+    def custom_openapi():
+        if app.openapi_schema:
+            return app.openapi_schema
+        openapi_schema = get_openapi_schema(app)
+        app.openapi_schema = openapi_schema
+        return app.openapi_schema
+
+    app.openapi = custom_openapi  # type: ignore [method-assign]
+
+    return app
