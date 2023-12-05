@@ -284,6 +284,11 @@ components:
           description: Part size to be used for upload. Specified in bytes.
           title: Part Size
           type: integer
+        s3_endpoint_alias:
+          description: Alias for the object storage location where the given object
+            is stored.
+          title: S3 Endpoint Alias
+          type: string
         status:
           $ref: '#/components/schemas/UploadStatus'
         submitter_public_key:
@@ -301,6 +306,7 @@ components:
       - part_size
       - creation_date
       - submitter_public_key
+      - s3_endpoint_alias
       title: Multi-Part Upload Details
       type: object
     UploadAttemptCreation:
@@ -373,7 +379,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 1.1.0
+  version: 2.0.0
 openapi: 3.1.0
 paths:
   /files/{file_id}:
@@ -434,10 +440,17 @@ paths:
       summary: health
       tags:
       - UploadControllerService
-  /uploads:
+  /uploads/{endpoint_alias}:
     post:
-      description: Initiate a new mutli-part upload for the given file.
+      description: Initiate a new multi-part upload for the given file.
       operationId: createUpload
+      parameters:
+      - in: path
+        name: endpoint_alias
+        required: true
+        schema:
+          title: Endpoint Alias
+          type: string
       requestBody:
         content:
           application/json:

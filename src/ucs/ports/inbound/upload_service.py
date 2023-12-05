@@ -24,7 +24,7 @@ from ucs.ports.inbound.file_service import FileMetadataServicePort
 class UploadServicePort(ABC):
     """Interface of a service handling uploads to the Inbox storage."""
 
-    class FileUnkownError(FileMetadataServicePort.FileUnkownError):
+    class FileUnknownError(FileMetadataServicePort.FileUnknownError):
         """A shortcut to the corresponding error from the FileMetadataServicePort."""
 
     class UnknownUploadError(RuntimeError):
@@ -135,7 +135,7 @@ class UploadServicePort(ABC):
 
     @abstractmethod
     async def initiate_new(
-        self, *, file_id: str, submitter_public_key: str
+        self, *, file_id: str, submitter_public_key: str, s3_endpoint_alias: str
     ) -> models.UploadAttempt:
         """Initiates a new multi-part upload for the file with the given ID."""
         ...

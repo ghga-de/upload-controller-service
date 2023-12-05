@@ -20,9 +20,9 @@ import logging
 import uuid
 from typing import Callable
 
+from ghga_service_commons.utils.multinode_storage import ObjectStorages
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.utils import calc_part_size
-from pydantic_settings import BaseSettings
 
 from ucs.core import models
 from ucs.ports.inbound.upload_service import UploadServicePort
@@ -32,27 +32,18 @@ from ucs.ports.outbound.dao import (
     ResourceNotFoundError,
 )
 from ucs.ports.outbound.event_pub import EventPublisherPort
-from ucs.ports.outbound.storage import ObjectStoragePort
 
 log = logging.getLogger(__name__)
-
-
-class UploadServiceConfig(BaseSettings):
-    """Config parameters and their defaults."""
-
-    # this will be removed in the multinode PR
-    inbox_bucket: str = "inbox"
 
 
 class UploadService(UploadServicePort):
     """Service for handling multi-part uploads to the Inbox storage."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         *,
-        config: UploadServiceConfig,
         daos: DaoCollectionPort,
-        object_storage: ObjectStoragePort,
+        object_storages: ObjectStorages,
         event_publisher: EventPublisherPort,
         # domain internal dependencies are immediately injected:
         part_size_calculator: Callable[[int], int] = lambda file_size: calc_part_size(
@@ -60,9 +51,8 @@ class UploadService(UploadServicePort):
         ),
     ):
         """Initialize class instance with configs and outbound adapter objects."""
-        self._inbox_bucket = config.inbox_bucket
         self._daos = daos
-        self._object_storage = object_storage
+        self._object_storages = object_storages
         self._event_publisher = event_publisher
         self._part_size_calculator = part_size_calculator
 
@@ -104,18 +94,22 @@ class UploadService(UploadServicePort):
             upload_id, status=models.UploadStatus.PENDING
         )
 
+        bucket_id, object_storage = self._object_storages.for_alias(
+            upload.s3_endpoint_alias
+        )
+
         # mark the upload as aborted in the object storage:
         try:
-            await self._object_storage.abort_multipart_upload(
+            await object_storage.abort_multipart_upload(
                 upload_id=upload_id,
-                bucket_id=self._inbox_bucket,
+                bucket_id=bucket_id,
                 object_id=upload.object_id,
             )
-        except ObjectStoragePort.MultiPartUploadAbortError as error:
+        except object_storage.MultiPartUploadAbortError as error:
             multipart_cancel_error = self.UploadCancelError(upload_id=upload_id)
             log.error(multipart_cancel_error, extra={"upload_id": upload_id})
             raise multipart_cancel_error from error
-        except ObjectStoragePort.MultiPartUploadNotFoundError:
+        except object_storage.MultiPartUploadNotFoundError:
             # This correspond to an inconsistency between the database and
             # the storage, however, since this cancel method might be used to
             # resolve this inconsistency, this exception will be ignored.
@@ -140,7 +134,7 @@ class UploadService(UploadServicePort):
         except ResourceNotFoundError as error:
             # File ID is immutable across services, so if we get an invalid file ID
             # from a downstream service event, something is seriously wrong
-            unknown_file_id = self.FileUnkownError(file_id=file_id)
+            unknown_file_id = self.FileUnknownError(file_id=file_id)
             log.critical(unknown_file_id, extra={"file_id": file_id})
             raise unknown_file_id from error
 
@@ -182,13 +176,16 @@ class UploadService(UploadServicePort):
                 # processed in the meantime
                 raise status_mismatch_error
 
-        # remove the object from object storage
+        # remove the object from object storage:
+        bucket_id, object_storage = self._object_storages.for_alias(
+            latest_upload.s3_endpoint_alias
+        )
         try:
-            await self._object_storage.delete_object(
-                bucket_id=self._inbox_bucket,
+            await object_storage.delete_object(
+                bucket_id=bucket_id,
                 object_id=latest_upload.object_id,
             )
-        except ObjectStoragePort.ObjectNotFoundError as error:
+        except object_storage.ObjectNotFoundError as error:
             # This means the database and object storage are out of sync
             # In this case, set the upload status to failed as there's nothing else this
             # service can do about the situation
@@ -239,15 +236,18 @@ class UploadService(UploadServicePort):
                 log.error(active_upload_exists)
                 raise active_upload_exists
 
-    async def _init_multipart_upload(self, *, file_id: str, object_id: str) -> str:
+    async def _init_multipart_upload(
+        self, *, file_id: str, object_id: str, s3_endpoint_alias: str
+    ) -> str:
         """Initialize a new multipart upload and returns the upload ID.
         This will only interact with the object storage but not update the database.
         """
+        bucket_id, object_storage = self._object_storages.for_alias(s3_endpoint_alias)
         try:
-            return await self._object_storage.init_multipart_upload(
-                bucket_id=self._inbox_bucket, object_id=object_id
+            return await object_storage.init_multipart_upload(
+                bucket_id=bucket_id, object_id=object_id
             )
-        except ObjectStoragePort.MultiPartUploadAlreadyExistsError as error:
+        except object_storage.MultiPartUploadAlreadyExistsError as error:
             # FIXME in multinode PR? This only means there is an ongoing multipart upload,
             # the complete file is not in the inbox yet, so the error is misleading
             file_in_inbox = self.FileAlreadyInInboxError(file_id=file_id)
@@ -267,16 +267,19 @@ class UploadService(UploadServicePort):
             # already exists. In that case the assumption that the object
             # storage assigns unique IDs is violated. However, at this stage
             # there is nothing we can do to handel this exception.
-            await self._object_storage.abort_multipart_upload(
+            bucket_id, object_storage = self._object_storages.for_alias(
+                upload.s3_endpoint_alias
+            )
+            await object_storage.abort_multipart_upload(
                 upload_id=upload.upload_id,
-                bucket_id=self._inbox_bucket,
+                bucket_id=bucket_id,
                 object_id=upload.object_id,
             )
             log.error(
                 error,
                 extra={
                     "upload_id": upload.upload_id,
-                    "bucket_id": self._inbox_bucket,
+                    "bucket_id": bucket_id,
                     "object_id": upload.object_id,
                 },
             )
@@ -296,10 +299,16 @@ class UploadService(UploadServicePort):
         try:
             await self._daos.file_metadata.update(updated_file)
         except ResourceNotFoundError as error:
+            latest_upload_attempt = await self._daos.upload_attempts.get_by_id(
+                id_=new_upload_id
+            )
+            bucket_id, object_storage = self._object_storages.for_alias(
+                latest_upload_attempt.s3_endpoint_alias
+            )
             # this shouldn't happen, but if it does, we need to cleanup:
-            await self._object_storage.abort_multipart_upload(
+            await object_storage.abort_multipart_upload(
                 upload_id=new_upload_id,
-                bucket_id=self._inbox_bucket,
+                bucket_id=bucket_id,
                 object_id=object_id,
             )
             await self._daos.upload_attempts.delete(id_=new_upload_id)
@@ -307,20 +316,20 @@ class UploadService(UploadServicePort):
                 error,
                 extra={
                     "upload_id": new_upload_id,
-                    "bucket_id": self._inbox_bucket,
+                    "bucket_id": bucket_id,
                     "object_id": object_id,
                 },
             )
             raise
 
     async def initiate_new(
-        self, *, file_id: str, submitter_public_key: str
+        self, *, file_id: str, submitter_public_key: str, s3_endpoint_alias: str
     ) -> models.UploadAttempt:
         """Initiates a new multi-part upload for the file with the given ID."""
         try:
             file = await self._daos.file_metadata.get_by_id(file_id)
         except ResourceNotFoundError as error:
-            raise self.FileUnkownError(file_id=file_id) from error
+            raise self.FileUnknownError(file_id=file_id) from error
 
         await self._assert_no_active_upload(file_id=file_id)
 
@@ -331,7 +340,7 @@ class UploadService(UploadServicePort):
         )
 
         upload_id = await self._init_multipart_upload(
-            file_id=file_id, object_id=object_id
+            file_id=file_id, object_id=object_id, s3_endpoint_alias=s3_endpoint_alias
         )
         log.info("Started multipart upload for file '%s'.", file_id)
 
@@ -349,6 +358,7 @@ class UploadService(UploadServicePort):
             creation_date=now_as_utc(),
             completion_date=None,
             submitter_public_key=submitter_public_key,
+            s3_endpoint_alias=s3_endpoint_alias,
         )
 
         await self._insert_upload(upload=upload)
@@ -381,14 +391,17 @@ class UploadService(UploadServicePort):
             upload_id, status=models.UploadStatus.PENDING
         )
 
+        bucket_id, object_storage = self._object_storages.for_alias(
+            upload.s3_endpoint_alias
+        )
         try:
-            return await self._object_storage.get_part_upload_url(
+            return await object_storage.get_part_upload_url(
                 upload_id=upload_id,
-                bucket_id=self._inbox_bucket,
+                bucket_id=bucket_id,
                 object_id=upload.object_id,
                 part_number=part_no,
             )
-        except ObjectStoragePort.MultiPartUploadNotFoundError as error:
+        except object_storage.MultiPartUploadNotFoundError as error:
             db_storage_not_synchronized = self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"The upload attempt with ID {upload_id} was marked as 'pending' in"
@@ -400,7 +413,7 @@ class UploadService(UploadServicePort):
                 db_storage_not_synchronized,
                 extra={
                     "upload_id": upload_id,
-                    "bucket_id": self._inbox_bucket,
+                    "bucket_id": bucket_id,
                     "object_id": upload.object_id,
                 },
             )
@@ -413,13 +426,16 @@ class UploadService(UploadServicePort):
         )
 
         # mark the upload as complete in the object storage:
+        bucket_id, object_storage = self._object_storages.for_alias(
+            upload.s3_endpoint_alias
+        )
         try:
-            await self._object_storage.complete_multipart_upload(
+            await object_storage.complete_multipart_upload(
                 upload_id=upload_id,
-                bucket_id=self._inbox_bucket,
+                bucket_id=bucket_id,
                 object_id=upload.object_id,
             )
-        except ObjectStoragePort.MultiPartUploadConfirmError as error:
+        except object_storage.MultiPartUploadConfirmError as error:
             # This can typically not be repaired, so aborting the upload attempt
             # and marking it as failed in the database:
             await self._cancel_with_final_status(
@@ -449,7 +465,8 @@ class UploadService(UploadServicePort):
             upload_date=completion_date,
             submitter_public_key=updated_upload.submitter_public_key,
             object_id=upload.object_id,
-            bucket_id=self._inbox_bucket,
+            bucket_id=bucket_id,
+            s3_endpoint_alias=upload.s3_endpoint_alias,
         )
         log.debug("Sent upload received event for upload '%s'", upload_id)
 

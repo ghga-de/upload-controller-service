@@ -84,7 +84,7 @@ async def get_file_metadata(
     """Get file metadata including the current upload attempt."""
     try:
         return await file_metadata_service.get_by_id(file_id)
-    except FileMetadataServicePort.FileUnkownError as error:
+    except FileMetadataServicePort.FileUnknownError as error:
         raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
 
 
@@ -93,7 +93,7 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
 
 
 @router.post(
-    "/uploads",
+    "/uploads/{endpoint_alias}",
     summary="Initiate a new multi-part upload.",
     operation_id="createUpload",
     response_model=rest_models.UploadAttempt,
@@ -119,21 +119,23 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
     },
 )
 async def create_upload(
+    endpoint_alias: str,
     upload_creation: rest_models.UploadAttemptCreation,
     upload_service: dummies.UploadServiceDummy,
 ):
-    """Initiate a new mutli-part upload for the given file."""
+    """Initiate a new multi-part upload for the given file."""
     try:
         return await upload_service.initiate_new(
             file_id=upload_creation.file_id,
             submitter_public_key=upload_creation.submitter_public_key,
+            s3_endpoint_alias=endpoint_alias,
         )
     except UploadServicePort.ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,
             active_upload=error.active_upload,
         ) from error
-    except FileMetadataServicePort.FileUnkownError as error:
+    except FileMetadataServicePort.FileUnknownError as error:
         raise HttpFileNotFoundUploadError(
             file_id=upload_creation.file_id, status_code=400
         ) from error

@@ -41,7 +41,7 @@ class FileMetadataServive(FileMetadataServicePort):
     """Implementation of a service handling file metata."""
 
     def __init__(self, *, daos: DaoCollectionPort):
-        """Ininitalize class instance with configs and outbound adapter objects."""
+        """Initialize class instance with configs and outbound adapter objects."""
         self._daos = daos
 
     @classmethod
@@ -109,7 +109,7 @@ class FileMetadataServive(FileMetadataServicePort):
             )
 
     async def upsert_multiple(self, files: Sequence[models.FileMetadataUpsert]) -> None:
-        """Registeres new files or updates the metadata for existing ones.
+        """Registers new files or updates the metadata for existing ones.
 
         Raises:
             InvalidFileMetadataUpdateError:
@@ -127,10 +127,10 @@ class FileMetadataServive(FileMetadataServicePort):
         Get metadata on the filed with the provided ID.
 
         Raises:
-            FileUnkownError:
+            UnknownFileError:
                 When a file with the corresponding ID does not exist.
         """
         try:
             return await self._daos.file_metadata.get_by_id(file_id)
         except ResourceNotFoundError as error:
-            raise self.FileUnkownError(file_id=file_id) from error
+            raise self.UnknownFileError(file_id=file_id) from error

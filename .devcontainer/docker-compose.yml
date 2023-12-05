@@ -17,6 +17,7 @@ services:
         USER_GID: 1000
 
     init: true
+
     extra_hosts:
       - host.docker.internal:host-gateway
 
