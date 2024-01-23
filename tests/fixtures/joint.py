@@ -62,7 +62,7 @@ class JointFixture:
         """Completely reset fixture states"""
         await self.s3.empty_buckets()
         self.mongodb.empty_collections()
-        self.kafka.delete_topics()
+        self.kafka.clear_topics()
 
 
 async def joint_fixture_function(

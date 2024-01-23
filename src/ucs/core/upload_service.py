@@ -103,7 +103,7 @@ class UploadService(UploadServicePort):
             pass
 
         # change the final status of the upload in the database:
-        updated_upload = upload.copy(update={"status": final_status})
+        updated_upload = upload.model_copy(update={"status": final_status})
         await self._daos.upload_attempts.update(updated_upload)
 
     async def _clear_latest_with_final_status(
@@ -150,7 +150,7 @@ class UploadService(UploadServicePort):
             ) from error
 
         # mark the upload as complete (uploaded) in the database:
-        updated_upload = latest_upload.copy(update={"status": final_status})
+        updated_upload = latest_upload.model_copy(update={"status": final_status})
         await self._daos.upload_attempts.update(updated_upload)
 
     async def _assert_no_active_upload(self, *, file_id: str) -> None:
@@ -209,7 +209,7 @@ class UploadService(UploadServicePort):
         If this operation fails unexpectedly, both the database and the object storage
         are roled back by eliminating any traces of this new upload.
         """
-        updated_file = file.copy(update={"latest_upload_id": new_upload_id})
+        updated_file = file.model_copy(update={"latest_upload_id": new_upload_id})
         try:
             await self._daos.file_metadata.update(updated_file)
         except:
@@ -320,7 +320,7 @@ class UploadService(UploadServicePort):
 
         # mark the upload as complete (uploaded) in the database:
         completion_date = now_as_utc()
-        updated_upload = upload.copy(
+        updated_upload = upload.model_copy(
             update={
                 "status": models.UploadStatus.UPLOADED,
                 "completion_date": completion_date,

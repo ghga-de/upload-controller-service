@@ -10,11 +10,16 @@ db_name: dev_db
 docs_url: /docs
 file_metadata_event_topic: metadata
 file_metadata_event_type: metadata_upsert
+generate_correlation_id: true
 host: 127.0.0.1
 inbox_bucket: inbox
+kafka_security_protocol: PLAINTEXT
 kafka_servers:
 - kafka:9092
-log_level: info
+kafka_ssl_cafile: ''
+kafka_ssl_certfile: ''
+kafka_ssl_keyfile: ''
+kafka_ssl_password: ''
 openapi_url: /openapi.json
 port: 8080
 s3_access_key_id: test

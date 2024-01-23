@@ -114,7 +114,7 @@ class HttpExistingActiveUploadError(HttpCustomExceptionBase):
             ),
             data={
                 "file_id": file_id,
-                "active_upload": json.loads(active_upload.json()),
+                "active_upload": json.loads(active_upload.model_dump_json()),
             },
         )
 

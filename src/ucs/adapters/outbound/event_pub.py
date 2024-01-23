@@ -77,7 +77,7 @@ class EventPubTranslator(EventPublisherPort):
         )
 
         await self._provider.publish(
-            payload=json.loads(event_payload.json()),
+            payload=json.loads(event_payload.model_dump_json()),
             type_=self._config.upload_received_event_type,
             topic=self._config.upload_received_event_topic,
             key=file_metadata.file_id,
