@@ -35,7 +35,9 @@ EXAMPLE_FILE = models.FileMetadata(
 # file in the list.)
 EXAMPLE_FILES = [
     EXAMPLE_FILE,
-    EXAMPLE_FILE.copy(update={"file_id": "testFile002", "file_name": "Test File 002"}),
+    EXAMPLE_FILE.model_copy(
+        update={"file_id": "testFile002", "file_name": "Test File 002"}
+    ),
 ]
 
 # An example of a storage file object corresponding to the EXAMPLE_FILE:
@@ -59,6 +61,6 @@ EXAMPLE_UPLOAD = models.UploadAttempt(
 
 # Multiple example uploads corresponding to EXAMPLE_FILE:
 EXAMPLE_UPLOADS = (
-    EXAMPLE_UPLOAD.copy(update={"status": models.UploadStatus.CANCELLED}),
-    EXAMPLE_UPLOAD.copy(update={"upload_id": "testUpload002"}),
+    EXAMPLE_UPLOAD.model_copy(update={"status": models.UploadStatus.CANCELLED}),
+    EXAMPLE_UPLOAD.model_copy(update={"upload_id": "testUpload002"}),
 )

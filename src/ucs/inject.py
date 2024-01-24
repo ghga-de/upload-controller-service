@@ -89,15 +89,15 @@ async def prepare_rest_app(
     """
     app = get_configured_app(config=config)
 
-    async with (
-        prepare_core_with_override(config=config, core_override=core_override) as (
-            upload_service,
-            file_metadata_service,
-        )
+    async with prepare_core_with_override(
+        config=config, core_override=core_override
+    ) as (
+        upload_service,
+        file_metadata_service,
     ):
-        app.dependency_overrides[
-            dummies.file_metadata_service_port
-        ] = lambda: file_metadata_service
+        app.dependency_overrides[dummies.file_metadata_service_port] = (
+            lambda: file_metadata_service
+        )
         app.dependency_overrides[dummies.upload_service_port] = lambda: upload_service
         yield app
 

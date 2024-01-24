@@ -26,7 +26,6 @@ from fastapi import status
 from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOADS
 from tests.fixtures.module_scope_fixtures import (  # noqa: F401
     JointFixture,
-    event_loop,
     joint_fixture,
     kafka_fixture,
     mongodb_fixture,
@@ -36,7 +35,7 @@ from tests.fixtures.module_scope_fixtures import (  # noqa: F401
 from ucs.core import models
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_get_health(joint_fixture: JointFixture):  # noqa: F811
     """Test the GET /health endpoint.
 
@@ -48,7 +47,7 @@ async def test_get_health(joint_fixture: JointFixture):  # noqa: F811
     assert response.json() == {"status": "OK"}
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the get_file_metadata endpoint with an non-existing file id."""
     file_id = "myNonExistingFile001"
@@ -58,7 +57,7 @@ async def test_get_file_metadata_not_found(joint_fixture: JointFixture):  # noqa
     assert response.json()["exception_id"] == "fileNotRegistered"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the create_upload endpoint with an non-existing file id."""
     file_id = "myNonExistingFile001"
@@ -81,7 +80,7 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F8
         ]
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_create_upload_other_active(
     existing_status: models.UploadStatus,
     joint_fixture: JointFixture,  # noqa: F811
@@ -89,7 +88,7 @@ async def test_create_upload_other_active(
     """Test the create_upload endpoint when there is another active update already
     existing.
     """
-    existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
+    existing_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": existing_status})
 
     # insert a pending upload into the database:
     await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
@@ -103,7 +102,9 @@ async def test_create_upload_other_active(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_body = response.json()
     assert response_body["exception_id"] == "existingActiveUpload"
-    assert response_body["data"]["active_upload"] == json.loads(existing_upload.json())
+    assert response_body["data"]["active_upload"] == json.loads(
+        existing_upload.model_dump_json()
+    )
 
 
 @pytest.mark.parametrize(
@@ -113,7 +114,7 @@ async def test_create_upload_other_active(
         models.UploadStatus.ACCEPTED,
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_create_upload_accepted(
     existing_status: models.UploadStatus,
     joint_fixture: JointFixture,  # noqa: F811
@@ -121,7 +122,7 @@ async def test_create_upload_accepted(
     """Test the create_upload endpoint when another update has already been accepted
     or is currently being evaluated.
     """
-    existing_upload = EXAMPLE_UPLOADS[0].copy(update={"status": existing_status})
+    existing_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": existing_status})
 
     # insert the existing upload into the database:
     await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
@@ -136,10 +137,12 @@ async def test_create_upload_accepted(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     response_body = response.json()
     assert response_body["exception_id"] == "existingActiveUpload"
-    assert response_body["data"]["active_upload"] == json.loads(existing_upload.json())
+    assert response_body["data"]["active_upload"] == json.loads(
+        existing_upload.model_dump_json()
+    )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F811
     """Test the get_upload endpoint with non-existing upload ID."""
     upload_id = "myNonExistingUpload001"
@@ -149,7 +152,7 @@ async def test_get_upload_not_found(joint_fixture: JointFixture):  # noqa: F811
     assert response.json()["exception_id"] == "noSuchUpload"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_update_upload_status_not_found(
     joint_fixture: JointFixture,  # noqa: F811
 ):
@@ -172,7 +175,7 @@ async def test_update_upload_status_not_found(
         if status_ not in [models.UploadStatus.CANCELLED, models.UploadStatus.UPLOADED]
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_update_upload_status_invalid_new_status(
     new_status: models.UploadStatus,
     joint_fixture: JointFixture,  # noqa: F811
@@ -197,13 +200,13 @@ async def test_update_upload_status_invalid_new_status(
         if status_ != models.UploadStatus.PENDING
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_update_upload_status_non_pending(
     old_status: models.UploadStatus,
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the update_upload_status endpoint on non pending upload."""
-    target_upload = EXAMPLE_UPLOADS[0].copy(update={"status": old_status})
+    target_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": old_status})
 
     # insert a pending and non_pending upload into the database:
     await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
@@ -220,7 +223,7 @@ async def test_update_upload_status_non_pending(
         assert response_body["data"]["current_upload_status"] == old_status.value
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(scope="module")
 async def test_create_presigned_url_not_found(
     joint_fixture: JointFixture,  # noqa: F811
 ):

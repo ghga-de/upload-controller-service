@@ -190,7 +190,7 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
         encrypted_parts_sha256=["somechecksum", "anotherchecksum"],
     )
     await joint_fixture.kafka.publish_event(
-        payload=json.loads(acceptance_event.json()),
+        payload=json.loads(acceptance_event.model_dump_json()),
         type_=joint_fixture.config.upload_accepted_event_type,
         topic=joint_fixture.config.upload_accepted_event_topic,
     )
@@ -231,7 +231,7 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     )
 
     await joint_fixture.kafka.publish_event(
-        payload=json.loads(failure_event.json()),
+        payload=json.loads(failure_event.model_dump_json()),
         type_=joint_fixture.config.upload_rejected_event_type,
         topic=joint_fixture.config.upload_rejected_event_topic,
     )
