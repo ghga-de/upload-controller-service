@@ -168,6 +168,7 @@ class UploadService(UploadServicePort):
             )
             if current_status in (
                 models.UploadStatus.ACCEPTED,
+                models.UploadStatus.FAILED,
                 models.UploadStatus.REJECTED,
             ):
                 # This state can be reached when consuming an event that has already
