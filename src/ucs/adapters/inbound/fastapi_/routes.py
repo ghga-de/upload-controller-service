@@ -158,7 +158,7 @@ async def get_upload(
     """Get details on a specific upload."""
     try:
         return await upload_service.get_details(upload_id=upload_id)
-    except UploadServicePort.UploadUnkownError as error:
+    except UploadServicePort.UnknownUploadError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
@@ -204,7 +204,7 @@ async def update_upload_status(
             await upload_service.complete(upload_id=upload_id)
         else:
             await upload_service.cancel(upload_id=upload_id)
-    except UploadServicePort.UploadStatusMissmatchError as error:
+    except UploadServicePort.UploadStatusMismatchError as error:
         raise http_exceptions.HttpUploadNotPendingError(
             upload_id=upload_id, current_status=error.current_status
         ) from error
@@ -220,7 +220,7 @@ async def update_upload_status(
             target_status=rest_models.UploadStatus.CANCELLED,
             reason=error.possible_reason,
         ) from error
-    except UploadServicePort.UploadUnkownError as error:
+    except UploadServicePort.UnknownUploadError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
 
@@ -249,7 +249,7 @@ async def create_presigned_url(
         presigned_url = await upload_service.create_part_url(
             upload_id=upload_id, part_no=part_no
         )
-    except UploadServicePort.UploadUnkownError as error:
+    except UploadServicePort.UnknownUploadError as error:
         raise http_exceptions.HttpUploadNotFoundError(upload_id=upload_id) from error
 
     return rest_models.PartUploadDetails(url=presigned_url)

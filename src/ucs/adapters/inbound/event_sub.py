@@ -31,7 +31,7 @@ class EventSubTranslatorConfig(BaseSettings):
     """Config for receiving metadata on files to expect for upload."""
 
     file_metadata_event_topic: str = Field(
-        ...,
+        default=...,
         description=(
             "Name of the topic to receive new or changed metadata on files that shall"
             + " be registered for uploaded."
@@ -39,7 +39,7 @@ class EventSubTranslatorConfig(BaseSettings):
         examples=["metadata"],
     )
     file_metadata_event_type: str = Field(
-        ...,
+        default=...,
         description=(
             "The type used for events to receive new or changed metadata on files that"
             + " are expected to be uploaded."
@@ -48,7 +48,7 @@ class EventSubTranslatorConfig(BaseSettings):
     )
 
     upload_accepted_event_topic: str = Field(
-        ...,
+        default=...,
         description=(
             "Name of the topic to receive event that indicate that an upload was"
             + " by downstream services."
@@ -56,7 +56,7 @@ class EventSubTranslatorConfig(BaseSettings):
         examples=["internal_file_registry"],
     )
     upload_accepted_event_type: str = Field(
-        ...,
+        default=...,
         description=(
             "The type used for event that indicate that an upload was by downstream"
             + " services."
@@ -64,13 +64,13 @@ class EventSubTranslatorConfig(BaseSettings):
         examples=["file_registered"],
     )
     upload_rejected_event_topic: str = Field(
-        ...,
+        default=...,
         description="Name of the topic used for events informing about rejection of an "
         + "upload by downstream services due to validation failure.",
         examples=["file_interrogation"],
     )
     upload_rejected_event_type: str = Field(
-        ...,
+        default=...,
         description="The type used for events informing about the failure of a file validation.",
         examples=["file_validation_failure"],
     )
