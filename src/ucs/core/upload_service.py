@@ -451,7 +451,7 @@ class UploadService(UploadServicePort):
             object_id=upload.object_id,
             bucket_id=self._inbox_bucket,
         )
-        log.debug("Sent out upload received event for upload '%s'", upload_id)
+        log.debug("Sent upload received event for upload '%s'", upload_id)
 
     async def cancel(self, *, upload_id: str) -> None:
         """Cancel the multi-part upload with the given ID."""
