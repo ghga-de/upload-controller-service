@@ -27,7 +27,7 @@ class UploadServicePort(ABC):
     class FileUnkownError(FileMetadataServicePort.FileUnkownError):
         """A shortcut to the corresponding error from the FileMetadataServicePort."""
 
-    class UploadUnkownError(RuntimeError):
+    class UnknownUploadError(RuntimeError):
         """Thrown when an upload attempt with the given ID is not known."""
 
         def __init__(self, *, upload_id: str):
@@ -35,7 +35,7 @@ class UploadServicePort(ABC):
             message = f"The upload attempt with ID {upload_id} is unkown."
             super().__init__(message)
 
-    class UploadStatusMissmatchError(RuntimeError):
+    class UploadStatusMismatchError(RuntimeError):
         """Thrown when an upload was expected to have a specific status for performing
         an action.
         """

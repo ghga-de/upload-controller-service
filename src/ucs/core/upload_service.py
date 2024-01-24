@@ -16,6 +16,7 @@
 
 """The main upload handling logic."""
 
+import logging
 import uuid
 from typing import Callable
 
@@ -25,14 +26,21 @@ from pydantic_settings import BaseSettings
 
 from ucs.core import models
 from ucs.ports.inbound.upload_service import UploadServicePort
-from ucs.ports.outbound.dao import DaoCollectionPort, ResourceNotFoundError
+from ucs.ports.outbound.dao import (
+    DaoCollectionPort,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
+)
 from ucs.ports.outbound.event_pub import EventPublisherPort
 from ucs.ports.outbound.storage import ObjectStoragePort
+
+log = logging.getLogger(__name__)
 
 
 class UploadServiceConfig(BaseSettings):
     """Config parameters and their defaults."""
 
+    # this will be removed in the multinode PR
     inbox_bucket: str = "inbox"
 
 
@@ -63,16 +71,25 @@ class UploadService(UploadServicePort):
     ) -> models.UploadAttempt:
         """Makes sure that the upload with the given ID exists and that its current
         status matches the specified status. If that is the case, the upload is returned.
-        Otherwise an UploadStatusMissmatchError is raised.
+        Otherwise an UploadStatusMismatchError is raised.
         """
         upload = await self.get_details(upload_id=upload_id)
 
         if upload.status != status:
-            raise self.UploadStatusMissmatchError(
+            status_mismatch_error = self.UploadStatusMismatchError(
                 upload_id=upload.upload_id,
                 expected_status=status,
                 current_status=upload.status,
             )
+            log.error(
+                status_mismatch_error,
+                extra={
+                    "upload_id": upload.upload_id,
+                    "expected_status": status,
+                    "current_status": upload.status,
+                },
+            )
+            raise status_mismatch_error
 
         return upload
 
@@ -95,7 +112,9 @@ class UploadService(UploadServicePort):
                 object_id=upload.object_id,
             )
         except ObjectStoragePort.MultiPartUploadAbortError as error:
-            raise self.UploadCancelError(upload_id=upload_id) from error
+            multipart_cancel_error = self.UploadCancelError(upload_id=upload_id)
+            log.error(multipart_cancel_error, extra={"upload_id": upload_id})
+            raise multipart_cancel_error from error
         except ObjectStoragePort.MultiPartUploadNotFoundError:
             # This correspond to an inconsistency between the database and
             # the storage, however, since this cancel method might be used to
@@ -106,6 +125,12 @@ class UploadService(UploadServicePort):
         updated_upload = upload.model_copy(update={"status": final_status})
         await self._daos.upload_attempts.update(updated_upload)
 
+        log.warning(
+            "Aborted multipart upload with id '%s' and set attempt status to '%s'.",
+            upload_id,
+            final_status,
+        )
+
     async def _clear_latest_with_final_status(
         self, *, file_id: str, final_status: models.UploadStatus
     ):
@@ -113,45 +138,87 @@ class UploadService(UploadServicePort):
         try:
             file = await self._daos.file_metadata.get_by_id(file_id)
         except ResourceNotFoundError as error:
-            raise self.FileUnkownError(file_id=file_id) from error
+            # File ID is immutable across services, so if we get an invalid file ID
+            # from a downstream service event, something is seriously wrong
+            unknown_file_id = self.FileUnkownError(file_id=file_id)
+            log.critical(unknown_file_id, extra={"file_id": file_id})
+            raise unknown_file_id from error
 
         if file.latest_upload_id is None:
-            raise self.NoLatestUploadError(file_id=file_id)
+            no_upload = self.NoLatestUploadError(file_id=file_id)
+            log.error(no_upload, extra={"file_id": file_id})
+            raise no_upload
 
         latest_upload = await self.get_details(upload_id=file.latest_upload_id)
+        current_status = latest_upload.status
 
         if latest_upload.status != models.UploadStatus.UPLOADED:
-            raise self.UploadStatusMissmatchError(
+            status_mismatch_error = self.UploadStatusMismatchError(
                 upload_id=latest_upload.upload_id,
                 expected_status=models.UploadStatus.UPLOADED,
-                current_status=latest_upload.status,
+                current_status=current_status,
             )
+            log.error(
+                status_mismatch_error,
+                extra={
+                    "upload_id": latest_upload.upload_id,
+                    "expected_status": models.UploadStatus.UPLOADED,
+                    "current_status": current_status,
+                },
+            )
+            if current_status in (
+                models.UploadStatus.ACCEPTED,
+                models.UploadStatus.FAILED,
+                models.UploadStatus.REJECTED,
+            ):
+                # This state can be reached when consuming an event that has already
+                # been seen, i.e. this does not necessarily represent an inconsistency
+                # so simply abort processing here
+                return
 
-        # remove the object from the object storage:
+            if current_status != models.UploadStatus.UPLOADED:
+                # Seeing any other status probably means there is some inconsistency
+                # across services, so it should be ok to crash so nothing else is
+                # processed in the meantime
+                raise status_mismatch_error
+
+        # remove the object from object storage
         try:
             await self._object_storage.delete_object(
                 bucket_id=self._inbox_bucket,
                 object_id=latest_upload.object_id,
             )
         except ObjectStoragePort.ObjectNotFoundError as error:
-            # This is unexpected. Thus setting the status of the upload attempt to
-            # failed and raise.
-            await self._cancel_with_final_status(
-                upload_id=latest_upload.upload_id,
-                final_status=models.UploadStatus.FAILED,
-            )
-            raise self.StorageAndDatabaseOutOfSyncError(
+            # This means the database and object storage are out of sync
+            # In this case, set the upload status to failed as there's nothing else this
+            # service can do about the situation
+            db_storage_not_synchronized = self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"Trying to clear the upload with ID {latest_upload.upload_id}"
                     + f" for file with file ID {file_id} (final status: {final_status}),"
                     + " however, the corresponding file with object ID"
                     + f" {latest_upload.object_id} could not be found in object storage."
                 )
-            ) from error
+            )
+            log.critical(
+                db_storage_not_synchronized,
+                extra={
+                    "upload_id": latest_upload.upload_id,
+                    "file_id": file_id,
+                    "object_id": latest_upload.object_id,
+                },
+            )
+            raise db_storage_not_synchronized from error
 
-        # mark the upload as complete (uploaded) in the database:
+        # mark the upload as either accepted or rejected in the database:
         updated_upload = latest_upload.model_copy(update={"status": final_status})
         await self._daos.upload_attempts.update(updated_upload)
+
+        log.info(
+            "Successfully set upload status for file '%s' to '%s'.",
+            file_id,
+            final_status,
+        )
 
     async def _assert_no_active_upload(self, *, file_id: str) -> None:
         """Asserts that there is no upload currently active for the file with the given
@@ -166,7 +233,11 @@ class UploadService(UploadServicePort):
                 models.UploadStatus.PENDING,
                 models.UploadStatus.UPLOADED,
             ):
-                raise self.ExistingActiveUploadError(active_upload=attempt)
+                active_upload_exists = self.ExistingActiveUploadError(
+                    active_upload=attempt
+                )
+                log.error(active_upload_exists)
+                raise active_upload_exists
 
     async def _init_multipart_upload(self, *, file_id: str, object_id: str) -> str:
         """Initialize a new multipart upload and returns the upload ID.
@@ -177,7 +248,11 @@ class UploadService(UploadServicePort):
                 bucket_id=self._inbox_bucket, object_id=object_id
             )
         except ObjectStoragePort.MultiPartUploadAlreadyExistsError as error:
-            raise self.FileAlreadyInInboxError(file_id=file_id) from error
+            # FIXME in multinode PR? This only means there is an ongoing multipart upload,
+            # the complete file is not in the inbox yet, so the error is misleading
+            file_in_inbox = self.FileAlreadyInInboxError(file_id=file_id)
+            log.error(file_in_inbox, extra={"file_id": file_id})
+            raise file_in_inbox from error
 
     async def _insert_upload(self, *, upload: models.UploadAttempt) -> None:
         """Insert a new upload attempt to the database assuming a corresponding
@@ -187,7 +262,7 @@ class UploadService(UploadServicePort):
         """
         try:
             await self._daos.upload_attempts.insert(upload)
-        except:
+        except ResourceAlreadyExistsError as error:
             # One source of error might be that an upload with the given ID
             # already exists. In that case the assumption that the object
             # storage assigns unique IDs is violated. However, at this stage
@@ -196,6 +271,14 @@ class UploadService(UploadServicePort):
                 upload_id=upload.upload_id,
                 bucket_id=self._inbox_bucket,
                 object_id=upload.object_id,
+            )
+            log.error(
+                error,
+                extra={
+                    "upload_id": upload.upload_id,
+                    "bucket_id": self._inbox_bucket,
+                    "object_id": upload.object_id,
+                },
             )
             raise
 
@@ -212,7 +295,7 @@ class UploadService(UploadServicePort):
         updated_file = file.model_copy(update={"latest_upload_id": new_upload_id})
         try:
             await self._daos.file_metadata.update(updated_file)
-        except:
+        except ResourceNotFoundError as error:
             # this shouldn't happen, but if it does, we need to cleanup:
             await self._object_storage.abort_multipart_upload(
                 upload_id=new_upload_id,
@@ -220,6 +303,14 @@ class UploadService(UploadServicePort):
                 object_id=object_id,
             )
             await self._daos.upload_attempts.delete(id_=new_upload_id)
+            log.error(
+                error,
+                extra={
+                    "upload_id": new_upload_id,
+                    "bucket_id": self._inbox_bucket,
+                    "object_id": object_id,
+                },
+            )
             raise
 
     async def initiate_new(
@@ -235,13 +326,18 @@ class UploadService(UploadServicePort):
 
         # Generate the new object ID for the file
         object_id = str(uuid.uuid4())
+        log.debug(
+            "Generated new object ID '%s' for file with ID '%s'.", object_id, file_id
+        )
 
         upload_id = await self._init_multipart_upload(
             file_id=file_id, object_id=object_id
         )
+        log.info("Started multipart upload for file '%s'.", file_id)
 
         # get the recommended part size:
         part_size = self._part_size_calculator(file.decrypted_size)
+        log.debug("Calculated part size for upload: %i", part_size)
 
         # assemble the upload attempts details:
         upload = models.UploadAttempt(
@@ -259,6 +355,11 @@ class UploadService(UploadServicePort):
         await self._set_latest_upload_for_file(
             file=file, new_upload_id=upload_id, object_id=object_id
         )
+        log.info(
+            "Created database entry for upload attempt '%s' of file '%s'.",
+            upload_id,
+            file_id,
+        )
 
         return upload
 
@@ -267,7 +368,9 @@ class UploadService(UploadServicePort):
         try:
             return await self._daos.upload_attempts.get_by_id(upload_id)
         except ResourceNotFoundError as error:
-            raise self.UploadUnkownError(upload_id=upload_id) from error
+            unknown_upload = self.UnknownUploadError(upload_id=upload_id)
+            log.error(unknown_upload, extra={"upload_id": upload_id})
+            raise unknown_upload from error
 
     async def create_part_url(self, *, upload_id: str, part_no: int) -> str:
         """
@@ -286,13 +389,22 @@ class UploadService(UploadServicePort):
                 part_number=part_no,
             )
         except ObjectStoragePort.MultiPartUploadNotFoundError as error:
-            raise self.StorageAndDatabaseOutOfSyncError(
+            db_storage_not_synchronized = self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"The upload attempt with ID {upload_id} was marked as 'pending' in"
                     + "the database, but no corresponding upload exists in the object"
                     + "storage."
                 )
-            ) from error
+            )
+            log.error(
+                db_storage_not_synchronized,
+                extra={
+                    "upload_id": upload_id,
+                    "bucket_id": self._inbox_bucket,
+                    "object_id": upload.object_id,
+                },
+            )
+            raise db_storage_not_synchronized from error
 
     async def complete(self, *, upload_id: str) -> None:
         """Confirm the completion of the multi-part upload with the given ID."""
@@ -313,10 +425,11 @@ class UploadService(UploadServicePort):
             await self._cancel_with_final_status(
                 upload_id=upload_id, final_status=models.UploadStatus.FAILED
             )
-
-            raise self.UploadCompletionError(
+            upload_completion_error = self.UploadCompletionError(
                 upload_id=upload_id, reason=str(error)
-            ) from error
+            )
+            log.error(upload_completion_error, extra={"upload_id": upload_id})
+            raise upload_completion_error from error
 
         # mark the upload as complete (uploaded) in the database:
         completion_date = now_as_utc()
@@ -327,6 +440,7 @@ class UploadService(UploadServicePort):
             }
         )
         await self._daos.upload_attempts.update(updated_upload)
+        log.info("Marked upload '%s' as completed.", upload_id)
 
         # publish an event, informing other services that a new upload was received:
         file = await self._daos.file_metadata.get_by_id(upload.file_id)
@@ -337,6 +451,7 @@ class UploadService(UploadServicePort):
             object_id=upload.object_id,
             bucket_id=self._inbox_bucket,
         )
+        log.debug("Sent upload received event for upload '%s'", upload_id)
 
     async def cancel(self, *, upload_id: str) -> None:
         """Cancel the multi-part upload with the given ID."""

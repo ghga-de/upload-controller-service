@@ -31,13 +31,13 @@ class EventPubTanslatorConfig(BaseSettings):
     """Config for publishing file upload-related events."""
 
     upload_received_event_topic: str = Field(
-        ...,
+        default=...,
         description="Name of the topic to publish events that inform about new file "
         + "uploads.",
         examples=["file_uploads"],
     )
     upload_received_event_type: str = Field(
-        ...,
+        default=...,
         description="The type to use for event that inform about new file uploads.",
         examples=["file_upload_received"],
     )

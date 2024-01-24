@@ -22,7 +22,6 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-# fmt: off
 class UploadStatus(str, Enum):
     """
     The current upload state. Can be one of:
@@ -40,7 +39,6 @@ class UploadStatus(str, Enum):
     FAILED = "failed"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
-# fmt: on
 
 
 class UploadAttempt(BaseModel):

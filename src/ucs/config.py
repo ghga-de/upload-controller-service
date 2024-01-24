@@ -17,6 +17,7 @@
 
 from ghga_service_commons.api import ApiConfigBase
 from hexkit.config import config_from_yaml
+from hexkit.log import LoggingConfig
 from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.s3 import S3Config
@@ -32,6 +33,7 @@ class Config(  # pylint: disable=too-many-ancestors
     MongoDbConfig,
     S3Config,
     KafkaConfig,
+    LoggingConfig,
     UploadServiceConfig,
     EventSubTranslatorConfig,
     EventPubTanslatorConfig,

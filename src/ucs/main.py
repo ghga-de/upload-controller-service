@@ -16,6 +16,7 @@
 """In this module object construction and dependency injection is carried out."""
 
 from ghga_service_commons.api import run_server
+from hexkit.log import configure_logging
 
 from ucs.config import Config
 from ucs.inject import (
@@ -26,7 +27,7 @@ from ucs.inject import (
 
 async def run_rest_app():
     """Run the HTTP REST API."""
-    config = Config()  # type: ignore
+    config = Config()
 
     async with prepare_rest_app(config=config) as app:
         await run_server(app=app, config=config)
@@ -34,7 +35,8 @@ async def run_rest_app():
 
 async def consume_events(run_forever: bool = True):
     """Run an event consumer listening to the specified topic."""
-    config = Config()  # type: ignore
+    config = Config()
+    configure_logging(config=config)
 
     async with prepare_event_subscriber(config=config) as event_subscriber:
         await event_subscriber.run(forever=run_forever)
