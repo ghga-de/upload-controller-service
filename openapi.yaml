@@ -153,6 +153,30 @@ components:
       - file_id
       title: HttpNoFileAccessErrorData
       type: object
+    HttpUnknownStorageAliasError:
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/HttpUnknownStorageAliasErrorData'
+        description:
+          description: A human readable message to the client explaining the cause
+            of the exception.
+          title: Description
+          type: string
+        exception_id:
+          const: noSuchStorage
+          title: Exception Id
+      required:
+      - data
+      - description
+      - exception_id
+      title: HttpUnknownStorageAliasError
+      type: object
+    HttpUnknownStorageAliasErrorData:
+      additionalProperties: true
+      properties: {}
+      title: HttpUnknownStorageAliasErrorData
+      type: object
     HttpUploadNotFoundError:
       additionalProperties: false
       properties:
@@ -440,16 +464,16 @@ paths:
       summary: health
       tags:
       - UploadControllerService
-  /uploads/{endpoint_alias}:
+  /uploads/storages/{storage_alias}:
     post:
       description: Initiate a new multi-part upload for the given file.
       operationId: createUpload
       parameters:
       - in: path
-        name: endpoint_alias
+        name: storage_alias
         required: true
         schema:
-          title: Endpoint Alias
+          title: Storage Alias
           type: string
       requestBody:
         content:
@@ -490,6 +514,15 @@ paths:
 
             - noFileAccess: The user is not registered as a Data Submitter for the
             corresponding file.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpUnknownStorageAliasError'
+          description:
+          - 'Exceptions by ID:
+
+            - noSuchStorage: The storage node for the given alias does not exist.'
         '422':
           content:
             application/json:
