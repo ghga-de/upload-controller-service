@@ -133,4 +133,4 @@ class FileMetadataServive(FileMetadataServicePort):
         try:
             return await self._daos.file_metadata.get_by_id(file_id)
         except ResourceNotFoundError as error:
-            raise self.UnknownFileError(file_id=file_id) from error
+            raise self.FileUnknownError(file_id=file_id) from error
