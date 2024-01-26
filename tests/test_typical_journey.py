@@ -124,7 +124,7 @@ async def perform_upload(
     """
     # initiate new upload:
     response = await joint_fixture.rest_client.post(
-        f"/uploads/{endpoint_alias}",
+        f"/uploads/storages/{endpoint_alias}",
         json={"file_id": file_id, "submitter_public_key": "test-key"},
     )
     assert response.status_code == status.HTTP_200_OK

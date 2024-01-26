@@ -242,7 +242,16 @@ class UploadService(UploadServicePort):
         """Initialize a new multipart upload and returns the upload ID.
         This will only interact with the object storage but not update the database.
         """
-        bucket_id, object_storage = self._object_storages.for_alias(s3_endpoint_alias)
+        try:
+            bucket_id, object_storage = self._object_storages.for_alias(
+                s3_endpoint_alias
+            )
+        except KeyError as error:
+            unknown_alias = self.UnknownStorageAliasError(
+                storage_alias=s3_endpoint_alias
+            )
+            log.error(unknown_alias, extra={"storage_alias": s3_endpoint_alias})
+            raise unknown_alias from error
         try:
             return await object_storage.init_multipart_upload(
                 bucket_id=bucket_id, object_id=object_id

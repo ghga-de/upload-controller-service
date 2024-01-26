@@ -133,6 +133,16 @@ class UploadServicePort(ABC):
             message = f"The file with ID {file_id} as no upload."
             super().__init__(message)
 
+    class UnknownStorageAliasError(RuntimeError):
+        """Thrown when the requested storage location is not configured.
+        The given parameter given should be a configured alias, but is not.
+        """
+
+        def __init__(self, *, storage_alias: str):
+            self.storage_alias = storage_alias
+            message = f"No storage node exists for alias {storage_alias}."
+            super().__init__(message)
+
     @abstractmethod
     async def initiate_new(
         self, *, file_id: str, submitter_public_key: str, s3_endpoint_alias: str

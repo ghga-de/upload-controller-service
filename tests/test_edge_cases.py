@@ -63,7 +63,7 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F8
     """Test the create_upload endpoint with an non-existing file id."""
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.post(
-        f"/uploads/{UPLOAD_DETAILS_1.endpoint_alias}",
+        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
         json={"file_id": file_id, "submitter_public_key": "test-key"},
     )
 
@@ -99,7 +99,7 @@ async def test_create_upload_other_active(
     await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     response = await joint_fixture.rest_client.post(
-        f"/uploads/{UPLOAD_DETAILS_1.endpoint_alias}",
+        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
         json={
             "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
             "submitter_public_key": "test-key",
@@ -139,7 +139,7 @@ async def test_create_upload_accepted(
 
     # try to create a new upload:
     response = await joint_fixture.rest_client.post(
-        f"/uploads/{UPLOAD_DETAILS_1.endpoint_alias}",
+        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
         json={
             "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
             "submitter_public_key": "test-key",
