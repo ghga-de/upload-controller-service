@@ -69,7 +69,7 @@ class UploadAttempt(BaseModel):
         ..., description="The public key used by the submittter to encrypt the file."
     )
     model_config = ConfigDict(from_attributes=True, title="Multi-Part Upload Details")
-    s3_endpoint_alias: str = Field(
+    storage_alias: str = Field(
         ...,
         description="Alias for the object storage location where the given object is stored.",
     )

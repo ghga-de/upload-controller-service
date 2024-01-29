@@ -96,7 +96,7 @@ async def get_file_metadata(
 
 
 @router.post(
-    "/uploads/storages/{storage_alias}",
+    "/uploads",
     summary="Initiate a new multi-part upload.",
     operation_id="createUpload",
     response_model=rest_models.UploadAttempt,
@@ -132,7 +132,7 @@ async def create_upload(
         return await upload_service.initiate_new(
             file_id=upload_creation.file_id,
             submitter_public_key=upload_creation.submitter_public_key,
-            s3_endpoint_alias=storage_alias,
+            storage_alias=storage_alias,
         )
     except UploadServicePort.ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(

@@ -95,7 +95,7 @@ class UploadService(UploadServicePort):
         )
 
         bucket_id, object_storage = self._object_storages.for_alias(
-            upload.s3_endpoint_alias
+            upload.storage_alias
         )
 
         # mark the upload as aborted in the object storage:
@@ -178,7 +178,7 @@ class UploadService(UploadServicePort):
 
         # remove the object from object storage:
         bucket_id, object_storage = self._object_storages.for_alias(
-            latest_upload.s3_endpoint_alias
+            latest_upload.storage_alias
         )
         try:
             await object_storage.delete_object(
@@ -237,20 +237,16 @@ class UploadService(UploadServicePort):
                 raise active_upload_exists
 
     async def _init_multipart_upload(
-        self, *, file_id: str, object_id: str, s3_endpoint_alias: str
+        self, *, file_id: str, object_id: str, storage_alias: str
     ) -> str:
         """Initialize a new multipart upload and returns the upload ID.
         This will only interact with the object storage but not update the database.
         """
         try:
-            bucket_id, object_storage = self._object_storages.for_alias(
-                s3_endpoint_alias
-            )
+            bucket_id, object_storage = self._object_storages.for_alias(storage_alias)
         except KeyError as error:
-            unknown_alias = self.UnknownStorageAliasError(
-                storage_alias=s3_endpoint_alias
-            )
-            log.error(unknown_alias, extra={"storage_alias": s3_endpoint_alias})
+            unknown_alias = self.UnknownStorageAliasError(storage_alias=storage_alias)
+            log.error(unknown_alias, extra={"storage_alias": storage_alias})
             raise unknown_alias from error
         try:
             return await object_storage.init_multipart_upload(
@@ -277,7 +273,7 @@ class UploadService(UploadServicePort):
             # storage assigns unique IDs is violated. However, at this stage
             # there is nothing we can do to handel this exception.
             bucket_id, object_storage = self._object_storages.for_alias(
-                upload.s3_endpoint_alias
+                upload.storage_alias
             )
             await object_storage.abort_multipart_upload(
                 upload_id=upload.upload_id,
@@ -312,7 +308,7 @@ class UploadService(UploadServicePort):
                 id_=new_upload_id
             )
             bucket_id, object_storage = self._object_storages.for_alias(
-                latest_upload_attempt.s3_endpoint_alias
+                latest_upload_attempt.storage_alias
             )
             # this shouldn't happen, but if it does, we need to cleanup:
             await object_storage.abort_multipart_upload(
@@ -332,7 +328,7 @@ class UploadService(UploadServicePort):
             raise
 
     async def initiate_new(
-        self, *, file_id: str, submitter_public_key: str, s3_endpoint_alias: str
+        self, *, file_id: str, submitter_public_key: str, storage_alias: str
     ) -> models.UploadAttempt:
         """Initiates a new multi-part upload for the file with the given ID."""
         try:
@@ -349,7 +345,7 @@ class UploadService(UploadServicePort):
         )
 
         upload_id = await self._init_multipart_upload(
-            file_id=file_id, object_id=object_id, s3_endpoint_alias=s3_endpoint_alias
+            file_id=file_id, object_id=object_id, storage_alias=storage_alias
         )
         log.info("Started multipart upload for file '%s'.", file_id)
 
@@ -367,7 +363,7 @@ class UploadService(UploadServicePort):
             creation_date=now_as_utc(),
             completion_date=None,
             submitter_public_key=submitter_public_key,
-            s3_endpoint_alias=s3_endpoint_alias,
+            storage_alias=storage_alias,
         )
 
         await self._insert_upload(upload=upload)
@@ -401,7 +397,7 @@ class UploadService(UploadServicePort):
         )
 
         bucket_id, object_storage = self._object_storages.for_alias(
-            upload.s3_endpoint_alias
+            upload.storage_alias
         )
         try:
             return await object_storage.get_part_upload_url(
@@ -436,7 +432,7 @@ class UploadService(UploadServicePort):
 
         # mark the upload as complete in the object storage:
         bucket_id, object_storage = self._object_storages.for_alias(
-            upload.s3_endpoint_alias
+            upload.storage_alias
         )
         try:
             await object_storage.complete_multipart_upload(
@@ -475,7 +471,7 @@ class UploadService(UploadServicePort):
             submitter_public_key=updated_upload.submitter_public_key,
             object_id=upload.object_id,
             bucket_id=bucket_id,
-            s3_endpoint_alias=upload.s3_endpoint_alias,
+            storage_alias=upload.storage_alias,
         )
         log.debug("Sent upload received event for upload '%s'", upload_id)
 

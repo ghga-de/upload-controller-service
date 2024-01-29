@@ -61,14 +61,14 @@ EXAMPLE_UPLOAD_1 = models.UploadAttempt(
     creation_date=now_as_utc(),
     submitter_public_key="test-key",
     completion_date=None,
-    s3_endpoint_alias=ENDPOINT_ALIASES[0],
+    storage_alias=ENDPOINT_ALIASES[0],
 )
 EXAMPLE_UPLOAD_2 = EXAMPLE_UPLOAD_1.model_copy(
     update={
         "upload_id": "testUpload002",
         "object_id": "object002",
         "file_id": EXAMPLE_FILE_2.file_id,
-        "s3_endpoint_alias": ENDPOINT_ALIASES[1],
+        "storage_alias": ENDPOINT_ALIASES[1],
     }
 )
 

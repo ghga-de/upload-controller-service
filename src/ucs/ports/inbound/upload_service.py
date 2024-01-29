@@ -145,7 +145,7 @@ class UploadServicePort(ABC):
 
     @abstractmethod
     async def initiate_new(
-        self, *, file_id: str, submitter_public_key: str, s3_endpoint_alias: str
+        self, *, file_id: str, submitter_public_key: str, storage_alias: str
     ) -> models.UploadAttempt:
         """Initiates a new multi-part upload for the file with the given ID."""
         ...

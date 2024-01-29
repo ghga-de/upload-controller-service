@@ -32,7 +32,7 @@ class EventPublisherPort(Protocol):
         submitter_public_key: str,
         object_id: str,
         bucket_id: str,
-        s3_endpoint_alias: str,
+        storage_alias: str,
     ) -> None:
         """Publish event informing that a new upload was received."""
         ...

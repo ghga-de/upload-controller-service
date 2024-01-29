@@ -63,11 +63,11 @@ class EventPubTranslator(EventPublisherPort):
         submitter_public_key: str,
         object_id: str,
         bucket_id: str,
-        s3_endpoint_alias: str,
+        storage_alias: str,
     ) -> None:
         """Publish event informing that a new file upload was received."""
         event_payload = event_schemas.FileUploadReceived(
-            s3_endpoint_alias=s3_endpoint_alias,
+            s3_endpoint_alias=storage_alias,
             file_id=file_metadata.file_id,
             object_id=object_id,
             bucket_id=bucket_id,

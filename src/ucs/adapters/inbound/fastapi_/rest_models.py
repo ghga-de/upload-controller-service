@@ -37,6 +37,10 @@ class UploadAttemptCreation(BaseModel):
     submitter_public_key: str = Field(
         ..., description="The public key used by the submittter to encrypt the file."
     )
+    storage_alias: str = Field(
+        ...,
+        description="Alias identifying the object storage location to use for this upload",
+    )
     model_config = ConfigDict(title="Properties required to create a new upload")
 
 

@@ -308,13 +308,13 @@ components:
           description: Part size to be used for upload. Specified in bytes.
           title: Part Size
           type: integer
-        s3_endpoint_alias:
-          description: Alias for the object storage location where the given object
-            is stored.
-          title: S3 Endpoint Alias
-          type: string
         status:
           $ref: '#/components/schemas/UploadStatus'
+        storage_alias:
+          description: Alias for the object storage location where the given object
+            is stored.
+          title: Storage Alias
+          type: string
         submitter_public_key:
           description: The public key used by the submittter to encrypt the file.
           title: Submitter Public Key
@@ -330,7 +330,7 @@ components:
       - part_size
       - creation_date
       - submitter_public_key
-      - s3_endpoint_alias
+      - storage_alias
       title: Multi-Part Upload Details
       type: object
     UploadAttemptCreation:
@@ -340,6 +340,11 @@ components:
           description: The ID of the file corresponding to this upload.
           title: File Id
           type: string
+        storage_alias:
+          description: Alias identifying the object storage location to use for this
+            upload
+          title: Storage Alias
+          type: string
         submitter_public_key:
           description: The public key used by the submittter to encrypt the file.
           title: Submitter Public Key
@@ -347,6 +352,7 @@ components:
       required:
       - file_id
       - submitter_public_key
+      - storage_alias
       title: Properties required to create a new upload
       type: object
     UploadAttemptUpdate:
@@ -464,12 +470,12 @@ paths:
       summary: health
       tags:
       - UploadControllerService
-  /uploads/storages/{storage_alias}:
+  /uploads:
     post:
       description: Initiate a new multi-part upload for the given file.
       operationId: createUpload
       parameters:
-      - in: path
+      - in: query
         name: storage_alias
         required: true
         schema:
