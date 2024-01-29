@@ -474,13 +474,6 @@ paths:
     post:
       description: Initiate a new multi-part upload for the given file.
       operationId: createUpload
-      parameters:
-      - in: query
-        name: storage_alias
-        required: true
-        schema:
-          title: Storage Alias
-          type: string
       requestBody:
         content:
           application/json:
