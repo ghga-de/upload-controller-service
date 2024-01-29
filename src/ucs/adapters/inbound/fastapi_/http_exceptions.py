@@ -186,7 +186,7 @@ class HttpUnknownStorageAliasError(HttpCustomExceptionBase):
 
     exception_id = "noSuchStorage"
 
-    def __init__(self, *, storage_alias: str, status_code: int = 404):
+    def __init__(self, *, storage_alias: str, status_code: int = 400):
         """Construct message and initialize exception"""
         super().__init__(
             status_code=status_code,

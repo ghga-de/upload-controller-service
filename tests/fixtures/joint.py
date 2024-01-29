@@ -41,7 +41,7 @@ from hexkit.providers.s3.testutils import S3Fixture, get_s3_fixture
 from pytest_asyncio.plugin import _ScopeName
 
 from tests.fixtures.config import get_config
-from tests.fixtures.example_data import ENDPOINT_ALIASES
+from tests.fixtures.example_data import STORAGE_ALIASES
 from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.config import Config
 from ucs.inject import prepare_core, prepare_event_subscriber, prepare_rest_app
@@ -93,8 +93,8 @@ async def joint_fixture_function(
     )
     object_storages_config = S3ObjectStoragesConfig(
         object_storages={
-            ENDPOINT_ALIASES[0]: node_config,
-            ENDPOINT_ALIASES[1]: second_node_config,
+            STORAGE_ALIASES[0]: node_config,
+            STORAGE_ALIASES[1]: second_node_config,
         }
     )
 

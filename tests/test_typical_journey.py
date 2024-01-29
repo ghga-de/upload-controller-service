@@ -44,7 +44,7 @@ TARGET_BUCKET_ID = "test-staging"
 async def run_until_uploaded(
     joint_fixture: JointFixture,  # noqa: F811
     file_to_register: event_schemas.MetadataSubmissionFiles,
-    endpoint_alias: str,
+    storage_alias: str,
 ):
     """Utility function to process kafka events related to the upload.
 
@@ -82,7 +82,7 @@ async def run_until_uploaded(
         joint_fixture,
         file_id=file_to_register.file_id,
         final_status="cancelled",
-        endpoint_alias=endpoint_alias,
+        storage_alias=storage_alias,
     )
 
     # perform another upload and confirm it:
@@ -93,7 +93,7 @@ async def run_until_uploaded(
             joint_fixture,
             file_id=file_to_register.file_id,
             final_status="uploaded",
-            endpoint_alias=endpoint_alias,
+            storage_alias=storage_alias,
         )
 
     # check for the  events:
@@ -112,7 +112,7 @@ async def perform_upload(
     *,
     file_id: str,
     final_status: Literal["cancelled", "uploaded"],
-    endpoint_alias: str,
+    storage_alias: str,
 ) -> str:
     """Process an upload with a specific status.
 
@@ -124,8 +124,12 @@ async def perform_upload(
     """
     # initiate new upload:
     response = await joint_fixture.rest_client.post(
-        f"/uploads/storages/{endpoint_alias}",
-        json={"file_id": file_id, "submitter_public_key": "test-key"},
+        "/uploads",
+        json={
+            "file_id": file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": storage_alias,
+        },
     )
     assert response.status_code == status.HTTP_200_OK
     upload_details = response.json()
@@ -181,18 +185,18 @@ async def perform_upload(
 async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
     for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
-        endpoint_alias = upload_details.endpoint_alias
+        storage_alias = upload_details.storage_alias
         file_to_register = upload_details.submission_metadata
 
         await run_until_uploaded(
             joint_fixture=joint_fixture,
             file_to_register=file_to_register,
-            endpoint_alias=endpoint_alias,
+            storage_alias=storage_alias,
         )
 
         # publish an event to mark the upload as accepted:
         acceptance_event = event_schemas.FileInternallyRegistered(
-            s3_endpoint_alias=endpoint_alias,
+            s3_endpoint_alias=storage_alias,
             file_id=file_to_register.file_id,
             object_id=upload_details.upload_attempt.object_id,
             bucket_id=TARGET_BUCKET_ID,
@@ -237,18 +241,18 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     validation error.
     """
     for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
-        endpoint_alias = upload_details.endpoint_alias
+        storage_alias = upload_details.storage_alias
         file_to_register = upload_details.submission_metadata
 
         await run_until_uploaded(
             joint_fixture=joint_fixture,
             file_to_register=file_to_register,
-            endpoint_alias=endpoint_alias,
+            storage_alias=storage_alias,
         )
 
         # publish an event to mark the upload as rejected due to validation failure
         failure_event = event_schemas.FileUploadValidationFailure(
-            s3_endpoint_alias=endpoint_alias,
+            s3_endpoint_alias=storage_alias,
             file_id=file_to_register.file_id,
             object_id=upload_details.upload_attempt.object_id,
             bucket_id=TARGET_BUCKET_ID,

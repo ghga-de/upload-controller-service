@@ -123,11 +123,12 @@ async def get_file_metadata(
     },
 )
 async def create_upload(
-    storage_alias: str,
     upload_creation: rest_models.UploadAttemptCreation,
     upload_service: dummies.UploadServiceDummy,
 ):
     """Initiate a new multi-part upload for the given file."""
+    storage_alias = upload_creation.storage_alias
+
     try:
         return await upload_service.initiate_new(
             file_id=upload_creation.file_id,

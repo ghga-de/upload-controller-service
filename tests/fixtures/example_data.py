@@ -27,13 +27,13 @@ from ucs.core import models
 class UploadDetails:
     """Compact container for necessary test data"""
 
-    endpoint_alias: str
+    storage_alias: str
     file_metadata: models.FileMetadata
     upload_attempt: models.UploadAttempt
     submission_metadata: MetadataSubmissionFiles
 
 
-ENDPOINT_ALIASES = ("test", "test2")
+STORAGE_ALIASES = ("test", "test2")
 
 # Example metadata for a single file:
 EXAMPLE_FILE_1 = models.FileMetadata(
@@ -61,14 +61,14 @@ EXAMPLE_UPLOAD_1 = models.UploadAttempt(
     creation_date=now_as_utc(),
     submitter_public_key="test-key",
     completion_date=None,
-    storage_alias=ENDPOINT_ALIASES[0],
+    storage_alias=STORAGE_ALIASES[0],
 )
 EXAMPLE_UPLOAD_2 = EXAMPLE_UPLOAD_1.model_copy(
     update={
         "upload_id": "testUpload002",
         "object_id": "object002",
         "file_id": EXAMPLE_FILE_2.file_id,
-        "storage_alias": ENDPOINT_ALIASES[1],
+        "storage_alias": STORAGE_ALIASES[1],
     }
 )
 
@@ -88,13 +88,13 @@ FILE_TO_REGISTER_2 = MetadataSubmissionFiles(
 
 
 UPLOAD_DETAILS_1 = UploadDetails(
-    endpoint_alias=ENDPOINT_ALIASES[0],
+    storage_alias=STORAGE_ALIASES[0],
     file_metadata=EXAMPLE_FILE_1,
     upload_attempt=EXAMPLE_UPLOAD_1,
     submission_metadata=FILE_TO_REGISTER_1,
 )
 UPLOAD_DETAILS_2 = UploadDetails(
-    endpoint_alias=ENDPOINT_ALIASES[1],
+    storage_alias=STORAGE_ALIASES[1],
     file_metadata=EXAMPLE_FILE_2,
     upload_attempt=EXAMPLE_UPLOAD_2,
     submission_metadata=FILE_TO_REGISTER_2,

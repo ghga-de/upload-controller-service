@@ -63,8 +63,12 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F8
     """Test the create_upload endpoint with an non-existing file id."""
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.post(
-        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
-        json={"file_id": file_id, "submitter_public_key": "test-key"},
+        "/uploads",
+        json={
+            "file_id": file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
+        },
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -99,10 +103,11 @@ async def test_create_upload_other_active(
     await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     response = await joint_fixture.rest_client.post(
-        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
+        "/uploads",
         json={
             "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
             "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
         },
     )
 
@@ -139,10 +144,11 @@ async def test_create_upload_accepted(
 
     # try to create a new upload:
     response = await joint_fixture.rest_client.post(
-        f"/uploads/storages/{UPLOAD_DETAILS_1.endpoint_alias}",
+        "/uploads",
         json={
             "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
             "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
         },
     )
 
@@ -152,6 +158,29 @@ async def test_create_upload_accepted(
     assert response_body["data"]["active_upload"] == json.loads(
         existing_upload.model_dump_json()
     )
+
+
+@pytest.mark.asyncio(scope="module")
+async def test_create_upload_unknown_storage(
+    joint_fixture: JointFixture,  # noqa: F811
+):
+    """Test the create_upload endpoint with storage_alias missing in the request body"""
+    # insert upload metadata into the database:
+    await joint_fixture.daos.file_metadata.insert(UPLOAD_DETAILS_1.file_metadata)
+
+    # try to create a new upload:
+    response = await joint_fixture.rest_client.post(
+        "/uploads",
+        json={
+            "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": "absolutely_fake_alias",
+        },
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response_body = response.json()
+    assert response_body["exception_id"] == "noSuchStorage"
 
 
 @pytest.mark.asyncio(scope="module")
