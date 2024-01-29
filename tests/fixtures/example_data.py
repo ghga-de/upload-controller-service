@@ -15,52 +15,87 @@
 
 """Example data used for testing."""
 
-from ghga_service_commons.utils.utc_dates import now_as_utc
-from hexkit.providers.s3.testutils import TEST_FILE_PATHS, FileObject
+from dataclasses import dataclass
 
-from tests.fixtures.config import DEFAULT_CONFIG
+from ghga_event_schemas.pydantic_ import MetadataSubmissionFiles
+from ghga_service_commons.utils.utc_dates import now_as_utc
+
 from ucs.core import models
 
-# Example metadata on a single file:
-EXAMPLE_FILE = models.FileMetadata(
+
+@dataclass
+class UploadDetails:
+    """Compact container for necessary test data"""
+
+    storage_alias: str
+    file_metadata: models.FileMetadata
+    upload_attempt: models.UploadAttempt
+    submission_metadata: MetadataSubmissionFiles
+
+
+STORAGE_ALIASES = ("test", "test2")
+
+# Example metadata for a single file:
+EXAMPLE_FILE_1 = models.FileMetadata(
     file_id="testFile001",
     file_name="Test File 001",
     decrypted_sha256="fake-checksum",
     decrypted_size=12345678,
     latest_upload_id="testUpload001",
 )
-
-# A list of metadata in case multiple file entries are needed:
-# (The example storage objects and example uploads below only correspond to the first
-# file in the list.)
-EXAMPLE_FILES = [
-    EXAMPLE_FILE,
-    EXAMPLE_FILE.model_copy(
-        update={"file_id": "testFile002", "file_name": "Test File 002"}
-    ),
-]
-
-# An example of a storage file object corresponding to the EXAMPLE_FILE:
-EXAMPLE_STORAGE_OBJECT = FileObject(
-    file_path=TEST_FILE_PATHS[0],
-    bucket_id=DEFAULT_CONFIG.inbox_bucket,
-    object_id="object001",
+EXAMPLE_FILE_2 = EXAMPLE_FILE_1.model_copy(
+    update={
+        "file_id": "testFile002",
+        "file_name": "Test File 002",
+        "latest_upload_id": "testUpload002",
+    }
 )
 
-# An details on an example upload corresponding to the EXAMPLE_FILE:
-EXAMPLE_UPLOAD = models.UploadAttempt(
+# Details on an example upload corresponding to the respective EXAMPLE_FILE:
+EXAMPLE_UPLOAD_1 = models.UploadAttempt(
     upload_id="testUpload001",
-    file_id="testFile001",
+    file_id=EXAMPLE_FILE_1.file_id,
     object_id="object001",
     status=models.UploadStatus.PENDING,
     part_size=1234,
     creation_date=now_as_utc(),
     submitter_public_key="test-key",
     completion_date=None,
+    storage_alias=STORAGE_ALIASES[0],
+)
+EXAMPLE_UPLOAD_2 = EXAMPLE_UPLOAD_1.model_copy(
+    update={
+        "upload_id": "testUpload002",
+        "object_id": "object002",
+        "file_id": EXAMPLE_FILE_2.file_id,
+        "storage_alias": STORAGE_ALIASES[1],
+    }
 )
 
-# Multiple example uploads corresponding to EXAMPLE_FILE:
-EXAMPLE_UPLOADS = (
-    EXAMPLE_UPLOAD.model_copy(update={"status": models.UploadStatus.CANCELLED}),
-    EXAMPLE_UPLOAD.model_copy(update={"upload_id": "testUpload002"}),
+# Metadata for file submission
+FILE_TO_REGISTER_1 = MetadataSubmissionFiles(
+    file_id=EXAMPLE_FILE_1.file_id,
+    file_name=EXAMPLE_FILE_1.file_name,
+    decrypted_size=EXAMPLE_FILE_1.decrypted_size,
+    decrypted_sha256=EXAMPLE_FILE_1.decrypted_sha256,
+)
+FILE_TO_REGISTER_2 = MetadataSubmissionFiles(
+    file_id=EXAMPLE_FILE_2.file_id,
+    file_name=EXAMPLE_FILE_2.file_name,
+    decrypted_size=EXAMPLE_FILE_2.decrypted_size,
+    decrypted_sha256=EXAMPLE_FILE_2.decrypted_sha256,
+)
+
+
+UPLOAD_DETAILS_1 = UploadDetails(
+    storage_alias=STORAGE_ALIASES[0],
+    file_metadata=EXAMPLE_FILE_1,
+    upload_attempt=EXAMPLE_UPLOAD_1,
+    submission_metadata=FILE_TO_REGISTER_1,
+)
+UPLOAD_DETAILS_2 = UploadDetails(
+    storage_alias=STORAGE_ALIASES[1],
+    file_metadata=EXAMPLE_FILE_2,
+    upload_attempt=EXAMPLE_UPLOAD_2,
+    submission_metadata=FILE_TO_REGISTER_2,
 )

@@ -24,7 +24,7 @@ from ucs.core import models
 
 
 class HttpNoFileAccessError(HttpCustomExceptionBase):
-    """Thrown when the client has not sufficient priviledges to access the specified
+    """Thrown when the client has not sufficient privileges to access the specified
     file.
     """
 
@@ -152,7 +152,7 @@ class HttpUploadNotPendingError(HttpCustomExceptionBase):
 
 
 class HttpUploadStatusChangeError(HttpCustomExceptionBase):
-    """Thrown when a problem occured when trying to change the upload status."""
+    """Thrown when a problem occurred when trying to change the upload status."""
 
     exception_id = "uploadStatusChange"
 
@@ -179,3 +179,21 @@ class HttpUploadStatusChangeError(HttpCustomExceptionBase):
             ),
             data={"upload_id": upload_id, "target_status": target_status},
         )
+
+
+class HttpUnknownStorageAliasError(HttpCustomExceptionBase):
+    """Thrown when an upload to a storage node that does not exist was requested."""
+
+    exception_id = "noSuchStorage"
+
+    def __init__(self, *, storage_alias: str, status_code: int = 400):
+        """Construct message and initialize exception"""
+        super().__init__(
+            status_code=status_code,
+            description=(f"Storage node for alias {storage_alias} does not exist."),
+            data={"storage_alias": storage_alias},
+        )
+
+
+class HttpFileNotFoundUploadError(HttpFileNotFoundError):
+    """Needed to avoid key error in FastAPIs openapi generation."""

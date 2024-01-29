@@ -27,7 +27,7 @@ UPDATABLE_METADATA_FIELDS = {"status"}
 class FileMetadataServicePort(ABC):
     """Interface of a service handling file metata."""
 
-    class FileUnkownError(RuntimeError):
+    class FileUnknownError(RuntimeError):
         """Thrown when a file with the given ID is not known."""
 
         def __init__(self, *, file_id: str):

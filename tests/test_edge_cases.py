@@ -23,7 +23,7 @@ import json
 import pytest
 from fastapi import status
 
-from tests.fixtures.example_data import EXAMPLE_FILE, EXAMPLE_UPLOADS
+from tests.fixtures.example_data import UPLOAD_DETAILS_1
 from tests.fixtures.module_scope_fixtures import (  # noqa: F401
     JointFixture,
     joint_fixture,
@@ -31,6 +31,7 @@ from tests.fixtures.module_scope_fixtures import (  # noqa: F401
     mongodb_fixture,
     reset_state,
     s3_fixture,
+    second_s3_fixture,
 )
 from ucs.core import models
 
@@ -62,7 +63,12 @@ async def test_create_upload_not_found(joint_fixture: JointFixture):  # noqa: F8
     """Test the create_upload endpoint with an non-existing file id."""
     file_id = "myNonExistingFile001"
     response = await joint_fixture.rest_client.post(
-        "/uploads", json={"file_id": file_id, "submitter_public_key": "test-key"}
+        "/uploads",
+        json={
+            "file_id": file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
+        },
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -88,15 +94,21 @@ async def test_create_upload_other_active(
     """Test the create_upload endpoint when there is another active update already
     existing.
     """
-    existing_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": existing_status})
+    existing_upload = UPLOAD_DETAILS_1.upload_attempt.model_copy(
+        update={"status": existing_status}
+    )
 
     # insert a pending upload into the database:
-    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.file_metadata.insert(UPLOAD_DETAILS_1.file_metadata)
     await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     response = await joint_fixture.rest_client.post(
         "/uploads",
-        json={"file_id": EXAMPLE_FILE.file_id, "submitter_public_key": "test-key"},
+        json={
+            "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
+        },
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -122,16 +134,22 @@ async def test_create_upload_accepted(
     """Test the create_upload endpoint when another update has already been accepted
     or is currently being evaluated.
     """
-    existing_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": existing_status})
+    existing_upload = UPLOAD_DETAILS_1.upload_attempt.model_copy(
+        update={"status": existing_status}
+    )
 
     # insert the existing upload into the database:
-    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.file_metadata.insert(UPLOAD_DETAILS_1.file_metadata)
     await joint_fixture.daos.upload_attempts.insert(existing_upload)
 
     # try to create a new upload:
     response = await joint_fixture.rest_client.post(
         "/uploads",
-        json={"file_id": EXAMPLE_FILE.file_id, "submitter_public_key": "test-key"},
+        json={
+            "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": UPLOAD_DETAILS_1.storage_alias,
+        },
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -140,6 +158,29 @@ async def test_create_upload_accepted(
     assert response_body["data"]["active_upload"] == json.loads(
         existing_upload.model_dump_json()
     )
+
+
+@pytest.mark.asyncio(scope="module")
+async def test_create_upload_unknown_storage(
+    joint_fixture: JointFixture,  # noqa: F811
+):
+    """Test the create_upload endpoint with storage_alias missing in the request body"""
+    # insert upload metadata into the database:
+    await joint_fixture.daos.file_metadata.insert(UPLOAD_DETAILS_1.file_metadata)
+
+    # try to create a new upload:
+    response = await joint_fixture.rest_client.post(
+        "/uploads",
+        json={
+            "file_id": UPLOAD_DETAILS_1.file_metadata.file_id,
+            "submitter_public_key": "test-key",
+            "storage_alias": "absolutely_fake_alias",
+        },
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    response_body = response.json()
+    assert response_body["exception_id"] == "noSuchStorage"
 
 
 @pytest.mark.asyncio(scope="module")
@@ -206,10 +247,12 @@ async def test_update_upload_status_non_pending(
     joint_fixture: JointFixture,  # noqa: F811
 ):
     """Test the update_upload_status endpoint on non pending upload."""
-    target_upload = EXAMPLE_UPLOADS[0].model_copy(update={"status": old_status})
+    target_upload = UPLOAD_DETAILS_1.upload_attempt.model_copy(
+        update={"status": old_status}
+    )
 
     # insert a pending and non_pending upload into the database:
-    await joint_fixture.daos.file_metadata.insert(EXAMPLE_FILE)
+    await joint_fixture.daos.file_metadata.insert(UPLOAD_DETAILS_1.file_metadata)
     await joint_fixture.daos.upload_attempts.insert(target_upload)
 
     for new_status in [models.UploadStatus.CANCELLED, models.UploadStatus.UPLOADED]:

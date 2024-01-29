@@ -16,28 +16,26 @@
 """Config Parameter Modeling and Parsing"""
 
 from ghga_service_commons.api import ApiConfigBase
+from ghga_service_commons.utils.multinode_storage import S3ObjectStoragesConfig
 from hexkit.config import config_from_yaml
 from hexkit.log import LoggingConfig
 from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
-from hexkit.providers.s3 import S3Config
 
 from ucs.adapters.inbound.event_sub import EventSubTranslatorConfig
 from ucs.adapters.outbound.event_pub import EventPubTanslatorConfig
-from ucs.core.upload_service import UploadServiceConfig
 
 
 @config_from_yaml(prefix="ucs")
 class Config(  # pylint: disable=too-many-ancestors
     ApiConfigBase,
     MongoDbConfig,
-    S3Config,
+    S3ObjectStoragesConfig,
     KafkaConfig,
     LoggingConfig,
-    UploadServiceConfig,
     EventSubTranslatorConfig,
     EventPubTanslatorConfig,
 ):
     """Config parameters and their defaults."""
 
-    service_name: str = "upload_controller_service"
+    service_name: str = "ucs"

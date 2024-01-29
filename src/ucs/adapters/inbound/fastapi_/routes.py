@@ -44,6 +44,13 @@ ERROR_RESPONSES = {
         ),
         "model": http_exceptions.HttpUploadNotFoundError.get_body_model(),
     },
+    "noSuchStorage": {
+        "description": {
+            "Exceptions by ID:"
+            + "\n- noSuchStorage: The storage node for the given alias does not exist."
+        },
+        "model": http_exceptions.HttpUnknownStorageAliasError.get_body_model(),
+    },
     "fileNotRegistered": {
         "description": (
             "Exceptions by ID:"
@@ -84,12 +91,8 @@ async def get_file_metadata(
     """Get file metadata including the current upload attempt."""
     try:
         return await file_metadata_service.get_by_id(file_id)
-    except FileMetadataServicePort.FileUnkownError as error:
+    except FileMetadataServicePort.FileUnknownError as error:
         raise http_exceptions.HttpFileNotFoundError(file_id=file_id) from error
-
-
-class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
-    """Needed to avoid key error in FastAPIs openapi generation."""
 
 
 @router.post(
@@ -112,29 +115,37 @@ class HttpFileNotFoundUploadError(http_exceptions.HttpFileNotFoundError):
             ),
             "model": Union[
                 http_exceptions.HttpExistingActiveUploadError.get_body_model(),
-                HttpFileNotFoundUploadError.get_body_model(),
+                http_exceptions.HttpFileNotFoundUploadError.get_body_model(),
             ],
         },
         status.HTTP_403_FORBIDDEN: ERROR_RESPONSES["noFileAccess"],
+        status.HTTP_404_NOT_FOUND: ERROR_RESPONSES["noSuchStorage"],
     },
 )
 async def create_upload(
     upload_creation: rest_models.UploadAttemptCreation,
     upload_service: dummies.UploadServiceDummy,
 ):
-    """Initiate a new mutli-part upload for the given file."""
+    """Initiate a new multi-part upload for the given file."""
+    storage_alias = upload_creation.storage_alias
+
     try:
         return await upload_service.initiate_new(
             file_id=upload_creation.file_id,
             submitter_public_key=upload_creation.submitter_public_key,
+            storage_alias=storage_alias,
         )
     except UploadServicePort.ExistingActiveUploadError as error:
         raise http_exceptions.HttpExistingActiveUploadError(
             file_id=upload_creation.file_id,
             active_upload=error.active_upload,
         ) from error
-    except FileMetadataServicePort.FileUnkownError as error:
-        raise HttpFileNotFoundUploadError(
+    except UploadServicePort.UnknownStorageAliasError as error:
+        raise http_exceptions.HttpUnknownStorageAliasError(
+            storage_alias=storage_alias
+        ) from error
+    except FileMetadataServicePort.FileUnknownError as error:
+        raise http_exceptions.HttpFileNotFoundUploadError(
             file_id=upload_creation.file_id, status_code=400
         ) from error
 

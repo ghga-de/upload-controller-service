@@ -17,20 +17,19 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Callable, Optional
+from typing import Optional
 
 from fastapi import FastAPI
 from ghga_service_commons.utils.context import asyncnullcontext
+from ghga_service_commons.utils.multinode_storage import S3ObjectStorages
 from hexkit.providers.akafka import KafkaEventPublisher, KafkaEventSubscriber
 from hexkit.providers.mongodb import MongoDbDaoFactory
-from typing_extensions import TypeAlias
 
 from ucs.adapters.inbound.event_sub import EventSubTranslator
 from ucs.adapters.inbound.fastapi_ import dummies
 from ucs.adapters.inbound.fastapi_.configure import get_configured_app
 from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.adapters.outbound.event_pub import EventPubTranslator
-from ucs.adapters.outbound.s3 import S3ObjectStorage
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
 from ucs.core.upload_service import UploadService
@@ -40,10 +39,11 @@ from ucs.ports.inbound.upload_service import UploadServicePort
 
 @asynccontextmanager
 async def prepare_core(
-    *, config: Config
+    *,
+    config: Config,
 ) -> AsyncGenerator[tuple[UploadServicePort, FileMetadataServicePort], None]:
     """Constructs and initializes all core components and their outbound dependencies."""
-    object_storage = S3ObjectStorage(config=config)
+    object_storages = S3ObjectStorages(config=config)
     dao_factory = MongoDbDaoFactory(config=config)
     dao_collection = await DaoCollectionTranslator.construct(provider=dao_factory)
 
@@ -53,15 +53,11 @@ async def prepare_core(
         )
         upload_service = UploadService(
             daos=dao_collection,
-            object_storage=object_storage,
+            object_storages=object_storages,
             event_publisher=event_pub_translator,
-            config=config,
         )
         file_metadata_service = FileMetadataServive(daos=dao_collection)
         yield upload_service, file_metadata_service
-
-
-OutboxCleaner: TypeAlias = Callable[[], AsyncGenerator[None, None]]
 
 
 def prepare_core_with_override(

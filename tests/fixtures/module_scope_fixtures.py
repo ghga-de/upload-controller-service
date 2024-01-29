@@ -38,4 +38,5 @@ def reset_state(joint_fixture: JointFixture):
 mongodb_fixture = get_mongodb_fixture("module")
 kafka_fixture = get_kafka_fixture("module")
 s3_fixture = get_s3_fixture("module")
+second_s3_fixture = get_s3_fixture("module")
 joint_fixture = get_joint_fixture("module")

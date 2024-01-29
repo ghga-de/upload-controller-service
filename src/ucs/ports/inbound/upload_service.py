@@ -24,7 +24,7 @@ from ucs.ports.inbound.file_service import FileMetadataServicePort
 class UploadServicePort(ABC):
     """Interface of a service handling uploads to the Inbox storage."""
 
-    class FileUnkownError(FileMetadataServicePort.FileUnkownError):
+    class FileUnknownError(FileMetadataServicePort.FileUnknownError):
         """A shortcut to the corresponding error from the FileMetadataServicePort."""
 
     class UnknownUploadError(RuntimeError):
@@ -133,9 +133,19 @@ class UploadServicePort(ABC):
             message = f"The file with ID {file_id} as no upload."
             super().__init__(message)
 
+    class UnknownStorageAliasError(RuntimeError):
+        """Thrown when the requested storage location is not configured.
+        The given parameter given should be a configured alias, but is not.
+        """
+
+        def __init__(self, *, storage_alias: str):
+            self.storage_alias = storage_alias
+            message = f"No storage node exists for alias {storage_alias}."
+            super().__init__(message)
+
     @abstractmethod
     async def initiate_new(
-        self, *, file_id: str, submitter_public_key: str
+        self, *, file_id: str, submitter_public_key: str, storage_alias: str
     ) -> models.UploadAttempt:
         """Initiates a new multi-part upload for the file with the given ID."""
         ...

@@ -21,6 +21,7 @@ __all__ = [
     "mongodb_fixture",
     "kafka_fixture",
     "s3_fixture",
+    "second_s3_fixture",
 ]
 
 from collections.abc import AsyncGenerator
@@ -29,6 +30,10 @@ from dataclasses import dataclass
 import httpx
 import pytest_asyncio
 from ghga_service_commons.api.testing import AsyncTestClient
+from ghga_service_commons.utils.multinode_storage import (
+    S3ObjectStorageNodeConfig,
+    S3ObjectStoragesConfig,
+)
 from hexkit.providers.akafka import KafkaEventSubscriber
 from hexkit.providers.akafka.testutils import KafkaFixture, get_kafka_fixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture, get_mongodb_fixture
@@ -36,6 +41,7 @@ from hexkit.providers.s3.testutils import S3Fixture, get_s3_fixture
 from pytest_asyncio.plugin import _ScopeName
 
 from tests.fixtures.config import get_config
+from tests.fixtures.example_data import STORAGE_ALIASES
 from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.config import Config
 from ucs.inject import prepare_core, prepare_event_subscriber, prepare_rest_app
@@ -57,27 +63,49 @@ class JointFixture:
     mongodb: MongoDbFixture
     kafka: KafkaFixture
     s3: S3Fixture
+    second_s3: S3Fixture
 
     async def reset_state(self):
         """Completely reset fixture states"""
         await self.s3.empty_buckets()
+        await self.second_s3.empty_buckets()
         self.mongodb.empty_collections()
         self.kafka.clear_topics()
 
 
 async def joint_fixture_function(
-    mongodb_fixture: MongoDbFixture, kafka_fixture: KafkaFixture, s3_fixture: S3Fixture
+    mongodb_fixture: MongoDbFixture,
+    kafka_fixture: KafkaFixture,
+    s3_fixture: S3Fixture,
+    second_s3_fixture: S3Fixture,
 ) -> AsyncGenerator[JointFixture, None]:
     """A fixture that embeds all other fixtures for API-level integration testing.
 
     **Do not call directly** Instead, use get_joint_fixture().
     """
+    bucket_id = "test-inbox"
+
+    node_config = S3ObjectStorageNodeConfig(
+        bucket=bucket_id, credentials=s3_fixture.config
+    )
+    second_node_config = S3ObjectStorageNodeConfig(
+        bucket=bucket_id, credentials=second_s3_fixture.config
+    )
+    object_storages_config = S3ObjectStoragesConfig(
+        object_storages={
+            STORAGE_ALIASES[0]: node_config,
+            STORAGE_ALIASES[1]: second_node_config,
+        }
+    )
+
     # merge configs from different sources with the default one:
     config = get_config(
-        sources=[mongodb_fixture.config, kafka_fixture.config, s3_fixture.config]
+        sources=[mongodb_fixture.config, kafka_fixture.config, object_storages_config]
     )
 
     daos = await DaoCollectionTranslator.construct(provider=mongodb_fixture.dao_factory)
+    await s3_fixture.populate_buckets([bucket_id])
+    await second_s3_fixture.populate_buckets([bucket_id])
 
     # create a DI container instance:translators
     async with prepare_core(config=config) as (upload_service, file_metadata_service):
@@ -98,8 +126,9 @@ async def joint_fixture_function(
                     rest_client=rest_client,
                     event_subscriber=event_subscriber,
                     mongodb=mongodb_fixture,
-                    s3=s3_fixture,
                     kafka=kafka_fixture,
+                    s3=s3_fixture,
+                    second_s3=second_s3_fixture,
                 )
 
 
@@ -112,3 +141,4 @@ joint_fixture = get_joint_fixture()
 mongodb_fixture = get_mongodb_fixture()
 kafka_fixture = get_kafka_fixture()
 s3_fixture = get_s3_fixture()
+second_s3_fixture = get_s3_fixture()
