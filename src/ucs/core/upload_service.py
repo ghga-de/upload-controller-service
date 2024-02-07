@@ -209,7 +209,7 @@ class UploadService(UploadServicePort):
             )
             raise db_storage_not_synchronized from error
         finally:
-            # mark the upload as either accepted or rejected in the database:
+            # mark the upload as either accepted, rejected or failed in the database:
             updated_upload = latest_upload.model_copy(update={"status": final_status})
             await self._daos.upload_attempts.update(updated_upload)
 
