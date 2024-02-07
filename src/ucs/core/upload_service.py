@@ -189,6 +189,8 @@ class UploadService(UploadServicePort):
             # This means the database and object storage are out of sync
             # In this case, set the upload status to failed as there's nothing else this
             # service can do about the situation
+            final_status = models.UploadStatus.FAILED
+
             db_storage_not_synchronized = self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"Trying to clear the upload with ID {latest_upload.upload_id}"
@@ -206,10 +208,10 @@ class UploadService(UploadServicePort):
                 },
             )
             raise db_storage_not_synchronized from error
-
-        # mark the upload as either accepted or rejected in the database:
-        updated_upload = latest_upload.model_copy(update={"status": final_status})
-        await self._daos.upload_attempts.update(updated_upload)
+        finally:
+            # mark the upload as either accepted or rejected in the database:
+            updated_upload = latest_upload.model_copy(update={"status": final_status})
+            await self._daos.upload_attempts.update(updated_upload)
 
         log.info(
             "Successfully set upload status for file '%s' to '%s'.",
