@@ -32,6 +32,7 @@ from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.adapters.outbound.event_pub import EventPubTranslator
 from ucs.config import Config
 from ucs.core.file_service import FileMetadataServive
+from ucs.core.storage_inspector import InboxInspector
 from ucs.core.upload_service import UploadService
 from ucs.ports.inbound.file_service import FileMetadataServicePort
 from ucs.ports.inbound.upload_service import UploadServicePort
@@ -121,3 +122,15 @@ async def prepare_event_subscriber(
             config=config, translator=event_sub_translator
         ) as kafka_event_subscriber:
             yield kafka_event_subscriber
+
+
+@asynccontextmanager
+async def prepare_storage_inspector(*, config: Config):
+    """Alternative to prepare_core for storage inspection CLI command without Kafka."""
+    object_storages = S3ObjectStorages(config=config)
+    dao_factory = MongoDbDaoFactory(config=config)
+    dao_collection = await DaoCollectionTranslator.construct(provider=dao_factory)
+
+    yield InboxInspector(
+        config=config, daos=dao_collection, object_storages=object_storages
+    )
