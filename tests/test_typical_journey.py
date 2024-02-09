@@ -20,6 +20,7 @@ service (incl. REST and event-driven APIs).
 """
 
 import json
+import logging
 from typing import Literal
 
 import pytest
@@ -37,6 +38,7 @@ from tests.fixtures.joint import (  # noqa: F401
     s3_fixture,
     second_s3_fixture,
 )
+from ucs.core.models import UploadStatus
 
 TARGET_BUCKET_ID = "test-staging"
 
@@ -281,3 +283,63 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
         response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "rejected"
+
+
+@pytest.mark.asyncio
+async def test_inbox_inspector(
+    caplog,
+    joint_fixture: JointFixture,  # noqa: F811
+):
+    """Sanity check for inbox inspection functionality."""
+    # get configured bucket_id. To simplify things, it's the same for both storage aliases
+    bucket_id = next(iter(joint_fixture.config.object_storages.values())).bucket
+
+    for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
+        storage_alias = upload_details.storage_alias
+        file_to_register = upload_details.submission_metadata
+
+        await run_until_uploaded(
+            joint_fixture=joint_fixture,
+            file_to_register=file_to_register,
+            storage_alias=storage_alias,
+        )
+
+    # this should remove the associated file
+    failure_event = event_schemas.FileUploadValidationFailure(
+        s3_endpoint_alias=UPLOAD_DETAILS_1.storage_alias,
+        file_id=UPLOAD_DETAILS_1.submission_metadata.file_id,
+        object_id=UPLOAD_DETAILS_1.upload_attempt.object_id,
+        bucket_id=bucket_id,
+        upload_date=now_as_utc().isoformat(),
+        reason="Sorry, but this has to fail.",
+    )
+
+    await joint_fixture.kafka.publish_event(
+        payload=json.loads(failure_event.model_dump_json()),
+        type_=joint_fixture.config.upload_rejected_event_type,
+        topic=joint_fixture.config.upload_rejected_event_topic,
+    )
+
+    # Manipulate upload attempt to simulate stale file in need of removal
+    metadata = await joint_fixture.daos.file_metadata.get_by_id(
+        id_=UPLOAD_DETAILS_2.file_metadata.file_id
+    )
+
+    current_upload_id = metadata.latest_upload_id
+    assert current_upload_id
+
+    attempt = await joint_fixture.daos.upload_attempts.get_by_id(id_=current_upload_id)
+    attempt.status = UploadStatus.REJECTED
+    await joint_fixture.daos.upload_attempts.upsert(attempt)
+
+    caplog.clear()
+    caplog.set_level(level=logging.INFO, logger="ucs.core.storage_inspector")
+
+    await joint_fixture.inbox_inspector.check_buckets()
+    expected_message = (
+        f"Stale object '{attempt.object_id}' found for file '{attempt.file_id}' in bucket"
+        + f" '{bucket_id}' of storage '{attempt.storage_alias}'."
+    )
+
+    assert len(caplog.messages) == 1
+    assert expected_message in caplog.messages
