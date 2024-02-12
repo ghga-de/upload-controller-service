@@ -27,16 +27,16 @@ from ucs.core import models
 from ucs.ports.outbound.event_pub import EventPublisherPort
 
 
-class EventPubTanslatorConfig(BaseSettings):
+class EventPubTranslatorConfig(BaseSettings):
     """Config for publishing file upload-related events."""
 
     file_deleted_event_topic: str = Field(
-        ...,
+        default=...,
         description="Name of the topic used for events indicating that a file has been deleted.",
         examples=["file_downloads"],
     )
     file_deleted_event_type: str = Field(
-        ...,
+        default=...,
         description="The type used for events indicating that a file has been deleted.",
         examples=["file_deleted"],
     )
@@ -60,7 +60,7 @@ class EventPubTranslator(EventPublisherPort):
     """
 
     def __init__(
-        self, *, config: EventPubTanslatorConfig, provider: EventPublisherProtocol
+        self, *, config: EventPubTranslatorConfig, provider: EventPublisherProtocol
     ):
         """Initialize with a suitable protocol provider."""
         self._config = config

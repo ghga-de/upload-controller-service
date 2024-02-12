@@ -48,12 +48,12 @@ class EventSubTranslatorConfig(BaseSettings):
     )
 
     files_to_delete_topic: str = Field(
-        ...,
+        default=...,
         description="The name of the topic for events informing about files to be deleted.",
         examples=["file_deletions"],
     )
     files_to_delete_type: str = Field(
-        ...,
+        default=...,
         description="The type used for events informing about a file to be deleted.",
         examples=["file_deletion_requested"],
     )
