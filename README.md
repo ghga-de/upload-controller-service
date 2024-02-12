@@ -49,6 +49,26 @@ ucs --help
 ### Parameters
 
 The service requires the following configuration parameters:
+- **`file_deleted_event_topic`** *(string)*: Name of the topic used for events indicating that a file has been deleted.
+
+
+  Examples:
+
+  ```json
+  "file_downloads"
+  ```
+
+
+- **`file_deleted_event_type`** *(string)*: The type used for events indicating that a file has been deleted.
+
+
+  Examples:
+
+  ```json
+  "file_deleted"
+  ```
+
+
 - **`upload_received_event_topic`** *(string)*: Name of the topic to publish events that inform about new file uploads.
 
 
@@ -86,6 +106,26 @@ The service requires the following configuration parameters:
 
   ```json
   "file_metadata_upserts"
+  ```
+
+
+- **`files_to_delete_topic`** *(string)*: The name of the topic for events informing about files to be deleted.
+
+
+  Examples:
+
+  ```json
+  "file_deletions"
+  ```
+
+
+- **`files_to_delete_type`** *(string)*: The type used for events informing about a file to be deleted.
+
+
+  Examples:
+
+  ```json
+  "file_deletion_requested"
   ```
 
 
