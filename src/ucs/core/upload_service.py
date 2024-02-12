@@ -531,12 +531,22 @@ class UploadService(UploadServicePort):
                     unknown_storage_alias, extra={"storage_alias": storage_alias}
                 )
                 raise unknown_storage_alias from error
-            with suppress(object_storage.ObjectNotFoundError):
-                # could probably be simplified to only delete for the latest Upload ID
-                # but as we currently are not sure if all things are deleted correctly
-                # when they should be, let's be thorough for now
+
+            # could probably be simplified to only delete for the latest Upload ID
+            # but as we currently are not sure if all things are deleted correctly
+            # when they should be, let's be thorough for now
+            if await object_storage.does_object_exist(
+                bucket_id=bucket_id, object_id=attempt.object_id
+            ):
                 await object_storage.delete_object(
                     bucket_id=bucket_id, object_id=attempt.object_id
+                )
+            # no way to check, just run and ignore exception
+            with suppress(object_storage.MultiPartUploadNotFoundError):
+                await object_storage.abort_multipart_upload(
+                    bucket_id=bucket_id,
+                    object_id=attempt.object_id,
+                    upload_id=attempt.upload_id,
                 )
             await self._daos.upload_attempts.delete(id_=attempt.upload_id)
 

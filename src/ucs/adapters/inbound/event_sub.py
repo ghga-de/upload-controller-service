@@ -100,11 +100,13 @@ class EventSubTranslator(EventSubscriberProtocol):
     ):
         """Initialize with config parameters and core dependencies."""
         self.topics_of_interest = [
+            config.files_to_delete_topic,
             config.file_metadata_event_topic,
             config.upload_accepted_event_topic,
             config.upload_rejected_event_topic,
         ]
         self.types_of_interest = [
+            config.files_to_delete_type,
             config.file_metadata_event_type,
             config.upload_accepted_event_type,
             config.upload_rejected_event_type,

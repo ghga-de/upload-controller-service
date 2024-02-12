@@ -96,7 +96,7 @@ class EventPubTranslator(EventPublisherPort):
         )
 
     async def publish_deletion_successful(self, *, file_id: str) -> None:
-        """TODO"""
+        """Publish event informing that deletion of data and metadata for the given file ID has succeeded."""
         event_payload = event_schemas.FileDeletionSuccess(file_id=file_id)
 
         await self._provider.publish(

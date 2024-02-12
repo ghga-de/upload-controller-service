@@ -70,6 +70,7 @@ class JointFixture:
     kafka: KafkaFixture
     s3: S3Fixture
     second_s3: S3Fixture
+    bucket_id: str
     inbox_inspector: StorageInspectorPort
 
     async def reset_state(self):
@@ -139,6 +140,7 @@ async def joint_fixture_function(
                     kafka=kafka_fixture,
                     s3=s3_fixture,
                     second_s3=second_s3_fixture,
+                    bucket_id=bucket_id,
                     inbox_inspector=inbox_inspector,
                 )
 
