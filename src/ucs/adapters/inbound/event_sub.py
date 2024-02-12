@@ -47,6 +47,17 @@ class EventSubTranslatorConfig(BaseSettings):
         examples=["file_metadata_upserts"],
     )
 
+    files_to_delete_topic: str = Field(
+        ...,
+        description="The name of the topic for events informing about files to be deleted.",
+        examples=["file_deletions"],
+    )
+    files_to_delete_type: str = Field(
+        ...,
+        description="The type used for events informing about a file to be deleted.",
+        examples=["file_deletion_requested"],
+    )
+
     upload_accepted_event_topic: str = Field(
         default=...,
         description=(
@@ -137,6 +148,14 @@ class EventSubTranslator(EventSubscriberProtocol):
 
         await self._upload_service.reject_latest(file_id=validated_payload.file_id)
 
+    async def _consume_deletion_requested(self, *, payload: JsonObject) -> None:
+        """Consume file deletion event"""
+        validated_payload = get_validated_payload(
+            payload=payload, schema=event_schemas.FileDeletionRequested
+        )
+
+        await self._upload_service.delete_requested(file_id=validated_payload.file_id)
+
     async def _consume_validated(
         self,
         *,
@@ -151,5 +170,7 @@ class EventSubTranslator(EventSubscriberProtocol):
             await self._consume_upload_accepted(payload=payload)
         elif type_ == self._config.upload_rejected_event_type:
             await self._consume_validation_failure(payload=payload)
+        elif type_ == self._config.files_to_delete_type:
+            await self._consume_deletion_requested(payload=payload)
         else:
             raise RuntimeError(f"Unexpected event of type: {type_}")

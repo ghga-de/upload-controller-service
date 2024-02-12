@@ -36,3 +36,7 @@ class EventPublisherPort(Protocol):
     ) -> None:
         """Publish event informing that a new upload was received."""
         ...
+
+    async def publish_deletion_successful(self, *, file_id: str) -> None:
+        """TODO"""
+        ...

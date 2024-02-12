@@ -18,6 +18,7 @@
 
 import logging
 import uuid
+from contextlib import suppress
 from typing import Callable
 
 from ghga_service_commons.utils.multinode_storage import ObjectStorages
@@ -504,3 +505,39 @@ class UploadService(UploadServicePort):
         await self._clear_latest_with_final_status(
             file_id=file_id, final_status=models.UploadStatus.REJECTED
         )
+
+    async def delete_requested(self, *, file_id: str) -> None:
+        """
+        Cancel the current upload attempt for the given file and remove all associated
+        data related to upload attempts and file metadata.
+        """
+        with suppress(ResourceNotFoundError):
+            await self._daos.file_metadata.delete(id_=file_id)
+
+        # delete upload attempt metadata and associated objects, if present
+        async for attempt in self._daos.upload_attempts.find_all(
+            mapping={"file_id": file_id}
+        ):
+            try:
+                storage_alias = attempt.storage_alias
+                bucket_id, object_storage = self._object_storages.for_alias(
+                    endpoint_alias=storage_alias
+                )
+            except KeyError as error:
+                unknown_storage_alias = self.UnknownStorageAliasError(
+                    storage_alias=storage_alias
+                )
+                log.critical(
+                    unknown_storage_alias, extra={"storage_alias": storage_alias}
+                )
+                raise unknown_storage_alias from error
+            with suppress(object_storage.ObjectNotFoundError):
+                # could probably be simplified to only delete for the latest Upload ID
+                # but as we currently are not sure if all things are deleted correctly
+                # when they should be, let's be thorough for now
+                await object_storage.delete_object(
+                    bucket_id=bucket_id, object_id=attempt.object_id
+                )
+            await self._daos.upload_attempts.delete(id_=attempt.upload_id)
+
+        await self._event_publisher.publish_deletion_successful(file_id=file_id)
