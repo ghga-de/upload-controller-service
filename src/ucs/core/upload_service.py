@@ -506,7 +506,7 @@ class UploadService(UploadServicePort):
             file_id=file_id, final_status=models.UploadStatus.REJECTED
         )
 
-    async def delete_requested(self, *, file_id: str) -> None:
+    async def deletion_requested(self, *, file_id: str) -> None:
         """
         Cancel the current upload attempt for the given file and remove all associated
         data related to upload attempts and file metadata.

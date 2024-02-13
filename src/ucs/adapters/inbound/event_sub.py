@@ -156,7 +156,7 @@ class EventSubTranslator(EventSubscriberProtocol):
             payload=payload, schema=event_schemas.FileDeletionRequested
         )
 
-        await self._upload_service.delete_requested(file_id=validated_payload.file_id)
+        await self._upload_service.deletion_requested(file_id=validated_payload.file_id)
 
     async def _consume_validated(
         self,
