@@ -18,6 +18,7 @@
 
 import logging
 import uuid
+from contextlib import suppress
 from typing import Callable
 
 from ghga_service_commons.utils.multinode_storage import ObjectStorages
@@ -189,6 +190,8 @@ class UploadService(UploadServicePort):
             # This means the database and object storage are out of sync
             # In this case, set the upload status to failed as there's nothing else this
             # service can do about the situation
+            final_status = models.UploadStatus.FAILED
+
             db_storage_not_synchronized = self.StorageAndDatabaseOutOfSyncError(
                 problem=(
                     f"Trying to clear the upload with ID {latest_upload.upload_id}"
@@ -206,10 +209,10 @@ class UploadService(UploadServicePort):
                 },
             )
             raise db_storage_not_synchronized from error
-
-        # mark the upload as either accepted or rejected in the database:
-        updated_upload = latest_upload.model_copy(update={"status": final_status})
-        await self._daos.upload_attempts.update(updated_upload)
+        finally:
+            # mark the upload as either accepted, rejected or failed in the database:
+            updated_upload = latest_upload.model_copy(update={"status": final_status})
+            await self._daos.upload_attempts.update(updated_upload)
 
         log.info(
             "Successfully set upload status for file '%s' to '%s'.",
@@ -502,3 +505,49 @@ class UploadService(UploadServicePort):
         await self._clear_latest_with_final_status(
             file_id=file_id, final_status=models.UploadStatus.REJECTED
         )
+
+    async def deletion_requested(self, *, file_id: str) -> None:
+        """
+        Cancel the current upload attempt for the given file and remove all associated
+        data related to upload attempts and file metadata.
+        """
+        with suppress(ResourceNotFoundError):
+            await self._daos.file_metadata.delete(id_=file_id)
+
+        # delete upload attempt metadata and associated objects, if present
+        async for attempt in self._daos.upload_attempts.find_all(
+            mapping={"file_id": file_id}
+        ):
+            try:
+                storage_alias = attempt.storage_alias
+                bucket_id, object_storage = self._object_storages.for_alias(
+                    endpoint_alias=storage_alias
+                )
+            except KeyError as error:
+                unknown_storage_alias = self.UnknownStorageAliasError(
+                    storage_alias=storage_alias
+                )
+                log.critical(
+                    unknown_storage_alias, extra={"storage_alias": storage_alias}
+                )
+                raise unknown_storage_alias from error
+
+            # could probably be simplified to only delete for the latest Upload ID
+            # but as we currently are not sure if all things are deleted correctly
+            # when they should be, let's be thorough for now
+            if await object_storage.does_object_exist(
+                bucket_id=bucket_id, object_id=attempt.object_id
+            ):
+                await object_storage.delete_object(
+                    bucket_id=bucket_id, object_id=attempt.object_id
+                )
+            # no way to check, just run and ignore exception
+            with suppress(object_storage.MultiPartUploadNotFoundError):
+                await object_storage.abort_multipart_upload(
+                    bucket_id=bucket_id,
+                    object_id=attempt.object_id,
+                    upload_id=attempt.upload_id,
+                )
+            await self._daos.upload_attempts.delete(id_=attempt.upload_id)
+
+        await self._event_publisher.publish_deletion_successful(file_id=file_id)

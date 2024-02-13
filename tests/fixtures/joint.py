@@ -44,8 +44,14 @@ from tests.fixtures.config import get_config
 from tests.fixtures.example_data import STORAGE_ALIASES
 from ucs.adapters.outbound.dao import DaoCollectionTranslator
 from ucs.config import Config
-from ucs.inject import prepare_core, prepare_event_subscriber, prepare_rest_app
+from ucs.inject import (
+    prepare_core,
+    prepare_event_subscriber,
+    prepare_rest_app,
+    prepare_storage_inspector,
+)
 from ucs.ports.inbound.file_service import FileMetadataServicePort
+from ucs.ports.inbound.storage_inspector import StorageInspectorPort
 from ucs.ports.inbound.upload_service import UploadServicePort
 from ucs.ports.outbound.dao import DaoCollectionPort
 
@@ -64,6 +70,8 @@ class JointFixture:
     kafka: KafkaFixture
     s3: S3Fixture
     second_s3: S3Fixture
+    bucket_id: str
+    inbox_inspector: StorageInspectorPort
 
     async def reset_state(self):
         """Completely reset fixture states"""
@@ -108,7 +116,10 @@ async def joint_fixture_function(
     await second_s3_fixture.populate_buckets([bucket_id])
 
     # create a DI container instance:translators
-    async with prepare_core(config=config) as (upload_service, file_metadata_service):
+    async with prepare_core(config=config) as (
+        upload_service,
+        file_metadata_service,
+    ), prepare_storage_inspector(config=config) as inbox_inspector:
         async with (
             prepare_rest_app(
                 config=config, core_override=(upload_service, file_metadata_service)
@@ -129,6 +140,8 @@ async def joint_fixture_function(
                     kafka=kafka_fixture,
                     s3=s3_fixture,
                     second_s3=second_s3_fixture,
+                    bucket_id=bucket_id,
+                    inbox_inspector=inbox_inspector,
                 )
 
 

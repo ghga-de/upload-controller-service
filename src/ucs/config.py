@@ -23,18 +23,18 @@ from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 
 from ucs.adapters.inbound.event_sub import EventSubTranslatorConfig
-from ucs.adapters.outbound.event_pub import EventPubTanslatorConfig
+from ucs.adapters.outbound.event_pub import EventPubTranslatorConfig
 
 
 @config_from_yaml(prefix="ucs")
-class Config(  # pylint: disable=too-many-ancestors
+class Config(
     ApiConfigBase,
     MongoDbConfig,
     S3ObjectStoragesConfig,
     KafkaConfig,
     LoggingConfig,
     EventSubTranslatorConfig,
-    EventPubTanslatorConfig,
+    EventPubTranslatorConfig,
 ):
     """Config parameters and their defaults."""
 

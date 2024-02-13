@@ -97,6 +97,22 @@
   "additionalProperties": false,
   "description": "Modifies the orginal Settings class provided by the user",
   "properties": {
+    "file_deleted_event_topic": {
+      "description": "Name of the topic used for events indicating that a file has been deleted.",
+      "examples": [
+        "file_downloads"
+      ],
+      "title": "File Deleted Event Topic",
+      "type": "string"
+    },
+    "file_deleted_event_type": {
+      "description": "The type used for events indicating that a file has been deleted.",
+      "examples": [
+        "file_deleted"
+      ],
+      "title": "File Deleted Event Type",
+      "type": "string"
+    },
     "upload_received_event_topic": {
       "description": "Name of the topic to publish events that inform about new file uploads.",
       "examples": [
@@ -127,6 +143,22 @@
         "file_metadata_upserts"
       ],
       "title": "File Metadata Event Type",
+      "type": "string"
+    },
+    "files_to_delete_topic": {
+      "description": "The name of the topic for events informing about files to be deleted.",
+      "examples": [
+        "file_deletions"
+      ],
+      "title": "Files To Delete Topic",
+      "type": "string"
+    },
+    "files_to_delete_type": {
+      "description": "The type used for events informing about a file to be deleted.",
+      "examples": [
+        "file_deletion_requested"
+      ],
+      "title": "Files To Delete Type",
       "type": "string"
     },
     "upload_accepted_event_topic": {
@@ -412,10 +444,14 @@
     }
   },
   "required": [
+    "file_deleted_event_topic",
+    "file_deleted_event_type",
     "upload_received_event_topic",
     "upload_received_event_type",
     "file_metadata_event_topic",
     "file_metadata_event_type",
+    "files_to_delete_topic",
+    "files_to_delete_type",
     "upload_accepted_event_topic",
     "upload_accepted_event_type",
     "upload_rejected_event_topic",

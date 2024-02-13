@@ -192,3 +192,11 @@ class UploadServicePort(ABC):
         that only know the file ID not the upload attempt.
         """
         ...
+
+    @abstractmethod
+    async def deletion_requested(self, *, file_id: str) -> None:
+        """
+        Cancel the current upload attempt for the given file and remove all associated
+        data related to upload attempts and file metadata.
+        """
+        ...

@@ -20,12 +20,15 @@ service (incl. REST and event-driven APIs).
 """
 
 import json
+import logging
+from contextlib import suppress
 from typing import Literal
 
 import pytest
 from fastapi import status
 from ghga_event_schemas import pydantic_ as event_schemas
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.protocols.dao import ResourceNotFoundError
 from hexkit.providers.s3.testutils import upload_part_via_url
 
 from tests.fixtures.example_data import UPLOAD_DETAILS_1, UPLOAD_DETAILS_2
@@ -37,6 +40,7 @@ from tests.fixtures.joint import (  # noqa: F401
     s3_fixture,
     second_s3_fixture,
 )
+from ucs.core.models import UploadStatus
 
 TARGET_BUCKET_ID = "test-staging"
 
@@ -51,10 +55,7 @@ async def run_until_uploaded(
     Run steps until uploaded data has been received and the upload attempt has been
     marked as uploaded
     """
-    # populate s3 storage:
-    # await joint_fixture.s3.populate_buckets([joint_fixture.config])
-
-    # publish event to register a new file for uplaod:
+    # publish event to register a new file for upload:
 
     file_metadata_event = event_schemas.MetadataSubmissionUpserted(
         associated_files=[file_to_register]
@@ -105,6 +106,8 @@ async def run_until_uploaded(
     payload = event_schemas.FileUploadReceived(**recorder.recorded_events[0].payload)
     assert payload.file_id == file_to_register.file_id
     assert payload.expected_decrypted_sha256 == file_to_register.decrypted_sha256
+
+    return payload.object_id
 
 
 async def perform_upload(
@@ -184,11 +187,14 @@ async def perform_upload(
 @pytest.mark.asyncio
 async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
     """Test the typical anticipated/successful journey through the service's APIs."""
-    for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
+    for s3, upload_details in zip(
+        (joint_fixture.s3, joint_fixture.second_s3),
+        (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2),
+    ):
         storage_alias = upload_details.storage_alias
         file_to_register = upload_details.submission_metadata
 
-        await run_until_uploaded(
+        inbox_object_id = await run_until_uploaded(
             joint_fixture=joint_fixture,
             file_to_register=file_to_register,
             storage_alias=storage_alias,
@@ -220,17 +226,22 @@ async def test_happy_journey(joint_fixture: JointFixture):  # noqa: F811
 
         # make sure that the latest upload of the corresponding file was marked as
         # accepted:
-        # (first get the ID of the latest upload for that file:)
+        # First get the ID of the latest upload for that file
         response = await joint_fixture.rest_client.get(
             f"/files/{file_to_register.file_id}"
         )
         assert response.status_code == status.HTTP_200_OK
         latest_upload_id = response.json()["latest_upload_id"]
 
-        # (Then get details on that upload:)
+        # Then get upload details
         response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "accepted"
+
+        # Finally verify the corresponding object has been removed from object storage
+        assert not await s3.storage.does_object_exist(
+            bucket_id=joint_fixture.bucket_id, object_id=inbox_object_id
+        )
 
 
 @pytest.mark.asyncio
@@ -240,11 +251,14 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
     Work through the service's APIs, but reject the upload attempt due to a file
     validation error.
     """
-    for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
+    for s3, upload_details in zip(
+        (joint_fixture.s3, joint_fixture.second_s3),
+        (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2),
+    ):
         storage_alias = upload_details.storage_alias
         file_to_register = upload_details.submission_metadata
 
-        await run_until_uploaded(
+        inbox_object_id = await run_until_uploaded(
             joint_fixture=joint_fixture,
             file_to_register=file_to_register,
             storage_alias=storage_alias,
@@ -270,14 +284,166 @@ async def test_unhappy_journey(joint_fixture: JointFixture):  # noqa: F811
         await joint_fixture.event_subscriber.run(forever=False)
 
         # make sure that the latest upload of the corresponding file was marked as rejected:
-        # (first get the ID of the latest upload for that file:)
+        # First get the ID of the latest upload for that file
         response = await joint_fixture.rest_client.get(
             f"/files/{file_to_register.file_id}"
         )
         assert response.status_code == status.HTTP_200_OK
         latest_upload_id = response.json()["latest_upload_id"]
 
-        # (Then get details on that upload:)
+        # Then get upload details
         response = await joint_fixture.rest_client.get(f"/uploads/{latest_upload_id}")
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["status"] == "rejected"
+
+        # Finally verify the corresponding object has been removed from object storage
+        assert not await s3.storage.does_object_exist(
+            bucket_id=joint_fixture.bucket_id, object_id=inbox_object_id
+        )
+
+
+@pytest.mark.asyncio
+async def test_inbox_inspector(
+    caplog,
+    joint_fixture: JointFixture,  # noqa: F811
+):
+    """Sanity check for inbox inspection functionality."""
+    # Run upload for both files and store object IDs
+    inbox_object_ids = []
+    for upload_details in (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2):
+        storage_alias = upload_details.storage_alias
+        file_to_register = upload_details.submission_metadata
+
+        inbox_object_id = await run_until_uploaded(
+            joint_fixture=joint_fixture,
+            file_to_register=file_to_register,
+            storage_alias=storage_alias,
+        )
+        inbox_object_ids.append(inbox_object_id)
+
+    # Properly reject upload 1. This should remove the associated file
+    failure_event = event_schemas.FileUploadValidationFailure(
+        s3_endpoint_alias=UPLOAD_DETAILS_1.storage_alias,
+        file_id=UPLOAD_DETAILS_1.submission_metadata.file_id,
+        object_id=UPLOAD_DETAILS_1.upload_attempt.object_id,
+        bucket_id=joint_fixture.bucket_id,
+        upload_date=now_as_utc().isoformat(),
+        reason="Sorry, but this has to fail.",
+    )
+
+    await joint_fixture.kafka.publish_event(
+        payload=json.loads(failure_event.model_dump_json()),
+        type_=joint_fixture.config.upload_rejected_event_type,
+        topic=joint_fixture.config.upload_rejected_event_topic,
+    )
+
+    # make sure object is present before rejection and removed afterwards
+    properly_rejected_id = inbox_object_ids[0]
+    assert await joint_fixture.s3.storage.does_object_exist(
+        bucket_id=joint_fixture.bucket_id, object_id=properly_rejected_id
+    )
+
+    await joint_fixture.event_subscriber.run(forever=False)
+
+    assert not await joint_fixture.s3.storage.does_object_exist(
+        bucket_id=joint_fixture.bucket_id, object_id=properly_rejected_id
+    )
+
+    # Manipulate upload attempt to simulate stale file in need of removal
+    metadata = await joint_fixture.daos.file_metadata.get_by_id(
+        id_=UPLOAD_DETAILS_2.file_metadata.file_id
+    )
+
+    current_upload_id = metadata.latest_upload_id
+    assert current_upload_id
+
+    attempt = await joint_fixture.daos.upload_attempts.get_by_id(id_=current_upload_id)
+    attempt.status = UploadStatus.REJECTED
+    await joint_fixture.daos.upload_attempts.upsert(attempt)
+
+    # Verify ID matches and object is present to be properly logged as stale
+    stale_id = inbox_object_ids[1]
+    assert stale_id == attempt.object_id
+    assert await joint_fixture.second_s3.storage.does_object_exist(
+        bucket_id=joint_fixture.bucket_id, object_id=stale_id
+    )
+
+    caplog.clear()
+    caplog.set_level(level=logging.INFO, logger="ucs.core.storage_inspector")
+
+    await joint_fixture.inbox_inspector.check_buckets()
+    expected_message = (
+        f"Stale object '{stale_id}' found for file '{attempt.file_id}' in bucket"
+        + f" '{joint_fixture.bucket_id}' of storage '{attempt.storage_alias}'."
+    )
+
+    assert len(caplog.messages) == 1
+    assert expected_message in caplog.messages
+
+
+@pytest.mark.asyncio
+async def test_happy_deletion(joint_fixture: JointFixture):  # noqa: F811
+    """Test happy path for file data/metadata deletion, with file metadata, two upload attempts
+    and a file still in the inbox.
+    """
+    for s3, upload_details in zip(
+        (joint_fixture.s3, joint_fixture.second_s3),
+        (UPLOAD_DETAILS_1, UPLOAD_DETAILS_2),
+    ):
+        storage_alias = upload_details.storage_alias
+        file_to_register = upload_details.submission_metadata
+        file_id = upload_details.file_metadata.file_id
+
+        inbox_object_id = await run_until_uploaded(
+            joint_fixture=joint_fixture,
+            file_to_register=file_to_register,
+            storage_alias=storage_alias,
+        )
+
+        # Verify everything is present
+        assert await s3.storage.does_object_exist(
+            bucket_id=joint_fixture.bucket_id, object_id=inbox_object_id
+        )
+        assert await joint_fixture.daos.file_metadata.get_by_id(id_=file_id)
+
+        num_attempts = 0
+        async for _ in joint_fixture.daos.upload_attempts.find_all(
+            mapping={"file_id": file_id}
+        ):
+            num_attempts += 1
+        assert num_attempts == 2
+
+        # Request deletion
+        deletion_event = event_schemas.FileDeletionRequested(file_id=file_id)
+        await joint_fixture.kafka.publish_event(
+            payload=json.loads(deletion_event.model_dump_json()),
+            type_=joint_fixture.config.files_to_delete_type,
+            topic=joint_fixture.config.files_to_delete_topic,
+        )
+
+        # Consume inbound event and check outbound event
+        deletion_successful_event = event_schemas.FileDeletionSuccess(file_id=file_id)
+        async with joint_fixture.kafka.record_events(
+            in_topic=joint_fixture.config.file_deleted_event_topic
+        ) as recorder:
+            await joint_fixture.event_subscriber.run(forever=False)
+
+        assert len(recorder.recorded_events) == 1
+        assert (
+            recorder.recorded_events[0].payload
+            == deletion_successful_event.model_dump()
+        )
+
+        # Verify everything is gone
+        assert not await s3.storage.does_object_exist(
+            bucket_id=joint_fixture.bucket_id, object_id=inbox_object_id
+        )
+        with suppress(ResourceNotFoundError):
+            await joint_fixture.daos.file_metadata.get_by_id(id_=file_id)
+
+        num_attempts = 0
+        async for _ in joint_fixture.daos.upload_attempts.find_all(
+            mapping={"file_id": file_id}
+        ):
+            num_attempts += 1
+        assert num_attempts == 0

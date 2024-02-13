@@ -27,8 +27,19 @@ from ucs.core import models
 from ucs.ports.outbound.event_pub import EventPublisherPort
 
 
-class EventPubTanslatorConfig(BaseSettings):
+class EventPubTranslatorConfig(BaseSettings):
     """Config for publishing file upload-related events."""
+
+    file_deleted_event_topic: str = Field(
+        default=...,
+        description="Name of the topic used for events indicating that a file has been deleted.",
+        examples=["file_downloads"],
+    )
+    file_deleted_event_type: str = Field(
+        default=...,
+        description="The type used for events indicating that a file has been deleted.",
+        examples=["file_deleted"],
+    )
 
     upload_received_event_topic: str = Field(
         default=...,
@@ -49,7 +60,7 @@ class EventPubTranslator(EventPublisherPort):
     """
 
     def __init__(
-        self, *, config: EventPubTanslatorConfig, provider: EventPublisherProtocol
+        self, *, config: EventPubTranslatorConfig, provider: EventPublisherProtocol
     ):
         """Initialize with a suitable protocol provider."""
         self._config = config
@@ -82,4 +93,15 @@ class EventPubTranslator(EventPublisherPort):
             type_=self._config.upload_received_event_type,
             topic=self._config.upload_received_event_topic,
             key=file_metadata.file_id,
+        )
+
+    async def publish_deletion_successful(self, *, file_id: str) -> None:
+        """Publish event informing that deletion of data and metadata for the given file ID has succeeded."""
+        event_payload = event_schemas.FileDeletionSuccess(file_id=file_id)
+
+        await self._provider.publish(
+            payload=json.loads(event_payload.model_dump_json()),
+            type_=self._config.file_deleted_event_type,
+            topic=self._config.file_deleted_event_topic,
+            key=file_id,
         )
