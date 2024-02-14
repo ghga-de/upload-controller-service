@@ -27,7 +27,7 @@ description = "The Upload-Controller Service (UCS) manages uploads to a S3 inbox
 dependencies = [
     "ghga-service-commons[all]>=2.0.0, <3",
     "ghga-event-schemas>=3.0.0,<4",
-    "hexkit[mongodb,s3,akafka]>=2.1.0",
+    "hexkit[mongodb,s3,akafka]>=2.1.0, <3",
     "typer>=0.9.0",
 ]
 
