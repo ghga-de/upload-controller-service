@@ -18,13 +18,13 @@ We recommend using the provided Docker container.
 
 A pre-build version is available at [docker hub](https://hub.docker.com/repository/docker/ghga/upload-controller-service):
 ```bash
-docker pull ghga/upload-controller-service:3.0.0
+docker pull ghga/upload-controller-service:3.0.1
 ```
 
 Or you can build the container yourself from the [`./Dockerfile`](./Dockerfile):
 ```bash
 # Execute in the repo's root dir:
-docker build -t ghga/upload-controller-service:3.0.0 .
+docker build -t ghga/upload-controller-service:3.0.1 .
 ```
 
 For production-ready deployment, we recommend using Kubernetes, however,
@@ -32,7 +32,7 @@ for simple use cases, you could execute the service using docker
 on a single server:
 ```bash
 # The entrypoint is preconfigured:
-docker run -p 8080:8080 ghga/upload-controller-service:3.0.0 --help
+docker run -p 8080:8080 ghga/upload-controller-service:3.0.1 --help
 ```
 
 If you prefer not to use containers, you may install the service from source:
@@ -275,7 +275,7 @@ The service requires the following configuration parameters:
 
 - **`workers`** *(integer)*: Number of workers processes to run. Default: `1`.
 
-- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `"/"`.
+- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `""`.
 
 - **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `"/openapi.json"`.
 

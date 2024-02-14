@@ -409,7 +409,7 @@ info:
   description: A service managing uploads of file objects to an S3-compatible Object
     Storage.
   title: Upload Controller Service
-  version: 3.0.0
+  version: 3.0.1
 openapi: 3.1.0
 paths:
   /files/{file_id}:
@@ -518,8 +518,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HttpUnknownStorageAliasError'
-          description:
-          - 'Exceptions by ID:
+          description: 'Exceptions by ID:
 
             - noSuchStorage: The storage node for the given alias does not exist.'
         '422':
