@@ -1,9 +1,9 @@
 [project]
 name = "ucs"
-version = "3.0.0"
+version = "3.0.1"
 description = "The Upload-Controller Service (UCS) manages uploads to a S3 inbox bucket."
 dependencies = [
-    "ghga-service-commons[all]>=2.0.0",
+    "ghga-service-commons[all]>=2.0.0, <3",
     "ghga-event-schemas>=3.0.0,<4",
     "hexkit[mongodb,s3,akafka]>=2.1.0",
     "typer>=0.9.0",
