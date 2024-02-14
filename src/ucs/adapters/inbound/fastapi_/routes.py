@@ -45,10 +45,10 @@ ERROR_RESPONSES = {
         "model": http_exceptions.HttpUploadNotFoundError.get_body_model(),
     },
     "noSuchStorage": {
-        "description": {
+        "description": (
             "Exceptions by ID:"
             + "\n- noSuchStorage: The storage node for the given alias does not exist."
-        },
+        ),
         "model": http_exceptions.HttpUnknownStorageAliasError.get_body_model(),
     },
     "fileNotRegistered": {
